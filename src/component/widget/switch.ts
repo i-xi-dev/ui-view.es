@@ -366,17 +366,14 @@ class Switch extends WidgetEditable {
     throw new Error("TODO");
   }
 
-  static get observedAttributes() {
+  static override get observedAttributes(): Array<string> {
     return [
-      Aria.Property.LABEL,
-      Aria.Property.READONLY,
-      Aria.State.CHECKED,
-      Aria.State.DISABLED,
-      Aria.State.HIDDEN,
-      //"aria-busy",
-      "data-direction",
-      "data-options",
-    ];
+      WidgetEditable.observedAttributes,
+      [
+        Aria.State.CHECKED,
+        //TODO "data-options",
+      ],
+    ].flat();
   }
 
   override connectedCallback(): void {

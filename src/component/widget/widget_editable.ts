@@ -22,6 +22,15 @@ abstract class WidgetEditable extends WidgetBase {
     }
   }
 
+  static override get observedAttributes(): Array<string> {
+    return [
+      WidgetBase.observedAttributes,
+      [
+        Aria.Property.READONLY,
+      ],
+    ].flat();
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
 

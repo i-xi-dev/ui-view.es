@@ -182,6 +182,16 @@ abstract class WidgetBase extends HTMLElement {
     return this.#main;
   }
 
+  static get observedAttributes(): Array<string> {
+    return [
+      Aria.Property.LABEL,
+      Aria.State.DISABLED,
+      Aria.State.HIDDEN,
+      WidgetBase.DataAttr.SIZE,
+      //TODO "aria-busy",
+    ];
+  }
+
 
 
 
