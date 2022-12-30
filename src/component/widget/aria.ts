@@ -15,6 +15,7 @@ namespace Aria {
 
   export const Property = {
     LABEL: "aria-label",
+    READONLY: "aria-readonly",
   } as const;
 
   export type Property = typeof Property[keyof typeof Property];

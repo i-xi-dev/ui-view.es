@@ -51,6 +51,19 @@ function setProp(name, value) {
         <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
       </fieldset>
       <fieldset>
+        <legend>aria-hidden attr</legend>
+        <button onclick="removeAttr('aria-hidden')">remove attr</button>
+        <select>
+          <option value=""></option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select><button onclick="setAttr('aria-hidden', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
+      <fieldset>
+        <legend>hidden prop</legend>
+        <input type="checkbox"/><button onclick="setProp('hidden', this.previousElementSibling.checked)">set prop</button>
+      </fieldset>
+      <fieldset>
         <legend>aria-label attr</legend>
         <button onclick="removeAttr('aria-label')">remove attr</button>
         <input type="text"/><button onclick="setAttr('aria-label', this.previousElementSibling.value)">set attr</button>
@@ -58,6 +71,19 @@ function setProp(name, value) {
       <fieldset>
         <legend>label prop</legend>
         <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
+      </fieldset>
+      <fieldset>
+        <legend>aria-readonly attr</legend>
+        <button onclick="removeAttr('aria-readonly')">remove attr</button>
+        <select>
+          <option value=""></option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select><button onclick="setAttr('aria-readonly', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
+      <fieldset>
+        <legend>readOnly prop</legend>
+        <input type="checkbox"/><button onclick="setProp('readOnly', this.previousElementSibling.checked)">set prop</button>
       </fieldset>
     </div>
 
@@ -76,9 +102,20 @@ function setProp(name, value) {
       <wc-switch aria-disabled="true" aria-checked="true" aria-label="Disabled"></wc-switch>
     </div>
     <div>
+      <div>aria-hidden</div>
+      <wc-switch aria-hidden="true" aria-label="Hidden"></wc-switch>
+      <wc-switch aria-hidden="false" aria-label="Not-Hidden"></wc-switch>
+    </div>
+    <div>
       <div>aria-label</div>
       <wc-switch aria-label=""></wc-switch>
       <wc-switch aria-label="Label"></wc-switch>
+    </div>
+    <div>
+      <div>aria-readonly</div>
+      <wc-switch aria-readonly="true"></wc-switch>
+      <wc-switch aria-readonly="false"></wc-switch>
+      <wc-switch aria-readonly="true" aria-checked="true" aria-label="ReadOnly"></wc-switch>
     </div>
   </body>
 </html>

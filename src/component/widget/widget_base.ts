@@ -130,6 +130,10 @@ abstract class WidgetBase extends HTMLElement {
     return this.#connected;
   }
 
+  protected set _connected(value: boolean) {
+    this.#connected = value;
+  }
+
   protected get _size(): WidgetSize {
     return this.#size;
   }
@@ -142,7 +146,7 @@ abstract class WidgetBase extends HTMLElement {
     const adjustedDisabled = !!value;//(value === true);
     if (this.#disabled !== adjustedDisabled) {
       this.#disabled = adjustedDisabled;
-      this._reflectDisabled();
+      this.#reflectDisabled();
     }
   }
 
@@ -154,7 +158,7 @@ abstract class WidgetBase extends HTMLElement {
     const adjustedHidden = !!value;//(value === true);
     if (this.#hidden !== adjustedHidden) {
       this.#hidden = adjustedHidden;
-      this._reflectHidden();
+      this.#reflectHidden();
     }
   }
 
@@ -166,7 +170,7 @@ abstract class WidgetBase extends HTMLElement {
     const adjustedLabel = (typeof value === "string") ? value : "";
     if (this.#label !== adjustedLabel) {
       this.#label = (typeof value === "string") ? value : "";
-      this._reflectLabel();
+      this.#reflectLabel();
     }
   }
 
@@ -185,16 +189,17 @@ abstract class WidgetBase extends HTMLElement {
     if (this.isConnected !== true) {
       return;
     }
-    //this._loadColorScheme();
-    this._loadSize();
-    this._loadDisabled();
-    this._loadHidden();
-    this._loadLabel();
+    //this.#loadColorScheme();
+    this.#loadSize();
+    this.#loadDisabled();
+    this.#loadHidden();
+    this.#loadLabel();
     this.#reflectRole();
-    this._reflectDisabled();
-    this._reflectHidden();
-    this._reflectLabel();
-    this.#connected = true;
+    this.#reflectDisabled();
+    this.#reflectHidden();
+    this.#reflectLabel();
+
+    //this.#connected = true;
   }
 
   disconnectedCallback(): void {
@@ -216,15 +221,25 @@ abstract class WidgetBase extends HTMLElement {
         if (this.#disabled !== adjustedDisabled) {
           this.#disabled = adjustedDisabled;
         }
-        if ((this.#disabled !== adjustedDisabled) || (["true", "false"].includes(newValue) !== true)) {
-          this._reflectDisabled();
+        if ((this.#disabled !== adjustedDisabled) || (["true"/*, "false"*/].includes(newValue) !== true)) {
+          this.#reflectDisabled();
+        }
+        break;
+
+      case Aria.State.HIDDEN:
+        const adjustedHidden = (newValue === "true");
+        if (this.#hidden !== adjustedHidden) {
+          this.#hidden = adjustedHidden;
+        }
+        if ((this.#hidden !== adjustedHidden) || (["true"/*, "false"*/].includes(newValue) !== true)) {
+          this.#reflectHidden();
         }
         break;
 
       case Aria.Property.LABEL:
         if (this.#label !== newValue) {
           this.#label = newValue;
-          this._reflectLabel();
+          this.#reflectLabel();
         }
         break;
 
@@ -233,19 +248,19 @@ abstract class WidgetBase extends HTMLElement {
     }
   }
 
-  protected _loadDisabled(): void {
+  #loadDisabled(): void {
     this.#disabled = (this.getAttribute(Aria.State.DISABLED) === "true");
   }
 
-  protected _loadHidden(): void {
+  #loadHidden(): void {
     this.#hidden = (this.getAttribute(Aria.State.HIDDEN) === "true");
   }
 
-  protected _loadLabel(): void {
+  #loadLabel(): void {
     this.#label = this.getAttribute(Aria.Property.LABEL) ?? "";
   }
 
-  // protected _loadColorScheme(): void {
+  // #loadColorScheme(): void {
   //   const loadedColor = (this.getAttribute(WidgetBase.DataAttr.COLOR_SCHEME) ?? "") as WidgetColorScheme;
   //   if (Object.values(WidgetColorScheme).includes(loadedColor) === true) {
   //     this.#colorScheme = loadedColor;
@@ -255,7 +270,7 @@ abstract class WidgetBase extends HTMLElement {
   //   }
   // }
 
-  protected _loadSize(): void {
+  #loadSize(): void {
     const loadedSize = (this.getAttribute(WidgetBase.DataAttr.SIZE) ?? "") as WidgetSize;
     if (Object.values(WidgetSize).includes(loadedSize) === true) {
       this.#size = loadedSize;
@@ -269,7 +284,7 @@ abstract class WidgetBase extends HTMLElement {
     this.setAttribute("role", this.#role);
   }
 
-  protected _reflectDisabled(): void {
+  #reflectDisabled(): void {
     this._reflectAriaAttr(Aria.State.DISABLED, ((this.#disabled === true) ? "true" : undefined));
     if (this._eventTarget) {
       if (this.#disabled === true) {
@@ -281,11 +296,11 @@ abstract class WidgetBase extends HTMLElement {
     }
   }
 
-  protected _reflectHidden(): void {
+  #reflectHidden(): void {
     this._reflectAriaAttr(Aria.State.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
   }
 
-  protected _reflectLabel(): void {
+  #reflectLabel(): void {
     this._reflectAriaAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
     if (this._labelElement) {
       this._labelElement.textContent = this.#label;
@@ -293,7 +308,7 @@ abstract class WidgetBase extends HTMLElement {
   }
 
   protected _reflectAriaAttr(name: Aria.Attr, value?: string): void {
-    console.log(1)
+    console.log(`name:${name}, value:${value}`)
     this.#reflectingInProgress = name;
     if (value) {
       this.setAttribute(name, value);
@@ -302,10 +317,10 @@ abstract class WidgetBase extends HTMLElement {
       this.removeAttribute(name);
     }
     this.#reflectingInProgress = "";
-    console.log(2)
   }
 
 
 }
+Object.freeze(WidgetBase);
 
-export { WidgetBase, WidgetDimension };
+export { type WidgetBaseInit, WidgetBase, WidgetDimension };

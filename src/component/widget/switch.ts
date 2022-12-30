@@ -1,5 +1,6 @@
 import { Aria } from "./aria";
-import { WidgetBase, WidgetDimension } from "./widget_base";
+import { WidgetDimension } from "./widget_base";
+import { WidgetEditable } from "./widget_editable";
 
 const _TrackLength = {
   XS: (WidgetDimension.X_SMALL * 1.25),
@@ -114,7 +115,12 @@ const _MAIN_TEMPLATE = `<div class="switch">
 //TODO clip-pathが direction: rtl に非対応
 //TODO label slot before,after
 //TODO options
-//TODO inert
+//TODO disabledをグレーにする（特に白いところ）
+//TODO changeイベント発火
+//TODO inputイベント発火
+//TODO inert firefoxが対応したら
+//TODO attatchInternal safariが対応したら
+//TODO copy
 
 const _STYLE = `:host {
   flex: none;
@@ -125,11 +131,11 @@ const _STYLE = `:host {
 
 *.switch {
   --switch-space: ${ _TRACK_OFFSET_INLINE_START }px;
+  --switching-time: 150ms;
   --track-length: calc(var(--widget-size) * 1.25);
   --track-thickness: calc(var(--widget-size) / 2);
   align-items: center;
   block-size: 100%;
-  border-radius: 4px;
   cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
@@ -138,6 +144,9 @@ const _STYLE = `:host {
   cursor: default;
   filter: grayscale(0.7);
   opacity: 0.7;
+}
+:host(*[aria-readonly="true"]) *.switch {
+  cursor: default;
 }
 *.switch * {
   pointer-events: none;
@@ -155,7 +164,7 @@ const _STYLE = `:host {
   clip-path: path(evenodd, "${ _ClipPathStart.M }");
   /*overflow: hidden;*/
   position: relative;
-  transition: clip-path 150ms;
+  transition: clip-path var(--switching-time);
 }
 
 :host(*[data-size="x-small"]) *.switch-track {
@@ -195,7 +204,7 @@ const _STYLE = `:host {
   background-color: var(--accent-color);
   border-radius: inherit;
   opacity: 0;
-  transition: opacity 150ms;
+  transition: opacity var(--switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-track-surface {
   opacity: 0.5;
@@ -204,7 +213,7 @@ const _STYLE = `:host {
   border: 2px solid var(--accent-color);
   border-radius: inherit;
   opacity: 0.5;
-  transition: opacity 150ms;
+  transition: opacity var(--switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-track-frame {
   opacity: 0;
@@ -215,7 +224,7 @@ const _STYLE = `:host {
   inset-block-start: 0;
   inset-inline-start: 0;
   position: absolute;
-  transition: inset-inline-start 150ms;
+  transition: inset-inline-start var(--switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-movablepart {
   inset-inline-start: calc(var(--track-length) - var(--track-thickness));
@@ -231,8 +240,12 @@ const _STYLE = `:host {
   margin: 0;
   transition: margin 150ms;
 }
-:host(*:not(*[aria-disabled="true"])) *.switch:hover *.switch-thumb-extension {
+*.switch:hover *.switch-thumb-extension {
   margin: -2px;
+}
+:host(*[aria-disabled="true"]) *.switch:hover *.switch-thumb-extension,
+:host(*[aria-readonly="true"]) *.switch:hover *.switch-thumb-extension {
+  margin: 0 !important;
 }
 *.switch-thumb-extension::before {
   background-color: var(--accent-color);
@@ -244,8 +257,12 @@ const _STYLE = `:host {
   position: absolute;
   transition: margin 150ms;
 }
-:host(*:not(*[aria-disabled="true"])) *.switch:hover *.switch-thumb-extension::before {
-  margin: 0px;
+*.switch:hover *.switch-thumb-extension::before {
+  margin: 0;/*TODO */
+}
+:host(*[aria-disabled="true"]) *.switch:hover *.switch-thumb-extension::before,
+:host(*[aria-readonly="true"]) *.switch:hover *.switch-thumb-extension::before {
+  margin: 0 !important;
 }
 
 
@@ -254,7 +271,7 @@ const _STYLE = `:host {
 *.switch-thumb {
   background-color: var(--main-color);
   border: var(--border-width) solid var(--accent-color);
-  transition: background-color 150ms;
+  transition: background-color var(--switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-thumb {
   background-color: var(--accent-color);
@@ -295,10 +312,9 @@ type SwitchOption = {
 const OFF = 0;
 const ON = 1;
 
-class Switch extends WidgetBase {
+class Switch extends WidgetEditable {
   #options: [SwitchOption, SwitchOption];
   #checked: boolean;
-  //TODO readOnly
 
   constructor() {
     super({
@@ -317,13 +333,13 @@ class Switch extends WidgetBase {
 
     this._eventTarget = main.querySelector("*.switch") as Element;
     this._eventTarget.addEventListener("click", () => {
-      if (this.disabled === true) {
+      if ((this.disabled === true) || (this.readOnly === true)) {
         return;
       }
       this.checked = !(this.#checked);
     }, { passive: true });
     (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
-      if (this.disabled === true) {
+      if ((this.disabled === true) || (this.readOnly === true)) {
         return;
       }
       if (["Enter", " "].includes(event.key) === true) {
@@ -353,12 +369,11 @@ class Switch extends WidgetBase {
   static get observedAttributes() {
     return [
       Aria.Property.LABEL,
+      Aria.Property.READONLY,
       Aria.State.CHECKED,
       Aria.State.DISABLED,
       Aria.State.HIDDEN,
       //"aria-busy",
-      "aria-hidden",
-      "aria-readonly",
       "data-direction",
       "data-options",
     ];
@@ -372,6 +387,8 @@ class Switch extends WidgetBase {
     }
     this.#loadChecked();
     this.#reflectChecked();
+
+    this._connected = true;
   }
 
   // override disconnectedCallback(): void {
@@ -415,13 +432,13 @@ class Switch extends WidgetBase {
   }
 
   #addRipple(): void {
-    if ((this._connected !== true) || (this.hidden === true)) {//TODO というかcomputedStyleがdisplay:none
+    if ((this._connected !== true) || (this.hidden === true)) {//TODO this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
       return;
     }
 
     const ripple = document.createElement("div");
     ripple.classList.add("switch-ripple");
-    this._main.querySelector("*.switch-thumb-extension")?.append(ripple);
+    (this._main.querySelector("*.switch-thumb-extension") as Element).append(ripple);
     globalThis.setTimeout(() => {
       ripple.remove();
     }, 1000);
