@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>test</title>
+    <script type="module">
+import { Switch } from "../dist/index.js";
+customElements.define("wc-switch", Switch);
+    </script>
+    <script>
+function removeAttr(name) {
+  document.getElementById("test1").removeAttribute(name);
+}
+function setAttr(name, value) {
+  document.getElementById("test1").setAttribute(name, value);
+}
+function setProp(name, value) {
+  document.getElementById("test1")[name] = value;
+}
+    </script>
+  </head>
+  <body style="background-color: silver; background-image: repeating-linear-gradient(45deg, #888 0, #aaa 16px)">
+    <div>
+      <wc-switch id="test1"></wc-switch>
+    </div>
+    <div>
+      <fieldset>
+        <legend>aria-checked attr</legend>
+        <button onclick="removeAttr('aria-checked')">remove attr</button>
+        <select>
+          <option value=""></option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+          <option value="mixed">mixed</option>
+        </select><button onclick="setAttr('aria-checked', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
+      <fieldset>
+        <legend>checked prop</legend>
+        <input type="checkbox"/><button onclick="setProp('checked', this.previousElementSibling.checked)">set prop</button>
+      </fieldset>
+      <fieldset>
+        <legend>aria-disabled attr</legend>
+        <button onclick="removeAttr('aria-disabled')">remove attr</button>
+        <select>
+          <option value=""></option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select><button onclick="setAttr('aria-disabled', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
+      <fieldset>
+        <legend>disabled prop</legend>
+        <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
+      </fieldset>
+      <fieldset>
+        <legend>aria-label attr</legend>
+        <button onclick="removeAttr('aria-label')">remove attr</button>
+        <input type="text"/><button onclick="setAttr('aria-label', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
+      <fieldset>
+        <legend>label prop</legend>
+        <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
+      </fieldset>
+    </div>
+
+    <hr/>
+
+    <div>
+      <div>aria-checked</div>
+      <wc-switch aria-checked="true"></wc-switch>
+      <wc-switch aria-checked="false"></wc-switch>
+      <wc-switch aria-checked="mixed"></wc-switch>
+    </div>
+    <div>
+      <div>aria-disabled</div>
+      <wc-switch aria-disabled="true"></wc-switch>
+      <wc-switch aria-disabled="false"></wc-switch>
+      <wc-switch aria-disabled="true" aria-checked="true" aria-label="Disabled"></wc-switch>
+    </div>
+    <div>
+      <div>aria-label</div>
+      <wc-switch aria-label=""></wc-switch>
+      <wc-switch aria-label="Label"></wc-switch>
+    </div>
+  </body>
+</html>

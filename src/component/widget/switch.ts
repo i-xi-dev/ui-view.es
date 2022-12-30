@@ -27,7 +27,7 @@ const _TrackThicknessHalf = {
   XL: (_TrackThickness.XL / 2),
 };
 
-const _THUMB_RADIUS_EXTENTION = _TRACK_OFFSET_INLINE_START + 1;
+const _THUMB_RADIUS_EXTENTION = _TRACK_OFFSET_INLINE_START + 2;
 
 const _ThumbShadowRadius = {
   XS: (_TrackThicknessHalf.XS + _THUMB_RADIUS_EXTENTION),
@@ -109,6 +109,12 @@ const _MAIN_TEMPLATE = `<div class="switch">
 `;
 //TODO pointerTarget をひろげる
 //TODO hover で明るくする
+//TODO label位置 inline-start | inline-end
+//TODO clip-pathが writing-mode:vertical-* に非対応
+//TODO clip-pathが direction: rtl に非対応
+//TODO label slot before,after
+//TODO options
+//TODO inert
 
 const _STYLE = `:host {
   flex: none;
@@ -128,6 +134,11 @@ const _STYLE = `:host {
   display: flex;
   flex-flow: row nowrap;
 }
+:host(*[aria-disabled="true"]) *.switch {
+  cursor: default;
+  filter: grayscale(0.7);
+  opacity: 0.7;
+}
 *.switch * {
   pointer-events: none;
 }
@@ -138,6 +149,7 @@ const _STYLE = `:host {
   position: relative;
 }
 *.switch-track {
+  background-color: var(--main-color);
   block-size: inherit;
   border-radius: calc(var(--widget-size) / 4);
   clip-path: path(evenodd, "${ _ClipPathStart.M }");
@@ -146,52 +158,56 @@ const _STYLE = `:host {
   transition: clip-path 150ms;
 }
 
-:host-context(*[data-size="x-small"]) *.switch-track {
+:host(*[data-size="x-small"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathStart.XS }");
 }
-:host-context(*[data-size="small"]) *.switch-track {
+:host(*[data-size="small"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathStart.S }");
 }
-:host-context(*[data-size="large"]) *.switch-track {
+:host(*[data-size="large"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathStart.L }");
 }
-:host-context(*[data-size="x-large"]) *.switch-track {
+:host(*[data-size="x-large"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathStart.XL }");
 }
-:host-context(*[aria-checked="true"]) *.switch-track {
+:host(*[aria-checked="true"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathEnd.M }");
 }
-:host-context(*[aria-checked="true"][data-size="x-small"]) *.switch-track {
+:host(*[aria-checked="true"][data-size="x-small"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathEnd.XS }");
 }
-:host-context(*[aria-checked="true"][data-size="small"]) *.switch-track {
+:host(*[aria-checked="true"][data-size="small"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathEnd.S }");
 }
-:host-context(*[aria-checked="true"][data-size="large"]) *.switch-track {
+:host(*[aria-checked="true"][data-size="large"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathEnd.L }");
 }
-:host-context(*[aria-checked="true"][data-size="x-large"]) *.switch-track {
+:host(*[aria-checked="true"][data-size="x-large"]) *.switch-track {
   clip-path: path(evenodd, "${ _ClipPathEnd.XL }");
 }
 
 *.switch-track-surface,
-*.switch-track-surface::before,
 *.switch-track-frame {
   inset: 0;
   position: absolute;
 }
 *.switch-track-surface {
-  background-color: var(--main-color);
+  background-color: var(--accent-color);
   border-radius: inherit;
+  opacity: 0;
+  transition: opacity 150ms;
+}
+:host(*[aria-checked="true"]) *.switch-track-surface {
+  opacity: 0.5;
 }
 *.switch-track-frame {
   border: 2px solid var(--accent-color);
   border-radius: inherit;
-  opacity: 0.6;
-  transition: background-color 150ms;
+  opacity: 0.5;
+  transition: opacity 150ms;
 }
-:host-context(*[aria-checked="true"]) *.switch-track-frame {
-  background-color: var(--accent-color);
+:host(*[aria-checked="true"]) *.switch-track-frame {
+  opacity: 0;
 }
 *.switch-movablepart {
   block-size: var(--track-thickness);
@@ -201,7 +217,7 @@ const _STYLE = `:host {
   position: absolute;
   transition: inset-inline-start 150ms;
 }
-:host-context(*[aria-checked="true"]) *.switch-movablepart {
+:host(*[aria-checked="true"]) *.switch-movablepart {
   inset-inline-start: calc(var(--track-length) - var(--track-thickness));
 }
 *.switch-thumb-extension,
@@ -215,7 +231,7 @@ const _STYLE = `:host {
   margin: 0;
   transition: margin 150ms;
 }
-*.switch:hover *.switch-thumb-extension {
+:host(*:not(*[aria-disabled="true"])) *.switch:hover *.switch-thumb-extension {
   margin: -2px;
 }
 *.switch-thumb-extension::before {
@@ -224,11 +240,11 @@ const _STYLE = `:host {
   content: "";
   inset: 0;
   margin: 0;
-  opacity: 0.6;
+  opacity: 0.5;
   position: absolute;
   transition: margin 150ms;
 }
-*.switch:hover *.switch-thumb-extension::before {
+:host(*:not(*[aria-disabled="true"])) *.switch:hover *.switch-thumb-extension::before {
   margin: 0px;
 }
 
@@ -240,12 +256,12 @@ const _STYLE = `:host {
   border: var(--border-width) solid var(--accent-color);
   transition: background-color 150ms;
 }
-:host-context(*[aria-checked="true"]) *.switch-thumb {
+:host(*[aria-checked="true"]) *.switch-thumb {
   background-color: var(--accent-color);
 }
 @keyframes switch-ripple {
   0% {
-    opacity: 0.3;
+    opacity: 0.6;
     transform: scale(1);
   }
   100% {
@@ -263,10 +279,11 @@ const _STYLE = `:host {
 
 
 *.switch-label {
+  user-select: none;
   white-space: pre;
 }
 *.switch-label:not(*:empty) {
-  margin-left: 6px;
+  margin-inline-start: 6px;
 }
 `;
 
@@ -300,13 +317,21 @@ class Switch extends WidgetBase {
 
     this._eventTarget = main.querySelector("*.switch") as Element;
     this._eventTarget.addEventListener("click", () => {
+      if (this.disabled === true) {
+        return;
+      }
       this.checked = !(this.#checked);
     }, { passive: true });
     (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
+      if (this.disabled === true) {
+        return;
+      }
       if (["Enter", " "].includes(event.key) === true) {
         this.checked = !(this.#checked);
       }
     }, { passive: true });
+
+    this._labelElement = main.querySelector("*.switch-label") as Element;
   }
 
   get checked(): boolean {
@@ -314,10 +339,10 @@ class Switch extends WidgetBase {
   }
 
   set checked(value: boolean) {
-    this.#checked = !!value;
-    this._reflectAriaAttr(Aria.State.CHECKED, ((this.#checked === true) ? "true" : "false"));
-    if (this._connected === true) {
-      this.#addRipple();
+    const adjustedChecked = !!value;//(value === true);
+    if (this.#checked !== adjustedChecked) {
+      this.#checked = adjustedChecked;
+      this.#reflectChecked();
     }
   }
 
@@ -327,20 +352,27 @@ class Switch extends WidgetBase {
 
   static get observedAttributes() {
     return [
-      //"aria-busy",
+      Aria.Property.LABEL,
       Aria.State.CHECKED,
       Aria.State.DISABLED,
+      Aria.State.HIDDEN,
+      //"aria-busy",
       "aria-hidden",
-      "aria-label",
       "aria-readonly",
       "data-direction",
       "data-options",
     ];
   }
 
-  // override connectedCallback(): void {
-  //   super.connectedCallback();
-  // }
+  override connectedCallback(): void {
+    super.connectedCallback();
+
+    if (this.isConnected !== true) {
+      return;
+    }
+    this.#loadChecked();
+    this.#reflectChecked();
+  }
 
   // override disconnectedCallback(): void {
   //   super.disconnectedCallback();
@@ -350,14 +382,43 @@ class Switch extends WidgetBase {
   //
   // }
 
-  attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
+  override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
+    super.attributeChangedCallback(name, oldValue, newValue);
+
+    if (this._reflectingInProgress === name) {
+      return;
+    }
+
+    switch (name) {
+      case Aria.State.CHECKED:
+        const adjustedChecked = (newValue === "true");
+        if (this.#checked !== adjustedChecked) {
+          this.#checked = adjustedChecked;
+        }
+        if ((this.#checked !== adjustedChecked) || (["true", "false"].includes(newValue) !== true)) {
+          this.#reflectChecked();
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  #loadChecked(): void {
+    this.#checked = (this.getAttribute(Aria.State.CHECKED) === "true");
   }
 
   #reflectChecked(): void {
-    this.setAttribute(Aria.State.CHECKED, (this.#checked === true) ? "true" : "false");
+    this._reflectAriaAttr(Aria.State.CHECKED, ((this.#checked === true) ? "true" : "false"));
+    this.#addRipple();
   }
 
   #addRipple(): void {
+    if ((this._connected !== true) || (this.hidden === true)) {//TODO というかcomputedStyleがdisplay:none
+      return;
+    }
+
     const ripple = document.createElement("div");
     ripple.classList.add("switch-ripple");
     this._main.querySelector("*.switch-thumb-extension")?.append(ripple);

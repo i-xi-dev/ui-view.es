@@ -8,10 +8,17 @@ namespace Aria {
   export const State = {
     CHECKED: "aria-checked",
     DISABLED: "aria-disabled",
+    HIDDEN: "aria-hidden",
   } as const;
 
   export type State = typeof State[keyof typeof State];
 
-  export type Attr = State;
+  export const Property = {
+    LABEL: "aria-label",
+  } as const;
+
+  export type Property = typeof Property[keyof typeof Property];
+
+  export type Attr = State | Property;
 }
 export { Aria };
