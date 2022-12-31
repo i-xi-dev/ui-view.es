@@ -78,6 +78,13 @@ type WidgetBaseInit = {
   style: string,
 };
 
+const AttrReflection = {
+  FORCE: Symbol(),
+  IF_PROPERTY_CHANGED: Symbol(),
+  NONE: Symbol(),
+} as const;
+type AttrReflection = typeof AttrReflection[keyof typeof AttrReflection];
+
 abstract class WidgetBase extends HTMLElement {
   #role: string;
   #root: ShadowRoot;
@@ -144,10 +151,7 @@ abstract class WidgetBase extends HTMLElement {
 
   set disabled(value: boolean) {
     const adjustedDisabled = !!value;//(value === true);
-    if (this.#disabled !== adjustedDisabled) {
-      this.#disabled = adjustedDisabled;
-      this.#reflectDisabled();
-    }
+    this.#setDisabled(adjustedDisabled, AttrReflection.FORCE);
   }
 
   override get hidden(): boolean {
@@ -156,10 +160,7 @@ abstract class WidgetBase extends HTMLElement {
 
   override set hidden(value: boolean) {
     const adjustedHidden = !!value;//(value === true);
-    if (this.#hidden !== adjustedHidden) {
-      this.#hidden = adjustedHidden;
-      this.#reflectHidden();
-    }
+    this.#setHidden(adjustedHidden, AttrReflection.FORCE);
   }
 
   get label(): string {
@@ -168,10 +169,7 @@ abstract class WidgetBase extends HTMLElement {
 
   set label(value: string) {
     const adjustedLabel = (typeof value === "string") ? value : "";
-    if (this.#label !== adjustedLabel) {
-      this.#label = (typeof value === "string") ? value : "";
-      this.#reflectLabel();
-    }
+    this.#setLabel(adjustedLabel, AttrReflection.FORCE);
   }
 
   protected get _reflectingInProgress(): string {
@@ -184,7 +182,7 @@ abstract class WidgetBase extends HTMLElement {
 
   static get observedAttributes(): Array<string> {
     return [
-      Aria.Property.LABEL,
+      Aria.Property.LABEL, // 外部labelを使用する場合は使用しない
       Aria.State.DISABLED,
       Aria.State.HIDDEN,
       WidgetBase.DataAttr.SIZE,
@@ -192,22 +190,17 @@ abstract class WidgetBase extends HTMLElement {
     ];
   }
 
-
-
-
   connectedCallback(): void {
     if (this.isConnected !== true) {
       return;
     }
-    //this.#loadColorScheme();
-    this.#loadSize();
-    this.#loadDisabled();
-    this.#loadHidden();
-    this.#loadLabel();
-    this.#reflectRole();
-    this.#reflectDisabled();
-    this.#reflectHidden();
-    this.#reflectLabel();
+
+    this.#reflectToRole();
+
+    this.#setDisabledFromString(this.getAttribute(Aria.State.DISABLED) ?? "", AttrReflection.NONE);
+    this.#setHiddenFromString(this.getAttribute(Aria.State.HIDDEN) ?? "", AttrReflection.NONE);
+    this.#setLabel(this.getAttribute(Aria.Property.LABEL) ?? "", AttrReflection.NONE);
+    this.#setSize(this.getAttribute(WidgetBase.DataAttr.SIZE) ?? "", AttrReflection.NONE);
 
     //this.#connected = true;
   }
@@ -227,30 +220,19 @@ abstract class WidgetBase extends HTMLElement {
 
     switch (name) {
       case Aria.State.DISABLED:
-        const adjustedDisabled = (newValue === "true");
-        if (this.#disabled !== adjustedDisabled) {
-          this.#disabled = adjustedDisabled;
-        }
-        if ((this.#disabled !== adjustedDisabled) || (["true"/*, "false"*/].includes(newValue) !== true)) {
-          this.#reflectDisabled();
-        }
+        this.#setDisabledFromString(newValue, AttrReflection.NONE);
         break;
 
       case Aria.State.HIDDEN:
-        const adjustedHidden = (newValue === "true");
-        if (this.#hidden !== adjustedHidden) {
-          this.#hidden = adjustedHidden;
-        }
-        if ((this.#hidden !== adjustedHidden) || (["true"/*, "false"*/].includes(newValue) !== true)) {
-          this.#reflectHidden();
-        }
+        this.#setHiddenFromString(newValue, AttrReflection.NONE);
         break;
 
       case Aria.Property.LABEL:
-        if (this.#label !== newValue) {
-          this.#label = newValue;
-          this.#reflectLabel();
-        }
+        this.#setLabel(newValue, AttrReflection.NONE);
+        break;
+
+      case WidgetBase.DataAttr.SIZE:
+        this.#setSize(newValue, AttrReflection.NONE);
         break;
 
       default:
@@ -258,16 +240,56 @@ abstract class WidgetBase extends HTMLElement {
     }
   }
 
-  #loadDisabled(): void {
-    this.#disabled = (this.getAttribute(Aria.State.DISABLED) === "true");
+  #setDisabledFromString(value: string, ariaDisabledReflection: AttrReflection): void {
+    this.#setDisabled((value === "true"), ariaDisabledReflection);
   }
 
-  #loadHidden(): void {
-    this.#hidden = (this.getAttribute(Aria.State.HIDDEN) === "true");
+  #setDisabled(value: boolean, ariaDisabledReflection: AttrReflection): void {
+    const changed = (this.#disabled !== value);
+    if (changed === true) {
+      this.#disabled = value;
+      this.#reflectDisabledToContent();
+    }
+    if ((ariaDisabledReflection === AttrReflection.FORCE) || (ariaDisabledReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+      this.#reflectToAriaDisabled();
+    }
   }
 
-  #loadLabel(): void {
-    this.#label = this.getAttribute(Aria.Property.LABEL) ?? "";
+  #setHiddenFromString(value: string, ariaHiddenReflection: AttrReflection): void {
+    this.#setHidden((value === "true"), ariaHiddenReflection);
+  }
+
+  #setHidden(value: boolean, ariaHiddenReflection: AttrReflection): void {
+    const changed = (this.#hidden !== value);
+    if (changed === true) {
+      this.#hidden = value;
+    }
+    if ((ariaHiddenReflection === AttrReflection.FORCE) || (ariaHiddenReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+      this.#reflectToAriaHidden();
+    }
+  }
+
+  #setLabel(value: string, ariaLabelReflection: AttrReflection): void {
+    const changed = (this.#label !== value);
+    if (changed === true) {
+      this.#label = value;
+      this.#reflectLabelToContent();
+    }
+    if ((ariaLabelReflection === AttrReflection.FORCE) || (ariaLabelReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+      this.#reflectToAriaLabel();
+    }
+  }
+
+  #setSize(value: string, dataSizeReflection: AttrReflection): void {
+    const valueIsWidgetSize = Object.values(WidgetSize).includes(value as WidgetSize);
+    const adjustedSize = (valueIsWidgetSize === true) ? (value as WidgetSize) : WidgetSize.MEDIUM;
+    const changed = (this.#size !== adjustedSize);
+    if (changed === true) {
+      this.#size = adjustedSize;
+    }
+    if ((dataSizeReflection === AttrReflection.FORCE) || (dataSizeReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+      this.#reflectToDataSize();
+    }
   }
 
   // #loadColorScheme(): void {
@@ -280,44 +302,11 @@ abstract class WidgetBase extends HTMLElement {
   //   }
   // }
 
-  #loadSize(): void {
-    const loadedSize = (this.getAttribute(WidgetBase.DataAttr.SIZE) ?? "") as WidgetSize;
-    if (Object.values(WidgetSize).includes(loadedSize) === true) {
-      this.#size = loadedSize;
-    }
-    else {
-      this.#size = WidgetSize.MEDIUM;
-    }
-  }
-
-  #reflectRole(): void {
+  #reflectToRole(): void {
     this.setAttribute("role", this.#role);
   }
 
-  #reflectDisabled(): void {
-    this._reflectAriaAttr(Aria.State.DISABLED, ((this.#disabled === true) ? "true" : undefined));
-    if (this._eventTarget) {
-      if (this.#disabled === true) {
-        this._eventTarget.removeAttribute("tabindex");
-      }
-      else {
-        this._eventTarget.setAttribute("tabindex", "0");
-      }
-    }
-  }
-
-  #reflectHidden(): void {
-    this._reflectAriaAttr(Aria.State.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
-  }
-
-  #reflectLabel(): void {
-    this._reflectAriaAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
-    if (this._labelElement) {
-      this._labelElement.textContent = this.#label;
-    }
-  }
-
-  protected _reflectAriaAttr(name: Aria.Attr, value?: string): void {
+  protected _reflectToAttr(name: string, value?: string): void {
     console.log(`name:${name}, value:${value}`)
     this.#reflectingInProgress = name;
     if (value) {
@@ -329,8 +318,45 @@ abstract class WidgetBase extends HTMLElement {
     this.#reflectingInProgress = "";
   }
 
+  #reflectToAriaDisabled(): void {
+    this._reflectToAttr(Aria.State.DISABLED, ((this.#disabled === true) ? "true" : undefined));
+  }
+
+  #reflectToAriaHidden(): void {
+    this._reflectToAttr(Aria.State.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
+  }
+
+  #reflectToAriaLabel(): void {
+    this._reflectToAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
+  }
+
+  #reflectToDataSize(): void {
+    this._reflectToAttr(WidgetBase.DataAttr.SIZE, ((this.#size !== WidgetSize.MEDIUM) ? this.#size : undefined));
+  }
+
+  #reflectDisabledToContent(): void {
+    if (this._eventTarget) {
+      if (this.#disabled === true) {
+        this._eventTarget.removeAttribute("tabindex");
+      }
+      else {
+        this._eventTarget.setAttribute("tabindex", "0");
+      }
+    }
+  }
+
+  #reflectLabelToContent(): void {
+    if (this._labelElement) {
+      this._labelElement.textContent = this.#label;
+    }
+  }
 
 }
 Object.freeze(WidgetBase);
 
-export { type WidgetBaseInit, WidgetBase, WidgetDimension };
+export {
+  type WidgetBaseInit,
+  AttrReflection,
+  WidgetBase,
+  WidgetDimension,
+};

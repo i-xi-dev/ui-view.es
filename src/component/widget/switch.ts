@@ -1,5 +1,5 @@
 import { Aria } from "./aria";
-import { WidgetDimension } from "./widget_base";
+import { AttrReflection, WidgetDimension } from "./widget_base";
 import { WidgetEditable } from "./widget_editable";
 
 const _TrackLength = {
@@ -109,18 +109,21 @@ const _MAIN_TEMPLATE = `<div class="switch">
 </div>
 `;
 //TODO pointerTarget をひろげる
-//TODO hover で明るくする
-//TODO label位置 inline-start | inline-end
+//TODO hover でコントラスト上げ、activeで明るくする
+//TODO data-label-position = block-start | block-end | inline-start | inline-end
 //TODO clip-pathが writing-mode:vertical-* に非対応
 //TODO clip-pathが direction: rtl に非対応
-//TODO label slot before,after
-//TODO options
+//TODO data-options = []
+//TODO data-option-label-visible = true | false
+//TODO data-option-label-position = auto | label-inline-end
 //TODO disabledをグレーにする（特に白いところ）
 //TODO changeイベント発火
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
 //TODO attatchInternal safariが対応したら
 //TODO copy
+//TODO プロパティは無くていいのでは たとえばhiddenでなく必ずaria-hiddenを変更する
+
 
 const _STYLE = `:host {
   flex: none;
@@ -197,26 +200,23 @@ const _STYLE = `:host {
 
 *.switch-track-surface,
 *.switch-track-frame {
-  inset: 0;
   position: absolute;
 }
 *.switch-track-surface {
   background-color: var(--accent-color);
   border-radius: inherit;
+  inset: 1px;
   opacity: 0;
   transition: opacity var(--switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-track-surface {
-  opacity: 0.5;
+  opacity: 1;
 }
 *.switch-track-frame {
   border: 2px solid var(--accent-color);
   border-radius: inherit;
-  opacity: 0.5;
+  inset: 0;
   transition: opacity var(--switching-time);
-}
-:host(*[aria-checked="true"]) *.switch-track-frame {
-  opacity: 0;
 }
 *.switch-movablepart {
   block-size: var(--track-thickness);
@@ -238,7 +238,7 @@ const _STYLE = `:host {
 *.switch-thumb-extension {
   background-color: var(--main-color);
   margin: 0;
-  transition: margin 150ms;
+  transition: margin 200ms;
 }
 *.switch:hover *.switch-thumb-extension {
   margin: -2px;
@@ -255,10 +255,10 @@ const _STYLE = `:host {
   margin: 0;
   opacity: 0.5;
   position: absolute;
-  transition: margin 150ms;
+  transition: margin 200ms;
 }
 *.switch:hover *.switch-thumb-extension::before {
-  margin: 0;/*TODO */
+  margin: -4px;
 }
 :host(*[aria-disabled="true"]) *.switch:hover *.switch-thumb-extension::before,
 :host(*[aria-readonly="true"]) *.switch:hover *.switch-thumb-extension::before {
@@ -337,6 +337,7 @@ class Switch extends WidgetEditable {
         return;
       }
       this.checked = !(this.#checked);
+      this.#dispatchChangeEvent();
     }, { passive: true });
     (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
       if ((this.disabled === true) || (this.readOnly === true)) {
@@ -344,6 +345,7 @@ class Switch extends WidgetEditable {
       }
       if (["Enter", " "].includes(event.key) === true) {
         this.checked = !(this.#checked);
+        this.#dispatchChangeEvent();
       }
     }, { passive: true });
 
@@ -356,10 +358,7 @@ class Switch extends WidgetEditable {
 
   set checked(value: boolean) {
     const adjustedChecked = !!value;//(value === true);
-    if (this.#checked !== adjustedChecked) {
-      this.#checked = adjustedChecked;
-      this.#reflectChecked();
-    }
+    this.#setChecked(adjustedChecked, AttrReflection.FORCE);
   }
 
   get formValue(): string {
@@ -382,8 +381,8 @@ class Switch extends WidgetEditable {
     if (this.isConnected !== true) {
       return;
     }
-    this.#loadChecked();
-    this.#reflectChecked();
+
+    this.#setCheckedFromString(this.getAttribute(Aria.State.CHECKED) ?? "", AttrReflection.NONE);
 
     this._connected = true;
   }
@@ -405,13 +404,7 @@ class Switch extends WidgetEditable {
 
     switch (name) {
       case Aria.State.CHECKED:
-        const adjustedChecked = (newValue === "true");
-        if (this.#checked !== adjustedChecked) {
-          this.#checked = adjustedChecked;
-        }
-        if ((this.#checked !== adjustedChecked) || (["true", "false"].includes(newValue) !== true)) {
-          this.#reflectChecked();
-        }
+        this.#setCheckedFromString(newValue, AttrReflection.NONE);
         break;
 
       default:
@@ -419,12 +412,26 @@ class Switch extends WidgetEditable {
     }
   }
 
-  #loadChecked(): void {
-    this.#checked = (this.getAttribute(Aria.State.CHECKED) === "true");
+  #setCheckedFromString(value: string, ariaCheckedReflection: AttrReflection): void {
+    this.#setChecked((value === "true"), ariaCheckedReflection);
   }
 
-  #reflectChecked(): void {
-    this._reflectAriaAttr(Aria.State.CHECKED, ((this.#checked === true) ? "true" : "false"));
+  #setChecked(value: boolean, ariaCheckedReflection: AttrReflection): void {
+    const changed = (this.#checked !== value);
+    if (changed === true) {
+      this.#checked = value;
+      this.#reflectCheckedToContent();
+    }
+    if ((ariaCheckedReflection === AttrReflection.FORCE) || (ariaCheckedReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+      this.#reflectToAriaChecked();
+    }
+  }
+
+  #reflectToAriaChecked(): void {
+    this._reflectToAttr(Aria.State.CHECKED, ((this.#checked === true) ? "true" : "false"));
+  }
+
+  #reflectCheckedToContent(): void {
     this.#addRipple();
   }
 
@@ -439,6 +446,12 @@ class Switch extends WidgetEditable {
     globalThis.setTimeout(() => {
       ripple.remove();
     }, 1000);
+  }
+
+  #dispatchChangeEvent(): void {
+    this.dispatchEvent(new Event("change", {
+      bubbles: true,
+    }));
   }
 }
 Object.freeze(Switch);

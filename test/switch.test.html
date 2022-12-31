@@ -20,7 +20,7 @@ function setProp(name, value) {
   </head>
   <body style="background-color: silver; background-image: repeating-linear-gradient(45deg, #888 0, #aaa 16px)">
     <div>
-      <wc-switch id="test1"></wc-switch>
+      <wc-switch id="test1" onchange="console.log(event)"></wc-switch>
     </div>
     <div>
       <fieldset>
@@ -85,6 +85,18 @@ function setProp(name, value) {
         <legend>readOnly prop</legend>
         <input type="checkbox"/><button onclick="setProp('readOnly', this.previousElementSibling.checked)">set prop</button>
       </fieldset>
+      <fieldset>
+        <legend>data-size attr</legend>
+        <button onclick="removeAttr('data-size')">remove attr</button>
+        <select>
+          <option value=""></option>
+          <option value="x-small">x-small</option>
+          <option value="small">small</option>
+          <option value="medium">medium</option>
+          <option value="large">large</option>
+          <option value="x-large">x-large</option>
+        </select><button onclick="setAttr('data-size', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
     </div>
 
     <hr/>
@@ -116,6 +128,15 @@ function setProp(name, value) {
       <wc-switch aria-readonly="true"></wc-switch>
       <wc-switch aria-readonly="false"></wc-switch>
       <wc-switch aria-readonly="true" aria-checked="true" aria-label="ReadOnly"></wc-switch>
+    </div>
+    <div>
+      <div>data-size</div>
+      <wc-switch data-size=""></wc-switch>
+      <wc-switch data-size="x-small" aria-label="X-Small"></wc-switch>
+      <wc-switch data-size="small" aria-label="Small"></wc-switch>
+      <wc-switch data-size="medium" aria-label="Medium"></wc-switch>
+      <wc-switch data-size="large" aria-label="Large"></wc-switch>
+      <wc-switch data-size="x-large" aria-label="X-Large"></wc-switch>
     </div>
   </body>
 </html>

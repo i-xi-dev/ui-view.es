@@ -1,5 +1,5 @@
 import { Aria } from "./aria";
-import { type WidgetBaseInit, WidgetBase } from "./widget_base";
+import { type WidgetBaseInit, AttrReflection, WidgetBase } from "./widget_base";
 
 abstract class WidgetEditable extends WidgetBase {
   #readOnly: boolean;
@@ -16,10 +16,7 @@ abstract class WidgetEditable extends WidgetBase {
 
   set readOnly(value: boolean) {
     const adjustedReadOnly = !!value;//(value === true);
-    if (this.#readOnly !== adjustedReadOnly) {
-      this.#readOnly = adjustedReadOnly;
-      this.#reflectReadOnly();
-    }
+    this.#setReadOnly(adjustedReadOnly, AttrReflection.FORCE);
   }
 
   static override get observedAttributes(): Array<string> {
@@ -37,8 +34,8 @@ abstract class WidgetEditable extends WidgetBase {
     if (this.isConnected !== true) {
       return;
     }
-    this.#loadReadOnly();
-    this.#reflectReadOnly();
+
+    this.#setReadOnlyFromString(this.getAttribute(Aria.Property.READONLY) ?? "", AttrReflection.NONE);
 
     //this._connected = true;
   }
@@ -52,13 +49,7 @@ abstract class WidgetEditable extends WidgetBase {
 
     switch (name) {
       case Aria.Property.READONLY:
-        const adjustedReadOnly = (newValue === "true");
-        if (this.#readOnly !== adjustedReadOnly) {
-          this.#readOnly = adjustedReadOnly;
-        }
-        if ((this.#readOnly !== adjustedReadOnly) || (["true"/*, "false"*/].includes(newValue) !== true)) {
-          this.#reflectReadOnly();
-        }
+        this.#setReadOnlyFromString(newValue, AttrReflection.NONE);
         break;
 
       default:
@@ -66,12 +57,22 @@ abstract class WidgetEditable extends WidgetBase {
     }
   }
 
-  #loadReadOnly(): void {
-    this.#readOnly = (this.getAttribute(Aria.Property.READONLY) === "true");
+  #setReadOnlyFromString(value: string, ariaReadonlyReflection: AttrReflection): void {
+    this.#setReadOnly((value === "true"), ariaReadonlyReflection);
   }
 
-  #reflectReadOnly(): void {
-    this._reflectAriaAttr(Aria.Property.READONLY, ((this.#readOnly === true) ? "true" : undefined));
+  #setReadOnly(value: boolean, ariaReadonlyReflection: AttrReflection): void {
+    const changed = (this.#readOnly !== value);
+    if (changed === true) {
+      this.#readOnly = value;
+    }
+    if ((ariaReadonlyReflection === AttrReflection.FORCE) || (ariaReadonlyReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+      this.#reflectToAriaReadonly();
+    }
+  }
+
+  #reflectToAriaReadonly(): void {
+    this._reflectToAttr(Aria.Property.READONLY, ((this.#readOnly === true) ? "true" : undefined));
   }
 
 }
