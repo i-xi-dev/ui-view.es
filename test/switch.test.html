@@ -30,6 +30,10 @@ function setDataset(name, value) {
     </div>
     <div>
       <fieldset>
+        <legend>busy prop</legend>
+        <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
+      </fieldset>
+      <fieldset>
         <legend>aria-checked attr</legend>
         <button onclick="removeAttr('aria-checked')">remove attr</button>
         <select>
@@ -124,6 +128,12 @@ function setDataset(name, value) {
       <wc-switch aria-checked="true"></wc-switch>
       <wc-switch aria-checked="false"></wc-switch>
       <wc-switch aria-checked="mixed"></wc-switch>
+    </div>
+    <div>
+      <div>aria-busy</div>
+      <wc-switch aria-busy="true"></wc-switch>
+      <wc-switch aria-busy="false"></wc-switch>
+      <wc-switch aria-busy="true" aria-checked="true"></wc-switch>
     </div>
     <div>
       <div>aria-disabled</div>

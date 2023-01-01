@@ -6,6 +6,7 @@ namespace Aria {
   export type Role = typeof Role[keyof typeof Role];
 
   export const State = {
+    BUSY: "aria-busy",
     CHECKED: "aria-checked",
     DISABLED: "aria-disabled",
     HIDDEN: "aria-hidden",

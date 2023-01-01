@@ -114,7 +114,6 @@ const _MAIN_CONTENT_TEMPLATE = `
 //TODO data-options = []
 //TODO data-option-label-visible = true | false
 //TODO data-option-label-position = ...
-//TODO disabledをグレーにする（特に白いところ）
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
 //TODO attatchInternals safariが対応したら
@@ -130,9 +129,6 @@ const _STYLE = `:host {
   cursor: pointer;
   margin-inline: -8px;
 }
-:host(*[aria-disabled="true"]) *.switch-container *.widget-event-target {
-  cursor: default;
-}
 :host(*[aria-readonly="true"]) *.switch-container *.widget-event-target {
   cursor: default;
 }
@@ -147,10 +143,6 @@ const _STYLE = `:host {
   block-size: 100%;
   display: flex;
   flex-flow: row nowrap;
-}
-:host(*[aria-disabled="true"]) *.switch {
-  filter: grayscale(0.7);
-  opacity: 0.7;
 }
 *.switch-control {
   block-size: var(--track-thickness);
@@ -241,6 +233,7 @@ const _STYLE = `:host {
 *.widget-event-target:hover + *.switch *.switch-thumb-extension {
   margin: -2px;
 }
+:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension,
 :host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension,
 :host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension {
   margin: 0 !important;
@@ -258,6 +251,7 @@ const _STYLE = `:host {
 *.widget-event-target:hover + *.switch *.switch-thumb-extension::before {
   margin: -4px;
 }
+:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before,
 :host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before,
 :host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before {
   margin: 0 !important;
@@ -345,14 +339,14 @@ class Switch extends Input {
     main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
 
     this._eventTarget.addEventListener("click", () => {
-      if ((this.disabled === true) || (this.readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
       this.checked = !(this.#checked);
       this.#dispatchChangeEvent();
     }, { passive: true });
     (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
-      if ((this.disabled === true) || (this.readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
       if (["Enter", " "].includes(event.key) === true) {
@@ -374,7 +368,7 @@ class Switch extends Input {
   }
 
   get formValue(): string {
-    throw new Error("TODO");
+    throw new Error("TODO busyのときエラーにするか待たせるか");
   }
 
   static override get observedAttributes(): Array<string> {

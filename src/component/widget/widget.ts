@@ -50,9 +50,21 @@ const _STYLE = `:host {
   box-shadow: 0 0 0 2px var(--focus-color);
   outline: none;
 }
+:host(*[aria-busy="true"]) *.widget-container *.widget-event-target,
+:host(*[aria-busy="true"][aria-disabled="true"]) *.widget-container *.widget-event-target {
+  cursor: wait;
+}
+:host(*[aria-disabled="true"]) *.widget-container *.widget-event-target {
+  cursor: not-allowed;
+}
 *.widget,
 *.widget * {
   pointer-events: none;
+}
+:host(*[aria-busy="true"]) *.widget,
+:host(*[aria-disabled="true"]) *.widget {
+  filter: contrast(0.5) grayscale(1);
+  opacity: 0.6;
 }
 `;
 
@@ -96,8 +108,8 @@ abstract class Widget extends HTMLElement {
   readonly #role: string;
   readonly #root: ShadowRoot;
   #connected: boolean;
-  //#colorScheme: WidgetColorScheme;
   #size: WidgetSize;
+  #busy: boolean;
   #disabled: boolean; // Aria仕様では各サブクラスで定義されるが、disabledにならない物は実装予定がないのでここで定義する
   #hidden: boolean;
   #label: string;
@@ -133,8 +145,8 @@ abstract class Widget extends HTMLElement {
     this.#role = init.role;
     this.#root = this.attachShadow(_ShadowRootInit);
     this.#connected = false;
-    //this.#colorScheme = WidgetColorScheme.AUTO;
     this.#size = WidgetSize.MEDIUM;
+    this.#busy = false;
     this.#disabled = false;
     this.#hidden = false;
     this.#label = "";
@@ -170,6 +182,15 @@ abstract class Widget extends HTMLElement {
 
   protected get _size(): WidgetSize {
     return this.#size;
+  }
+
+  get busy(): boolean {
+    return this.#busy;
+  }
+
+  set busy(value: boolean) {
+    const adjustedBusy = !!value;//(value === true);
+    this.#setBusy(adjustedBusy, Widget._ReflectionsOnPropChanged);
   }
 
   get disabled(): boolean {
@@ -214,10 +235,10 @@ abstract class Widget extends HTMLElement {
   static get observedAttributes(): Array<string> {
     return [
       Aria.Property.LABEL, // 外部labelを使用する場合は使用しない
+      Aria.State.BUSY,
       Aria.State.DISABLED,
       Aria.State.HIDDEN,
       Widget.DataAttr.SIZE,
-      //TODO "aria-busy",
     ];
   }
 
@@ -228,6 +249,7 @@ abstract class Widget extends HTMLElement {
 
     this.#reflectToRole();
 
+    this.#setBusyFromString(this.getAttribute(Aria.State.BUSY) ?? "", Widget._ReflectionsOnConnected);
     this.#setDisabledFromString(this.getAttribute(Aria.State.DISABLED) ?? "", Widget._ReflectionsOnConnected);
     this.#setHiddenFromString(this.getAttribute(Aria.State.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
     this.#setLabel(this.getAttribute(Aria.Property.LABEL) ?? "", Widget._ReflectionsOnConnected);
@@ -254,6 +276,10 @@ abstract class Widget extends HTMLElement {
         this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
+      case Aria.State.BUSY:
+        this.#setBusyFromString(newValue, Widget._ReflectionsOnAttrChanged);
+        break;
+
       case Aria.State.DISABLED:
         this.#setDisabledFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
@@ -268,6 +294,23 @@ abstract class Widget extends HTMLElement {
 
       default:
         break;
+    }
+  }
+
+  #setBusyFromString(value: string, reflections: Reflections): void {
+    this.#setBusy((value === "true"), reflections);
+  }
+
+  #setBusy(value: boolean, reflections: Reflections): void {
+    const changed = (this.#busy !== value);
+    if (changed === true) {
+      this.#busy = value;
+    }
+    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
+      this.#reflectBusyToContent();
+    }
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
+      this.#reflectToAriaBusy();
     }
   }
 
@@ -350,9 +393,20 @@ abstract class Widget extends HTMLElement {
     this.#reflectingInProgress = "";
   }
 
+  #reflectBusyToContent(): void {
+    if (this._eventTarget) {
+      if ((this.#busy === true) || (this.#disabled === true)) {
+        this._eventTarget.removeAttribute("tabindex");
+      }
+      else {
+        this._eventTarget.setAttribute("tabindex", "0");
+      }
+    }
+  }
+
   #reflectDisabledToContent(): void {
     if (this._eventTarget) {
-      if (this.#disabled === true) {
+      if ((this.#busy === true) || (this.#disabled === true)) {
         this._eventTarget.removeAttribute("tabindex");
       }
       else {
@@ -365,6 +419,10 @@ abstract class Widget extends HTMLElement {
     if (this._labelElement) {
       this._labelElement.textContent = this.#label;
     }
+  }
+
+  #reflectToAriaBusy(): void {
+    this._reflectToAttr(Aria.State.BUSY, ((this.#busy === true) ? "true" : undefined));
   }
 
   #reflectToAriaDisabled(): void {
