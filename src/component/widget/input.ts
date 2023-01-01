@@ -1,5 +1,5 @@
 import { Aria } from "./aria";
-import { type WidgetInit, Reflections, Widget } from "./widget";
+import { Widget } from "./widget";
 
 const _STYLE = `
 `;
@@ -7,7 +7,7 @@ const _STYLE = `
 abstract class Input extends Widget {
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
 
-  constructor(init: WidgetInit) {
+  constructor(init: Widget.Init) {
     super(init);
 
     this.#readOnly = false;
@@ -60,11 +60,11 @@ abstract class Input extends Widget {
     }
   }
 
-  #setReadOnlyFromString(value: string, reflections: Reflections): void {
+  #setReadOnlyFromString(value: string, reflections: Widget.Reflections): void {
     this.#setReadOnly((value === "true"), reflections);
   }
 
-  #setReadOnly(value: boolean, reflections: Reflections): void {
+  #setReadOnly(value: boolean, reflections: Widget.Reflections): void {
     const changed = (this.#readOnly !== value);
     if (changed === true) {
       this.#readOnly = value;

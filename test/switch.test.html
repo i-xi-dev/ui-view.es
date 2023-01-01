@@ -25,100 +25,102 @@ function setDataset(name, value) {
     </script>
   </head>
   <body style="background-color: silver; background-image: repeating-linear-gradient(45deg, #888 0, #aaa 16px)">
-    <div>
-      <wc-switch id="test1" onchange="console.log(event)"></wc-switch>
-    </div>
-    <div>
-      <fieldset>
-        <legend>busy prop</legend>
-        <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
-      </fieldset>
-      <fieldset>
-        <legend>aria-checked attr</legend>
-        <button onclick="removeAttr('aria-checked')">remove attr</button>
-        <select>
-          <option value=""></option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-          <option value="mixed">mixed</option>
-        </select><button onclick="setAttr('aria-checked', this.previousElementSibling.value)">set attr</button>
-      </fieldset>
-      <fieldset>
-        <legend>checked prop</legend>
-        <input type="checkbox"/><button onclick="setProp('checked', this.previousElementSibling.checked)">set prop</button>
-      </fieldset>
-      <fieldset>
-        <legend>aria-disabled attr</legend>
-        <button onclick="removeAttr('aria-disabled')">remove attr</button>
-        <select>
-          <option value=""></option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select><button onclick="setAttr('aria-disabled', this.previousElementSibling.value)">set attr</button>
-      </fieldset>
-      <fieldset>
-        <legend>disabled prop</legend>
-        <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
-      </fieldset>
-      <fieldset>
-        <legend>aria-hidden attr</legend>
-        <button onclick="removeAttr('aria-hidden')">remove attr</button>
-        <select>
-          <option value=""></option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select><button onclick="setAttr('aria-hidden', this.previousElementSibling.value)">set attr</button>
-      </fieldset>
-      <fieldset>
-        <legend>hidden prop</legend>
-        <input type="checkbox"/><button onclick="setProp('hidden', this.previousElementSibling.checked)">set prop</button>
-      </fieldset>
-      <fieldset>
-        <legend>aria-label attr</legend>
-        <button onclick="removeAttr('aria-label')">remove attr</button>
-        <input type="text"/><button onclick="setAttr('aria-label', this.previousElementSibling.value)">set attr</button>
-      </fieldset>
-      <fieldset>
-        <legend>label prop</legend>
-        <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
-      </fieldset>
-      <fieldset>
-        <legend>aria-readonly attr</legend>
-        <button onclick="removeAttr('aria-readonly')">remove attr</button>
-        <select>
-          <option value=""></option>
-          <option value="true">true</option>
-          <option value="false">false</option>
-        </select><button onclick="setAttr('aria-readonly', this.previousElementSibling.value)">set attr</button>
-      </fieldset>
-      <fieldset>
-        <legend>readOnly prop</legend>
-        <input type="checkbox"/><button onclick="setProp('readOnly', this.previousElementSibling.checked)">set prop</button>
-      </fieldset>
-      <fieldset>
-        <legend>data-size attr</legend>
-        <button onclick="removeAttr('data-size')">remove attr</button>
-        <select>
-          <option value=""></option>
-          <option value="x-small">x-small</option>
-          <option value="small">small</option>
-          <option value="medium">medium</option>
-          <option value="large">large</option>
-          <option value="x-large">x-large</option>
-        </select><button onclick="setAttr('data-size', this.previousElementSibling.value)">set attr</button>
-      </fieldset>
-      <fieldset>
-        <legend>dataset.size</legend>
-        <button onclick="removeDataset('size')">remove entry</button>
-        <select>
-          <option value=""></option>
-          <option value="x-small">x-small</option>
-          <option value="small">small</option>
-          <option value="medium">medium</option>
-          <option value="large">large</option>
-          <option value="x-large">x-large</option>
-        </select><button onclick="setDataset('size', this.previousElementSibling.value)">set entry</button>
-      </fieldset>
+    <div style="display:grid;grid-template-columns:1fr 1fr;">
+      <div>
+        <wc-switch id="test1" onchange="console.log(event)"></wc-switch>
+      </div>
+      <div style="overflow-y:scroll;height:60vh;">
+        <fieldset>
+          <legend>busy prop</legend>
+          <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>aria-checked attr</legend>
+          <button onclick="removeAttr('aria-checked')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+            <option value="mixed">mixed</option>
+          </select><button onclick="setAttr('aria-checked', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>checked prop</legend>
+          <input type="checkbox"/><button onclick="setProp('checked', this.previousElementSibling.checked)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>aria-disabled attr</legend>
+          <button onclick="removeAttr('aria-disabled')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select><button onclick="setAttr('aria-disabled', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>disabled prop</legend>
+          <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>aria-hidden attr</legend>
+          <button onclick="removeAttr('aria-hidden')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select><button onclick="setAttr('aria-hidden', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>hidden prop</legend>
+          <input type="checkbox"/><button onclick="setProp('hidden', this.previousElementSibling.checked)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>aria-label attr</legend>
+          <button onclick="removeAttr('aria-label')">remove attr</button>
+          <input type="text"/><button onclick="setAttr('aria-label', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>label prop</legend>
+          <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>aria-readonly attr</legend>
+          <button onclick="removeAttr('aria-readonly')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select><button onclick="setAttr('aria-readonly', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>readOnly prop</legend>
+          <input type="checkbox"/><button onclick="setProp('readOnly', this.previousElementSibling.checked)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>data-size attr</legend>
+          <button onclick="removeAttr('data-size')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="x-small">x-small</option>
+            <option value="small">small</option>
+            <option value="medium">medium</option>
+            <option value="large">large</option>
+            <option value="x-large">x-large</option>
+          </select><button onclick="setAttr('data-size', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>dataset.size</legend>
+          <button onclick="removeDataset('size')">remove entry</button>
+          <select>
+            <option value=""></option>
+            <option value="x-small">x-small</option>
+            <option value="small">small</option>
+            <option value="medium">medium</option>
+            <option value="large">large</option>
+            <option value="x-large">x-large</option>
+          </select><button onclick="setDataset('size', this.previousElementSibling.value)">set entry</button>
+        </fieldset>
+      </div>
     </div>
 
     <hr/>
@@ -165,6 +167,34 @@ function setDataset(name, value) {
       <wc-switch data-size="medium" aria-label="Medium"></wc-switch>
       <wc-switch data-size="large" aria-label="Large"></wc-switch>
       <wc-switch data-size="x-large" aria-label="X-Large"></wc-switch>
+    </div>
+    <div>
+      <div>data-value-label-visible</div>
+      <wc-switch>
+        <data slot="datalist" value="0">OFF</data>
+        <data slot="datalist" value="1">ON</data>
+      </wc-switch>
+      <wc-switch data-value-label-visible="true">
+        <data slot="datalist" value="0">OFF</data>
+        <data slot="datalist" value="1">ON</data>
+      </wc-switch>
+      <wc-switch data-value-label-visible="true">
+      </wc-switch>
+    </div>
+    <div>
+      <div>data-value-label-position</div>
+      <wc-switch data-value-label-position="before">
+        <data slot="datalist" value="0">OFF</data>
+        <data slot="datalist" value="1">ON</data>
+      </wc-switch>
+      <wc-switch data-value-label-position="before" data-value-label-visible="true">
+        <data slot="datalist" value="0">OFF</data>
+        <data slot="datalist" value="1">ON</data>
+      </wc-switch>
+      <wc-switch data-value-label-position="after" data-value-label-visible="true">
+        <data slot="datalist" value="0">OFF</data>
+        <data slot="datalist" value="1">ON</data>
+      </wc-switch>
     </div>
   </body>
 </html>

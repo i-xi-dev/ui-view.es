@@ -1,21 +1,29 @@
 import { Aria } from "./aria";
-import { Reflections, Widget, WidgetDimension } from "./widget";
+import { Widget } from "./widget";
 import { Input } from "./input";
 
+function _computeTrackLength(size: Widget.Size): number {
+  return (Widget.Dimension[size] * 1.25);
+}
+
 const _TrackLength = {
-  XS: (WidgetDimension.X_SMALL * 1.25),
-  S: (WidgetDimension.SMALL * 1.25),
-  M: (WidgetDimension.MEDIUM * 1.25),
-  L: (WidgetDimension.LARGE * 1.25),
-  XL: (WidgetDimension.X_LARGE * 1.25),
+  XS: _computeTrackLength(Widget.Size.X_SMALL),
+  S: _computeTrackLength(Widget.Size.SMALL),
+  M: _computeTrackLength(Widget.Size.MEDIUM),
+  L: _computeTrackLength(Widget.Size.LARGE),
+  XL: _computeTrackLength(Widget.Size.X_LARGE),
 };
 
+function _computeTrackThickness(size: Widget.Size): number {
+  return (Widget.Dimension[size] / 2);
+}
+
 const _TrackThickness = {
-  XS: (WidgetDimension.X_SMALL / 2),
-  S: (WidgetDimension.SMALL / 2),
-  M: (WidgetDimension.MEDIUM / 2),
-  L: (WidgetDimension.LARGE / 2),
-  XL: (WidgetDimension.X_LARGE / 2),
+  XS: _computeTrackThickness(Widget.Size.X_SMALL),
+  S: _computeTrackThickness(Widget.Size.SMALL),
+  M: _computeTrackThickness(Widget.Size.MEDIUM),
+  L: _computeTrackThickness(Widget.Size.LARGE),
+  XL: _computeTrackThickness(Widget.Size.X_LARGE),
 };
 
 const _TRACK_OFFSET_INLINE_START = 4;
@@ -105,20 +113,20 @@ const _MAIN_CONTENT_TEMPLATE = `
       <div class="switch-thumb"></div>
     </div>
   </div>
-  <div class="switch-label"></div>
+  <output class="switch-value-label"></output>
 `;
 //TODO hover でコントラスト上げ、activeで明るくする
-//TODO data-label-position = block-start | block-end | inline-start | inline-end
-//TODO clip-pathが writing-mode:vertical-* に非対応
-//TODO clip-pathが direction: rtl に非対応
-//TODO data-options = []
-//TODO data-option-label-visible = true | false
-//TODO data-option-label-position = ...
+//TODO clip-pathが writing-mode:vertical-* に非対応（どうしようもないような？writing-modeは横固定にして、data-direction=ltr|rtl|ttb|bttとかで設定するようにするしか？）
+//TODO clip-pathが direction: rtl に非対応（:dirがfirefoxのみなので、対応するならwritin-modeと同様）（方向をどう検知するかは置いといて、clip-pathを生成するよりtranformで座標返還したほうが早いのでは。SVGにしてしまえばclip-path生成の100行くらい削れる）
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
 //TODO attatchInternals safariが対応したら
-//TODO copy
-
+//TODO copy 値？値ラベル？両方？ テキスト？JSON？HTML？
+//TODO paste
+//XXX ラベルは廃止する （外付けにする）
+//XXX slot名は無くしたいが、他では名前使うかも。そうなると名前は統一したいのでとりあえず名前ありにしておく
+//TODO 値ラベルの幅は長いほうに合わせて固定にしたい（幅算出してwidth指定するか、不可視にして同じ位置に重ねて表示を切り替えるか。いちいちリフローがかかるので後者が良い？リフローなしでOffscreenCanvasで文字幅だけなら取れるがdataに子要素があったり装飾されてたりしたら正確に取れない。重ねる方法だと:emptyで空かどうか判別できなくなるので空状態かどうかを保持するプロパティが余計に必要）
+//TODO 値ラベルを可視に設定しても値ラベルが両方空の場合は、column-gapを0にしたい
 
 const _STYLE = `:host {
   flex: none;
@@ -141,8 +149,15 @@ const _STYLE = `:host {
   --track-thickness: calc(var(--widget-size) / 2);
   align-items: center;
   block-size: 100%;
+  column-gap: 0;
   display: flex;
   flex-flow: row nowrap;
+}
+:host(*[data-value-label-visible="true"]) *.switch {
+  column-gap: 6px;
+}
+:host(*[data-value-label-position="before"]) *.switch {
+  flex-flow: row-reverse nowrap;
 }
 *.switch-control {
   block-size: var(--track-thickness);
@@ -287,30 +302,44 @@ const _STYLE = `:host {
 }
 
 
-*.switch-label {
+*.switch-value-label {
+  display: none;
   user-select: none;
   white-space: pre;
 }
-*.switch-label:not(*:empty) {
-  margin-inline-start: 6px;
+:host(*[data-value-label-visible="true"]) *.switch-value-label {
+  display: block;
 }
-`;
+*.switch-value-label:not(*:empty) {
 
-type SwitchOption = {
-  label?: string,
-  value: string,
-};
+  text-align: start;
+}
+:host(*[data-value-label-position="before"]) *.switch-value-label:not(*:empty) {
+
+  text-align: end;
+}
+`;//TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
 
 const OFF = 0;
 const ON = 1;
+
+const DataAttr = {
+  VALUE_LABEL_VISIBLE: "data-value-label-visible",
+  VALUE_LABEL_POSITION: "data-value-label-position",
+} as const;
 
 class Switch extends Input {
   static readonly #className: string = "switch";
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
 
-  #options: [SwitchOption, SwitchOption];
   #checked: boolean;
+  #valueLabelElement: Element;
+
+  static readonly #defaultDataList: [Widget.DataListItem, Widget.DataListItem] = [
+    { value: "0", label: "" },
+    { value: "1", label: "" },
+  ];
 
   static {
     Switch.#styleSheet.replaceSync(_STYLE);
@@ -323,10 +352,6 @@ class Switch extends Input {
       className: Switch.#className,
     });
 
-    this.#options = [
-      { value: "0" },
-      { value: "1" },
-    ];
     this.#checked = false;
 
     this._appendStyleSheet(Switch.#styleSheet);
@@ -337,6 +362,7 @@ class Switch extends Input {
       Switch.#template.innerHTML = _MAIN_CONTENT_TEMPLATE;
     }
     main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
+    this.#valueLabelElement = main.querySelector("*.switch-value-label") as Element;
 
     this._eventTarget.addEventListener("click", () => {
       if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
@@ -355,7 +381,6 @@ class Switch extends Input {
       }
     }, { passive: true });
 
-    this._labelElement = main.querySelector("*.switch-label") as Element;
   }
 
   get checked(): boolean {
@@ -367,8 +392,26 @@ class Switch extends Input {
     this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
   }
 
-  get formValue(): string {
-    throw new Error("TODO busyのときエラーにするか待たせるか");
+  get #value(): Widget.DataListItem {
+    const assignedDataListItems = this._assignedDataListItems;
+    console.log(assignedDataListItems)
+    if (this.#checked === true) {
+      if (assignedDataListItems.length >= 2) {
+        return Object.assign({}, assignedDataListItems[ON]);
+      }
+      else {
+        return Object.assign({}, Switch.#defaultDataList[ON]);
+      }
+    }
+    else {
+      if (assignedDataListItems.length >= 1) {
+        return Object.assign({}, assignedDataListItems[OFF]);
+      }
+      else {
+        return Object.assign({}, Switch.#defaultDataList[OFF]);
+      }
+    }
+    //TODO busyのときエラーにするか待たせるか
   }
 
   static override get observedAttributes(): Array<string> {
@@ -376,7 +419,8 @@ class Switch extends Input {
       Input.observedAttributes,
       [
         Aria.State.CHECKED,
-        //TODO "data-options",
+        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
+        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
       ],
     ].flat();
   }
@@ -418,11 +462,11 @@ class Switch extends Input {
     }
   }
 
-  #setCheckedFromString(value: string, reflections: Reflections): void {
+  #setCheckedFromString(value: string, reflections: Widget.Reflections): void {
     this.#setChecked((value === "true"), reflections);
   }
 
-  #setChecked(value: boolean, reflections: Reflections): void {
+  #setChecked(value: boolean, reflections: Widget.Reflections): void {
     const changed = (this.#checked !== value);
     if (changed === true) {
       this.#checked = value;
@@ -441,6 +485,7 @@ class Switch extends Input {
 
   #reflectCheckedToContent(): void {
     this.#addRipple();
+    this.#valueLabelElement.textContent = this.#value.label;
   }
 
   #addRipple(): void {
@@ -461,6 +506,8 @@ class Switch extends Input {
       bubbles: true,
     }));
   }
+}
+namespace Switch {
 }
 Object.freeze(Switch);
 
