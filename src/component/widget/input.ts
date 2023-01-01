@@ -1,10 +1,13 @@
 import { Aria } from "./aria";
-import { type WidgetBaseInit, AttrReflection, WidgetBase } from "./widget_base";
+import { type WidgetInit, Reflections, Widget } from "./widget";
 
-abstract class WidgetEditable extends WidgetBase {
-  #readOnly: boolean;
+const _STYLE = `
+`;
 
-  constructor(init: WidgetBaseInit) {
+abstract class Input extends Widget {
+  #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
+
+  constructor(init: WidgetInit) {
     super(init);
 
     this.#readOnly = false;
@@ -16,12 +19,12 @@ abstract class WidgetEditable extends WidgetBase {
 
   set readOnly(value: boolean) {
     const adjustedReadOnly = !!value;//(value === true);
-    this.#setReadOnly(adjustedReadOnly, AttrReflection.FORCE);
+    this.#setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
   }
 
   static override get observedAttributes(): Array<string> {
     return [
-      WidgetBase.observedAttributes,
+      Widget.observedAttributes,
       [
         Aria.Property.READONLY,
       ],
@@ -35,7 +38,7 @@ abstract class WidgetEditable extends WidgetBase {
       return;
     }
 
-    this.#setReadOnlyFromString(this.getAttribute(Aria.Property.READONLY) ?? "", AttrReflection.NONE);
+    this.#setReadOnlyFromString(this.getAttribute(Aria.Property.READONLY) ?? "", Widget._ReflectionsOnConnected);
 
     //this._connected = true;
   }
@@ -49,7 +52,7 @@ abstract class WidgetEditable extends WidgetBase {
 
     switch (name) {
       case Aria.Property.READONLY:
-        this.#setReadOnlyFromString(newValue, AttrReflection.NONE);
+        this.#setReadOnlyFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       default:
@@ -57,16 +60,18 @@ abstract class WidgetEditable extends WidgetBase {
     }
   }
 
-  #setReadOnlyFromString(value: string, ariaReadonlyReflection: AttrReflection): void {
-    this.#setReadOnly((value === "true"), ariaReadonlyReflection);
+  #setReadOnlyFromString(value: string, reflections: Reflections): void {
+    this.#setReadOnly((value === "true"), reflections);
   }
 
-  #setReadOnly(value: boolean, ariaReadonlyReflection: AttrReflection): void {
+  #setReadOnly(value: boolean, reflections: Reflections): void {
     const changed = (this.#readOnly !== value);
     if (changed === true) {
       this.#readOnly = value;
     }
-    if ((ariaReadonlyReflection === AttrReflection.FORCE) || (ariaReadonlyReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+    // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
+    // }
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaReadonly();
     }
   }
@@ -76,6 +81,6 @@ abstract class WidgetEditable extends WidgetBase {
   }
 
 }
-Object.freeze(WidgetEditable);
+Object.freeze(Input);
 
-export { WidgetEditable };
+export { Input };

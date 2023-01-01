@@ -8,18 +8,13 @@ const WidgetDimension = {
   X_LARGE: 44,
 } as const;
 
-const _BASE_STYLE = `:host {
+const _STYLE = `:host {
   display: block;
 }
-/*
-:host(*[aria-disabled="true"]) {
-  pointer-events: none;
-}
-*/
 :host(*[aria-hidden="true"]) {
   display: none;
 }
-*.widget {
+*.widget-container {
   --accent-color: #136ed2;
   --border-width: 2px;
   --focus-color: orange;
@@ -33,22 +28,31 @@ const _BASE_STYLE = `:host {
   justify-content: stretch;
   min-block-size: var(--widget-size);
   min-inline-size: var(--widget-size);
+  position: relative;
 }
-:host(*[data-size="x-small"]) *.widget {
+:host(*[data-size="x-small"]) *.widget-container {
   --widget-size: ${ WidgetDimension.X_SMALL }px;
 }
-:host(*[data-size="small"]) *.widget {
+:host(*[data-size="small"]) *.widget-container {
   --widget-size: ${ WidgetDimension.SMALL }px;
 }
-:host(*[data-size="large"]) *.widget {
+:host(*[data-size="large"]) *.widget-container {
   --widget-size: ${ WidgetDimension.LARGE }px;
 }
-:host(*[data-size="x-large"]) *.widget {
+:host(*[data-size="x-large"]) *.widget-container {
   --widget-size: ${ WidgetDimension.X_LARGE }px;
 }
-*.widget *:focus {
+*.widget-event-target {
+  inset: 0;
+  position: absolute;
+}
+*.widget-event-target:focus {
   box-shadow: 0 0 0 2px var(--focus-color);
   outline: none;
+}
+*.widget,
+*.widget * {
+  pointer-events: none;
 }
 `;
 
@@ -73,30 +77,33 @@ const WidgetSize = {
 } as const;
 type WidgetSize = typeof WidgetSize[keyof typeof WidgetSize];
 
-type WidgetBaseInit = {
+type WidgetInit = {
   role: Aria.Role,
-  style: string,
+  className: string,
 };
 
-const AttrReflection = {
-  FORCE: Symbol(),
-  IF_PROPERTY_CHANGED: Symbol(),
-  NONE: Symbol(),
-} as const;
-type AttrReflection = typeof AttrReflection[keyof typeof AttrReflection];
+type ContentReflection = "always" | "if-needed";
+type AttrReflection = "always" | "if-needed" | "never";
 
-abstract class WidgetBase extends HTMLElement {
-  #role: string;
-  #root: ShadowRoot;
+type Reflections = {
+  content: ContentReflection,
+  attr: AttrReflection,
+};
+
+abstract class Widget extends HTMLElement {
+  static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
+
+  readonly #role: string;
+  readonly #root: ShadowRoot;
   #connected: boolean;
   //#colorScheme: WidgetColorScheme;
   #size: WidgetSize;
-  #disabled: boolean;
+  #disabled: boolean; // Aria仕様では各サブクラスで定義されるが、disabledにならない物は実装予定がないのでここで定義する
   #hidden: boolean;
   #label: string;
   #reflectingInProgress: string;
-  #main: Element;
-  protected _eventTarget: Element | null;
+  readonly #main: Element;
+  readonly #eventTarget: Element;
   protected _labelElement: Element | null;
 
   static DataAttr = Object.freeze({
@@ -104,7 +111,24 @@ abstract class WidgetBase extends HTMLElement {
     SIZE: "data-size",
   });
 
-  constructor(init: WidgetBaseInit) {
+  protected static _ReflectionsOnConnected: Reflections = {
+    content: "always",
+    attr: "never",
+  };
+  protected static _ReflectionsOnAttrChanged: Reflections = {
+    content: "if-needed",
+    attr: "never",
+  };
+  protected static _ReflectionsOnPropChanged: Reflections = {
+    content: "if-needed",
+    attr: "if-needed",
+  };
+
+  static {
+    Widget.#styleSheet.replaceSync(_STYLE);
+  }
+
+  constructor(init: WidgetInit) {
     super();
     this.#role = init.role;
     this.#root = this.attachShadow(_ShadowRootInit);
@@ -116,17 +140,20 @@ abstract class WidgetBase extends HTMLElement {
     this.#label = "";
     this.#reflectingInProgress = "";
 
-    //TODO adoptedStyleSheets
-    const style = document.createElement("style");
-    style.textContent = _BASE_STYLE + "\u000a" + init.style;
-
-    this.#main = document.createElement("div");
-    this.#main.classList.add("widget")
-
-    this._eventTarget = null;
+    this._appendStyleSheet(Widget.#styleSheet);
+    const container = this.ownerDocument.createElement("div");
+    container.classList.add("widget-container");
+    container.classList.add(`${ init.className }-container`);
+    this.#eventTarget = this.ownerDocument.createElement("div");
+    this.#eventTarget.classList.add("widget-event-target");
+    container.append(this.#eventTarget);
+    this.#main = this.ownerDocument.createElement("div");
+    this.#main.classList.add("widget");
+    this.#main.classList.add(init.className);
+    container.append(this.#main);
     this._labelElement = null;
 
-    this.#root.append(style, this.#main);
+    this.#root.append(container);
   }
 
   protected get _root(): ShadowRoot {
@@ -151,7 +178,7 @@ abstract class WidgetBase extends HTMLElement {
 
   set disabled(value: boolean) {
     const adjustedDisabled = !!value;//(value === true);
-    this.#setDisabled(adjustedDisabled, AttrReflection.FORCE);
+    this.#setDisabled(adjustedDisabled, Widget._ReflectionsOnPropChanged);
   }
 
   override get hidden(): boolean {
@@ -160,7 +187,7 @@ abstract class WidgetBase extends HTMLElement {
 
   override set hidden(value: boolean) {
     const adjustedHidden = !!value;//(value === true);
-    this.#setHidden(adjustedHidden, AttrReflection.FORCE);
+    this.#setHidden(adjustedHidden, Widget._ReflectionsOnPropChanged);
   }
 
   get label(): string {
@@ -169,7 +196,7 @@ abstract class WidgetBase extends HTMLElement {
 
   set label(value: string) {
     const adjustedLabel = (typeof value === "string") ? value : "";
-    this.#setLabel(adjustedLabel, AttrReflection.FORCE);
+    this.#setLabel(adjustedLabel, Widget._ReflectionsOnPropChanged);
   }
 
   protected get _reflectingInProgress(): string {
@@ -180,12 +207,16 @@ abstract class WidgetBase extends HTMLElement {
     return this.#main;
   }
 
+  protected get _eventTarget(): Element {
+    return this.#eventTarget;
+  }
+
   static get observedAttributes(): Array<string> {
     return [
       Aria.Property.LABEL, // 外部labelを使用する場合は使用しない
       Aria.State.DISABLED,
       Aria.State.HIDDEN,
-      WidgetBase.DataAttr.SIZE,
+      Widget.DataAttr.SIZE,
       //TODO "aria-busy",
     ];
   }
@@ -197,10 +228,10 @@ abstract class WidgetBase extends HTMLElement {
 
     this.#reflectToRole();
 
-    this.#setDisabledFromString(this.getAttribute(Aria.State.DISABLED) ?? "", AttrReflection.NONE);
-    this.#setHiddenFromString(this.getAttribute(Aria.State.HIDDEN) ?? "", AttrReflection.NONE);
-    this.#setLabel(this.getAttribute(Aria.Property.LABEL) ?? "", AttrReflection.NONE);
-    this.#setSize(this.getAttribute(WidgetBase.DataAttr.SIZE) ?? "", AttrReflection.NONE);
+    this.#setDisabledFromString(this.getAttribute(Aria.State.DISABLED) ?? "", Widget._ReflectionsOnConnected);
+    this.#setHiddenFromString(this.getAttribute(Aria.State.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
+    this.#setLabel(this.getAttribute(Aria.Property.LABEL) ?? "", Widget._ReflectionsOnConnected);
+    this.#setSize(this.getAttribute(Widget.DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
     //this.#connected = true;
   }
@@ -219,20 +250,20 @@ abstract class WidgetBase extends HTMLElement {
     }
 
     switch (name) {
+      case Aria.Property.LABEL:
+        this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
+        break;
+
       case Aria.State.DISABLED:
-        this.#setDisabledFromString(newValue, AttrReflection.NONE);
+        this.#setDisabledFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       case Aria.State.HIDDEN:
-        this.#setHiddenFromString(newValue, AttrReflection.NONE);
+        this.#setHiddenFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.Property.LABEL:
-        this.#setLabel(newValue, AttrReflection.NONE);
-        break;
-
-      case WidgetBase.DataAttr.SIZE:
-        this.#setSize(newValue, AttrReflection.NONE);
+      case Widget.DataAttr.SIZE:
+        this.#setSize(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       default:
@@ -240,74 +271,75 @@ abstract class WidgetBase extends HTMLElement {
     }
   }
 
-  #setDisabledFromString(value: string, ariaDisabledReflection: AttrReflection): void {
-    this.#setDisabled((value === "true"), ariaDisabledReflection);
+  #setDisabledFromString(value: string, reflections: Reflections): void {
+    this.#setDisabled((value === "true"), reflections);
   }
 
-  #setDisabled(value: boolean, ariaDisabledReflection: AttrReflection): void {
+  #setDisabled(value: boolean, reflections: Reflections): void {
     const changed = (this.#disabled !== value);
     if (changed === true) {
       this.#disabled = value;
+    }
+    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
       this.#reflectDisabledToContent();
     }
-    if ((ariaDisabledReflection === AttrReflection.FORCE) || (ariaDisabledReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaDisabled();
     }
   }
 
-  #setHiddenFromString(value: string, ariaHiddenReflection: AttrReflection): void {
-    this.#setHidden((value === "true"), ariaHiddenReflection);
+  #setHiddenFromString(value: string, reflections: Reflections): void {
+    this.#setHidden((value === "true"), reflections);
   }
 
-  #setHidden(value: boolean, ariaHiddenReflection: AttrReflection): void {
+  #setHidden(value: boolean, reflections: Reflections): void {
     const changed = (this.#hidden !== value);
     if (changed === true) {
       this.#hidden = value;
     }
-    if ((ariaHiddenReflection === AttrReflection.FORCE) || (ariaHiddenReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+    // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
+    // }
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaHidden();
     }
   }
 
-  #setLabel(value: string, ariaLabelReflection: AttrReflection): void {
+  #setLabel(value: string, reflections: Reflections): void {
     const changed = (this.#label !== value);
     if (changed === true) {
       this.#label = value;
+    }
+    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
       this.#reflectLabelToContent();
     }
-    if ((ariaLabelReflection === AttrReflection.FORCE) || (ariaLabelReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaLabel();
     }
   }
 
-  #setSize(value: string, dataSizeReflection: AttrReflection): void {
+  #setSize(value: string, reflections: Reflections): void {
     const valueIsWidgetSize = Object.values(WidgetSize).includes(value as WidgetSize);
     const adjustedSize = (valueIsWidgetSize === true) ? (value as WidgetSize) : WidgetSize.MEDIUM;
     const changed = (this.#size !== adjustedSize);
     if (changed === true) {
       this.#size = adjustedSize;
     }
-    if ((dataSizeReflection === AttrReflection.FORCE) || (dataSizeReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+    // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
+    // }
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToDataSize();
     }
   }
 
-  // #loadColorScheme(): void {
-  //   const loadedColor = (this.getAttribute(WidgetBase.DataAttr.COLOR_SCHEME) ?? "") as WidgetColorScheme;
-  //   if (Object.values(WidgetColorScheme).includes(loadedColor) === true) {
-  //     this.#colorScheme = loadedColor;
-  //   }
-  //   else {
-  //     this.#colorScheme = WidgetColorScheme.AUTO;
-  //   }
-  // }
+  protected _appendStyleSheet(sheet: CSSStyleSheet): void {
+    this.#root.adoptedStyleSheets.push(sheet);
+  }
 
   #reflectToRole(): void {
     this.setAttribute("role", this.#role);
   }
 
   protected _reflectToAttr(name: string, value?: string): void {
-    console.log(`name:${name}, value:${value}`)
     this.#reflectingInProgress = name;
     if (value) {
       this.setAttribute(name, value);
@@ -316,22 +348,6 @@ abstract class WidgetBase extends HTMLElement {
       this.removeAttribute(name);
     }
     this.#reflectingInProgress = "";
-  }
-
-  #reflectToAriaDisabled(): void {
-    this._reflectToAttr(Aria.State.DISABLED, ((this.#disabled === true) ? "true" : undefined));
-  }
-
-  #reflectToAriaHidden(): void {
-    this._reflectToAttr(Aria.State.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
-  }
-
-  #reflectToAriaLabel(): void {
-    this._reflectToAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
-  }
-
-  #reflectToDataSize(): void {
-    this._reflectToAttr(WidgetBase.DataAttr.SIZE, ((this.#size !== WidgetSize.MEDIUM) ? this.#size : undefined));
   }
 
   #reflectDisabledToContent(): void {
@@ -351,12 +367,28 @@ abstract class WidgetBase extends HTMLElement {
     }
   }
 
+  #reflectToAriaDisabled(): void {
+    this._reflectToAttr(Aria.State.DISABLED, ((this.#disabled === true) ? "true" : undefined));
+  }
+
+  #reflectToAriaHidden(): void {
+    this._reflectToAttr(Aria.State.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
+  }
+
+  #reflectToAriaLabel(): void {
+    this._reflectToAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
+  }
+
+  #reflectToDataSize(): void {
+    this._reflectToAttr(Widget.DataAttr.SIZE, ((this.#size !== WidgetSize.MEDIUM) ? this.#size : undefined));
+  }
+
 }
-Object.freeze(WidgetBase);
+Object.freeze(Widget);
 
 export {
-  type WidgetBaseInit,
-  AttrReflection,
-  WidgetBase,
+  type WidgetInit,
+  Reflections,
+  Widget,
   WidgetDimension,
 };

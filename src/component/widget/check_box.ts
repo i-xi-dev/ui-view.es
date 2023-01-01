@@ -1,7 +1,7 @@
 
-import { WidgetEditable } from "./widget_editable";
+import { Input } from "./input";
 
-class CheckBox extends WidgetEditable {
+class CheckBox extends Input {
 }
 Object.freeze(CheckBox);
 

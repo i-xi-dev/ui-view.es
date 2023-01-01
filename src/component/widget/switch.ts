@@ -1,6 +1,6 @@
 import { Aria } from "./aria";
-import { AttrReflection, WidgetDimension } from "./widget_base";
-import { WidgetEditable } from "./widget_editable";
+import { Reflections, Widget, WidgetDimension } from "./widget";
+import { Input } from "./input";
 
 const _TrackLength = {
   XS: (WidgetDimension.X_SMALL * 1.25),
@@ -94,7 +94,7 @@ const _ClipPathEnd = {
   XL: `${ _ClipPathTrack.XL } ${ _ClipPathThumbEnd.XL }`,
 };
 
-const _MAIN_TEMPLATE = `<div class="switch">
+const _MAIN_CONTENT_TEMPLATE = `
   <div class="switch-control">
     <div class="switch-track">
       <div class="switch-track-surface"></div>
@@ -106,30 +106,36 @@ const _MAIN_TEMPLATE = `<div class="switch">
     </div>
   </div>
   <div class="switch-label"></div>
-</div>
 `;
-//TODO pointerTarget をひろげる
 //TODO hover でコントラスト上げ、activeで明るくする
 //TODO data-label-position = block-start | block-end | inline-start | inline-end
 //TODO clip-pathが writing-mode:vertical-* に非対応
 //TODO clip-pathが direction: rtl に非対応
 //TODO data-options = []
 //TODO data-option-label-visible = true | false
-//TODO data-option-label-position = auto | label-inline-end
+//TODO data-option-label-position = ...
 //TODO disabledをグレーにする（特に白いところ）
-//TODO changeイベント発火
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
-//TODO attatchInternal safariが対応したら
+//TODO attatchInternals safariが対応したら
 //TODO copy
-//TODO プロパティは無くていいのでは たとえばhiddenでなく必ずaria-hiddenを変更する
 
 
 const _STYLE = `:host {
   flex: none;
   inline-size: max-content;
 }
-
+*.switch-container *.widget-event-target {
+  border-radius: 4px;
+  cursor: pointer;
+  margin-inline: -8px;
+}
+:host(*[aria-disabled="true"]) *.switch-container *.widget-event-target {
+  cursor: default;
+}
+:host(*[aria-readonly="true"]) *.switch-container *.widget-event-target {
+  cursor: default;
+}
 
 
 *.switch {
@@ -139,20 +145,12 @@ const _STYLE = `:host {
   --track-thickness: calc(var(--widget-size) / 2);
   align-items: center;
   block-size: 100%;
-  cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
 }
 :host(*[aria-disabled="true"]) *.switch {
-  cursor: default;
   filter: grayscale(0.7);
   opacity: 0.7;
-}
-:host(*[aria-readonly="true"]) *.switch {
-  cursor: default;
-}
-*.switch * {
-  pointer-events: none;
 }
 *.switch-control {
   block-size: var(--track-thickness);
@@ -240,11 +238,11 @@ const _STYLE = `:host {
   margin: 0;
   transition: margin 200ms;
 }
-*.switch:hover *.switch-thumb-extension {
+*.widget-event-target:hover + *.switch *.switch-thumb-extension {
   margin: -2px;
 }
-:host(*[aria-disabled="true"]) *.switch:hover *.switch-thumb-extension,
-:host(*[aria-readonly="true"]) *.switch:hover *.switch-thumb-extension {
+:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension,
+:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension {
   margin: 0 !important;
 }
 *.switch-thumb-extension::before {
@@ -257,11 +255,11 @@ const _STYLE = `:host {
   position: absolute;
   transition: margin 200ms;
 }
-*.switch:hover *.switch-thumb-extension::before {
+*.widget-event-target:hover + *.switch *.switch-thumb-extension::before {
   margin: -4px;
 }
-:host(*[aria-disabled="true"]) *.switch:hover *.switch-thumb-extension::before,
-:host(*[aria-readonly="true"]) *.switch:hover *.switch-thumb-extension::before {
+:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before,
+:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before {
   margin: 0 !important;
 }
 
@@ -312,14 +310,23 @@ type SwitchOption = {
 const OFF = 0;
 const ON = 1;
 
-class Switch extends WidgetEditable {
+class Switch extends Input {
+  static readonly #className: string = "switch";
+  static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
+  static #template: HTMLTemplateElement | null;
+
   #options: [SwitchOption, SwitchOption];
   #checked: boolean;
+
+  static {
+    Switch.#styleSheet.replaceSync(_STYLE);
+    Switch.#template = null;
+  }
 
   constructor() {
     super({
       role: Aria.Role.SWITCH,
-      style: _STYLE,
+      className: Switch.#className,
     });
 
     this.#options = [
@@ -328,10 +335,15 @@ class Switch extends WidgetEditable {
     ];
     this.#checked = false;
 
-    const main = this._main;
-    main.innerHTML = _MAIN_TEMPLATE;
+    this._appendStyleSheet(Switch.#styleSheet);
 
-    this._eventTarget = main.querySelector("*.switch") as Element;
+    const main = this._main;
+    if ((Switch.#template && (Switch.#template.ownerDocument === this.ownerDocument)) !== true) {
+      Switch.#template = this.ownerDocument.createElement("template");
+      Switch.#template.innerHTML = _MAIN_CONTENT_TEMPLATE;
+    }
+    main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
+
     this._eventTarget.addEventListener("click", () => {
       if ((this.disabled === true) || (this.readOnly === true)) {
         return;
@@ -358,7 +370,7 @@ class Switch extends WidgetEditable {
 
   set checked(value: boolean) {
     const adjustedChecked = !!value;//(value === true);
-    this.#setChecked(adjustedChecked, AttrReflection.FORCE);
+    this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
   }
 
   get formValue(): string {
@@ -367,7 +379,7 @@ class Switch extends WidgetEditable {
 
   static override get observedAttributes(): Array<string> {
     return [
-      WidgetEditable.observedAttributes,
+      Input.observedAttributes,
       [
         Aria.State.CHECKED,
         //TODO "data-options",
@@ -382,7 +394,7 @@ class Switch extends WidgetEditable {
       return;
     }
 
-    this.#setCheckedFromString(this.getAttribute(Aria.State.CHECKED) ?? "", AttrReflection.NONE);
+    this.#setCheckedFromString(this.getAttribute(Aria.State.CHECKED) ?? "", Widget._ReflectionsOnConnected);
 
     this._connected = true;
   }
@@ -404,7 +416,7 @@ class Switch extends WidgetEditable {
 
     switch (name) {
       case Aria.State.CHECKED:
-        this.#setCheckedFromString(newValue, AttrReflection.NONE);
+        this.#setCheckedFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       default:
@@ -412,17 +424,19 @@ class Switch extends WidgetEditable {
     }
   }
 
-  #setCheckedFromString(value: string, ariaCheckedReflection: AttrReflection): void {
-    this.#setChecked((value === "true"), ariaCheckedReflection);
+  #setCheckedFromString(value: string, reflections: Reflections): void {
+    this.#setChecked((value === "true"), reflections);
   }
 
-  #setChecked(value: boolean, ariaCheckedReflection: AttrReflection): void {
+  #setChecked(value: boolean, reflections: Reflections): void {
     const changed = (this.#checked !== value);
     if (changed === true) {
       this.#checked = value;
+    }
+    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
       this.#reflectCheckedToContent();
     }
-    if ((ariaCheckedReflection === AttrReflection.FORCE) || (ariaCheckedReflection === AttrReflection.IF_PROPERTY_CHANGED && changed === true)) {
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaChecked();
     }
   }

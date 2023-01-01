@@ -16,6 +16,12 @@ function setAttr(name, value) {
 function setProp(name, value) {
   document.getElementById("test1")[name] = value;
 }
+function removeDataset(name) {
+  delete document.getElementById("test1").dataset[name];
+}
+function setDataset(name, value) {
+  document.getElementById("test1").dataset[name] = value;
+}
     </script>
   </head>
   <body style="background-color: silver; background-image: repeating-linear-gradient(45deg, #888 0, #aaa 16px)">
@@ -96,6 +102,18 @@ function setProp(name, value) {
           <option value="large">large</option>
           <option value="x-large">x-large</option>
         </select><button onclick="setAttr('data-size', this.previousElementSibling.value)">set attr</button>
+      </fieldset>
+      <fieldset>
+        <legend>dataset.size</legend>
+        <button onclick="removeDataset('size')">remove entry</button>
+        <select>
+          <option value=""></option>
+          <option value="x-small">x-small</option>
+          <option value="small">small</option>
+          <option value="medium">medium</option>
+          <option value="large">large</option>
+          <option value="x-large">x-large</option>
+        </select><button onclick="setDataset('size', this.previousElementSibling.value)">set entry</button>
       </fieldset>
     </div>
 
