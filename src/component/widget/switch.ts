@@ -94,7 +94,6 @@ const _STYLE = `
   border: 2px solid var(--widget-accent-color);
   border-radius: inherit;
   inset: 0;
-  transition: opacity var(--switch-switching-time);
 }
 
 *.switch-thumb-shadow,
@@ -188,7 +187,6 @@ const _STYLE = `
   position: absolute;
 }
 
-
 *.switch-value-label {
   display: none;
   user-select: none;
@@ -198,11 +196,9 @@ const _STYLE = `
   display: block;
 }
 *.switch-value-label:not(*:empty) {
-
   text-align: start;
 }
 :host(*[data-value-label-position="before"]) *.switch-value-label:not(*:empty) {
-
   text-align: end;
 }
 `;//TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible

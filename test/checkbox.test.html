@@ -3,26 +3,10 @@
   <head>
     <title>checkbox</title>
     <link rel="stylesheet" href="./test.css"/>
+    <script src="./test.js"></script>
     <script type="module">
 import { CheckBox } from "../dist/index.js";
 customElements.define("wc-checkbox", CheckBox);
-    </script>
-    <script>
-function removeAttr(name) {
-  document.getElementById("test1").removeAttribute(name);
-}
-function setAttr(name, value) {
-  document.getElementById("test1").setAttribute(name, value);
-}
-function setProp(name, value) {
-  document.getElementById("test1")[name] = value;
-}
-function removeDataset(name) {
-  delete document.getElementById("test1").dataset[name];
-}
-function setDataset(name, value) {
-  document.getElementById("test1").dataset[name] = value;
-}
     </script>
   </head>
   <body>
