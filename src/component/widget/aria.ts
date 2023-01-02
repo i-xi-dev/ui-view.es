@@ -1,5 +1,6 @@
 namespace Aria {
   export const Role = {
+    CHECKBOX: "checkbox",
     SWITCH: "switch",
   } as const;
 

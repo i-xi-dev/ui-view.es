@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>checkbox</title>
+    <link rel="stylesheet" href="./test.css"/>
+    <script type="module">
+import { CheckBox } from "../dist/index.js";
+customElements.define("wc-checkbox", CheckBox);
+    </script>
+    <script>
+function removeAttr(name) {
+  document.getElementById("test1").removeAttribute(name);
+}
+function setAttr(name, value) {
+  document.getElementById("test1").setAttribute(name, value);
+}
+function setProp(name, value) {
+  document.getElementById("test1")[name] = value;
+}
+function removeDataset(name) {
+  delete document.getElementById("test1").dataset[name];
+}
+function setDataset(name, value) {
+  document.getElementById("test1").dataset[name] = value;
+}
+    </script>
+  </head>
+  <body>
+    <div class="test-dynamic">
+    </div>
+
+    <div class="test-static">
+      <div>
+        <div>aria-checked</div>
+        <wc-checkbox aria-checked="true"></wc-checkbox>
+        <wc-checkbox aria-checked="false"></wc-checkbox>
+        <wc-checkbox aria-checked="mixed"></wc-checkbox>
+      </div>
+  </body>
+</html>

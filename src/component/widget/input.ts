@@ -91,6 +91,14 @@ abstract class Input extends Widget {
     this._reflectToAttr(Aria.Property.READONLY, ((this.#readOnly === true) ? "true" : undefined));
   }
 
+  protected _dispatchChangeEvent(): void {
+    this.dispatchEvent(new Event("change", {
+      bubbles: true,
+    }));
+  }
+}
+namespace Input {
+  
 }
 Object.freeze(Input);
 

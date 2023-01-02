@@ -29,6 +29,8 @@ const _MAIN_CONTENT_TEMPLATE = `
 //TODO 値ラベルの幅は長いほうに合わせて固定にしたい（幅算出してwidth指定するか、不可視にして同じ位置に重ねて表示を切り替えるか。いちいちリフローがかかるので後者が良い？リフローなしでOffscreenCanvasで文字幅だけなら取れるがdataに子要素があったり装飾されてたりしたら正確に取れない。重ねる方法だと:emptyで空かどうか判別できなくなるので空状態かどうかを保持するプロパティが余計に必要）
 //TODO 値ラベルを可視に設定しても値ラベルが両方空の場合は、column-gapを0にしたい
 //TODO shadowなしで、白枠常時表示てもいいかも
+//XXX itemのdisabledは無視する
+//TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
 
 const _STYLE = `
 :host {
@@ -205,9 +207,6 @@ const _STYLE = `
 }
 `;//TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
 
-const OFF = 0;
-const ON = 1;
-
 const DataAttr = {
   VALUE_LABEL_VISIBLE: "data-value-label-visible",
   VALUE_LABEL_POSITION: "data-value-label-position",
@@ -218,13 +217,13 @@ class Switch extends Input {
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
 
-  #checked: boolean;
-  #valueLabelElement: Element;
-
   static readonly #defaultDataList: [Widget.DataListItem, Widget.DataListItem] = [
     { value: "0", label: "" },
     { value: "1", label: "" },
   ];
+
+  #checked: boolean;
+  #valueLabelElement: Element;
 
   static {
     Switch.#styleSheet.replaceSync(_STYLE);
@@ -254,7 +253,7 @@ class Switch extends Input {
         return;
       }
       this.checked = !(this.#checked);
-      this.#dispatchChangeEvent();
+      this._dispatchChangeEvent();
     }, { passive: true });
     (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
       if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
@@ -262,10 +261,9 @@ class Switch extends Input {
       }
       if (["Enter", " "].includes(event.key) === true) {
         this.checked = !(this.#checked);
-        this.#dispatchChangeEvent();
+        this._dispatchChangeEvent();
       }
     }, { passive: true });
-
   }
 
   get checked(): boolean {
@@ -277,26 +275,16 @@ class Switch extends Input {
     this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
   }
 
-  //TODO itemのdisabledは無視するで良いか
-  //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
   get #value(): Widget.DataListItem {
-    const assignedDataListItems = this._assignedDataListItems;
-    console.log(assignedDataListItems)
+    const dataListItems = this._getDataListItems({
+      defaultItems: Switch.#defaultDataList,
+      mergeDefaultItems: true,
+    }) as [Widget.DataListItem, Widget.DataListItem];
     if (this.#checked === true) {
-      if (assignedDataListItems.length >= 2) {
-        return Object.assign({}, assignedDataListItems[ON]);
-      }
-      else {
-        return Object.assign({}, Switch.#defaultDataList[ON]);
-      }
+      return dataListItems[Switch.OptionIndex.ON];
     }
     else {
-      if (assignedDataListItems.length >= 1) {
-        return Object.assign({}, assignedDataListItems[OFF]);
-      }
-      else {
-        return Object.assign({}, Switch.#defaultDataList[OFF]);
-      }
+      return dataListItems[Switch.OptionIndex.OFF];
     }
     //TODO busyのときエラーにするか待たせるか
   }
@@ -387,14 +375,12 @@ class Switch extends Input {
       ripple.remove();
     }, 1000);
   }
-
-  #dispatchChangeEvent(): void {
-    this.dispatchEvent(new Event("change", {
-      bubbles: true,
-    }));
-  }
 }
 namespace Switch {
+  export const OptionIndex = {
+    OFF: 0,
+    ON: 1,
+  } as const;
 }
 Object.freeze(Switch);
 

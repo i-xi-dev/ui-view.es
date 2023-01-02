@@ -231,19 +231,18 @@ abstract class Widget extends HTMLElement {
     return this.#eventTarget;
   }
 
-  #getAssignedOptionElements(): Array<HTMLOptionElement> {
+  get #assignedOptionElements(): Array<HTMLOptionElement> {
     //TODO slotchangeがおきるまで要素への参照キャッシュする
     const assignedElements = this.#dataListSlot.assignedElements();
-    console.log(assignedElements)
     return assignedElements.filter((element) => {
       return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
     }) as Array<HTMLOptionElement>;
     //XXX 値重複は警告する？
   }
 
-  protected get _assignedDataListItems(): Array<Widget.DataListItem> {
-    // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
-    return this.#getAssignedOptionElements().map((element) => {
+  // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
+  protected _getDataListItems(options?: Widget.DataListItemMergeOptions): Array<Widget.DataListItem> {
+    const items: Array<Widget.DataListItem> = this.#assignedOptionElements.map((element) => {
       return {
         value: element.value,
         label: element.label,
@@ -251,6 +250,15 @@ abstract class Widget extends HTMLElement {
         selected: element.selected,
       };
     });
+    
+    if (options?.defaultItems && Array.isArray(options.defaultItems) === true) {
+      if ((items.length < options.defaultItems.length) && (options?.mergeDefaultItems === true)) {
+        for (let i = items.length; i < options.defaultItems.length; i++) {
+          items.push(options.defaultItems[i] as Widget.DataListItem);
+        }
+      }
+    }
+    return items;
   }
 
   static get observedAttributes(): Array<string> {
@@ -466,7 +474,12 @@ namespace Widget {
     disabled?: boolean,
     selected?: boolean,
   };
-    
+
+  export type DataListItemMergeOptions = {
+    defaultItems?: Array<Widget.DataListItem>,
+    mergeDefaultItems?: boolean,
+  };
+
   export const Dimension = _WidgetDimension;
 
   export type Init = {

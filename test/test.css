@@ -1,0 +1,21 @@
+body {
+  background-color: #ccc;
+}
+
+*.test-dynamic,
+*.test-static {
+  border: thin solid #888;
+  border-radius: 8px;
+  padding-block: 8px;
+  padding-inline: 16px;
+}
+
+* + *.test-dynamic,
+* + *.test-static {
+  margin-block-start: 16px;
+}
+
+*.test-dynamic {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}

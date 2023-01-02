@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>test</title>
+    <title>switch</title>
+    <link rel="stylesheet" href="./test.css"/>
     <script type="module">
 import { Switch } from "../dist/index.js";
 customElements.define("wc-switch", Switch);
@@ -24,8 +25,8 @@ function setDataset(name, value) {
 }
     </script>
   </head>
-  <body style="background-color: silver; background-image: repeating-linear-gradient(45deg, #888 0, #aaa 16px)">
-    <div style="display:grid;grid-template-columns:1fr 1fr;">
+  <body>
+    <div class="test-dynamic">
       <div>
         <wc-switch id="test1" onchange="console.log(event)"></wc-switch>
       </div>
@@ -123,82 +124,82 @@ function setDataset(name, value) {
       </div>
     </div>
 
-    <hr/>
-
-    <div>
-      <div>aria-checked</div>
-      <wc-switch aria-checked="true"></wc-switch>
-      <wc-switch aria-checked="false"></wc-switch>
-      <wc-switch aria-checked="mixed"></wc-switch>
-    </div>
-    <div>
-      <div>aria-busy</div>
-      <wc-switch aria-busy="true"></wc-switch>
-      <wc-switch aria-busy="false"></wc-switch>
-      <wc-switch aria-busy="true" aria-checked="true"></wc-switch>
-    </div>
-    <div>
-      <div>aria-disabled</div>
-      <wc-switch aria-disabled="true"></wc-switch>
-      <wc-switch aria-disabled="false"></wc-switch>
-      <wc-switch aria-disabled="true" aria-checked="true" aria-label="Disabled"></wc-switch>
-    </div>
-    <div>
-      <div>aria-hidden</div>
-      <wc-switch aria-hidden="true" aria-label="Hidden"></wc-switch>
-      <wc-switch aria-hidden="false" aria-label="Not-Hidden"></wc-switch>
-    </div>
-    <div>
-      <div>aria-label</div>
-      <wc-switch aria-label=""></wc-switch>
-      <wc-switch aria-label="Label"></wc-switch>
-    </div>
-    <div>
-      <div>aria-readonly</div>
-      <wc-switch aria-readonly="true"></wc-switch>
-      <wc-switch aria-readonly="false"></wc-switch>
-      <wc-switch aria-readonly="true" aria-checked="true" aria-label="ReadOnly"></wc-switch>
-    </div>
-    <div>
-      <div>data-size</div>
-      <wc-switch data-size=""></wc-switch>
-      <wc-switch data-size="x-small" aria-label="X-Small"></wc-switch>
-      <wc-switch data-size="small" aria-label="Small"></wc-switch>
-      <wc-switch data-size="medium" aria-label="Medium"></wc-switch>
-      <wc-switch data-size="large" aria-label="Large"></wc-switch>
-      <wc-switch data-size="x-large" aria-label="X-Large"></wc-switch>
-    </div>
-    <div>
-      <div>data-value-label-visible</div>
-      <wc-switch>
-        <option slot="datalist" value="0">OFF</option>
-        <option slot="datalist" value="1">ON</option>
-      </wc-switch>
-      <wc-switch data-value-label-visible="true">
-        <option slot="datalist" value="0">OFF</option>
-        <option slot="datalist" value="1">ON</option>
-      </wc-switch>
-      <wc-switch data-value-label-visible="true">
-      </wc-switch>
-      <wc-switch data-value-label-visible="true">
-        <option slot="datalist" value="0" label="">OFF</option>
-        <option slot="datalist" value="1" label="">ON</option>
-      </wc-switch>
-    </div>
-    <div>
-      <div>data-value-label-position</div>
-      <wc-switch data-value-label-position="before">
-        <option slot="datalist" value="0">OFF</data>
-        <option slot="datalist" value="1">ON</option>
-      </wc-switch>
-      <wc-switch data-value-label-position="before" data-value-label-visible="true">
-        <option slot="datalist" value="0">OFF</option>
-        <option slot="datalist" value="1">ON</option>
-      </wc-switch>
-      <wc-switch data-value-label-position="after" data-value-label-visible="true">
-        <option slot="datalist" value="0">OFF</option>
-        <option slot="datalist" value="1">ON</option>
-      </wc-switch>
+    <div class="test-static">
+      <div>
+        <div>aria-checked</div>
+        <wc-switch aria-checked="true"></wc-switch>
+        <wc-switch aria-checked="false"></wc-switch>
+        <wc-switch aria-checked="mixed"></wc-switch>
+      </div>
+      <div>
+        <div>aria-busy</div>
+        <wc-switch aria-busy="true"></wc-switch>
+        <wc-switch aria-busy="false"></wc-switch>
+        <wc-switch aria-busy="true" aria-checked="true"></wc-switch>
+      </div>
+      <div>
+        <div>aria-disabled</div>
+        <wc-switch aria-disabled="true"></wc-switch>
+        <wc-switch aria-disabled="false"></wc-switch>
+        <wc-switch aria-disabled="true" aria-checked="true" aria-label="Disabled"></wc-switch>
+      </div>
+      <div>
+        <div>aria-hidden</div>
+        <wc-switch aria-hidden="true" aria-label="Hidden"></wc-switch>
+        <wc-switch aria-hidden="false" aria-label="Not-Hidden"></wc-switch>
+      </div>
+      <div>
+        <div>aria-label</div>
+        <wc-switch aria-label=""></wc-switch>
+        <wc-switch aria-label="Label"></wc-switch>
+      </div>
+      <div>
+        <div>aria-readonly</div>
+        <wc-switch aria-readonly="true"></wc-switch>
+        <wc-switch aria-readonly="false"></wc-switch>
+        <wc-switch aria-readonly="true" aria-checked="true" aria-label="ReadOnly"></wc-switch>
+      </div>
+      <div>
+        <div>data-size</div>
+        <wc-switch data-size=""></wc-switch>
+        <wc-switch data-size="x-small" aria-label="X-Small"></wc-switch>
+        <wc-switch data-size="small" aria-label="Small"></wc-switch>
+        <wc-switch data-size="medium" aria-label="Medium"></wc-switch>
+        <wc-switch data-size="large" aria-label="Large"></wc-switch>
+        <wc-switch data-size="x-large" aria-label="X-Large"></wc-switch>
+      </div>
+      <div>
+        <div>data-value-label-visible</div>
+        <wc-switch>
+          <option slot="datalist" value="0">OFF</option>
+          <option slot="datalist" value="1">ON</option>
+        </wc-switch>
+        <wc-switch data-value-label-visible="true">
+          <option slot="datalist" value="0">OFF</option>
+          <option slot="datalist" value="1">ON</option>
+        </wc-switch>
+        <wc-switch data-value-label-visible="true">
+        </wc-switch>
+        <wc-switch data-value-label-visible="true">
+          <option slot="datalist" value="0" label="">OFF</option>
+          <option slot="datalist" value="1" label="">ON</option>
+        </wc-switch>
+      </div>
+      <div>
+        <div>data-value-label-position</div>
+        <wc-switch data-value-label-position="before">
+          <option slot="datalist" value="0">OFF</data>
+          <option slot="datalist" value="1">ON</option>
+        </wc-switch>
+        <wc-switch data-value-label-position="before" data-value-label-visible="true">
+          <option slot="datalist" value="0">OFF</option>
+          <option slot="datalist" value="1">ON</option>
+        </wc-switch>
+        <wc-switch data-value-label-position="after" data-value-label-visible="true">
+          <option slot="datalist" value="0">OFF</option>
+          <option slot="datalist" value="1">ON</option>
+        </wc-switch>
+      </div>
     </div>
   </body>
 </html>
