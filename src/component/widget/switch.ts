@@ -2,122 +2,23 @@ import { Aria } from "./aria";
 import { Widget } from "./widget";
 import { Input } from "./input";
 
-function _computeTrackLength(size: Widget.Size): number {
-  return (Widget.Dimension[size] * 1.25);
-}
-
-const _TrackLength = {
-  XS: _computeTrackLength(Widget.Size.X_SMALL),
-  S: _computeTrackLength(Widget.Size.SMALL),
-  M: _computeTrackLength(Widget.Size.MEDIUM),
-  L: _computeTrackLength(Widget.Size.LARGE),
-  XL: _computeTrackLength(Widget.Size.X_LARGE),
-};
-
-function _computeTrackThickness(size: Widget.Size): number {
-  return (Widget.Dimension[size] / 2);
-}
-
-const _TrackThickness = {
-  XS: _computeTrackThickness(Widget.Size.X_SMALL),
-  S: _computeTrackThickness(Widget.Size.SMALL),
-  M: _computeTrackThickness(Widget.Size.MEDIUM),
-  L: _computeTrackThickness(Widget.Size.LARGE),
-  XL: _computeTrackThickness(Widget.Size.X_LARGE),
-};
-
 const _TRACK_OFFSET_INLINE_START = 4;
 
-const _TrackThicknessHalf = {
-  XS: (_TrackThickness.XS / 2),
-  S: (_TrackThickness.S / 2),
-  M: (_TrackThickness.M / 2),
-  L: (_TrackThickness.L / 2),
-  XL: (_TrackThickness.XL / 2),
-};
-
-const _THUMB_RADIUS_EXTENTION = _TRACK_OFFSET_INLINE_START + 2;
-
-const _ThumbShadowRadius = {
-  XS: (_TrackThicknessHalf.XS + _THUMB_RADIUS_EXTENTION),
-  S: (_TrackThicknessHalf.S + _THUMB_RADIUS_EXTENTION),
-  M: (_TrackThicknessHalf.M + _THUMB_RADIUS_EXTENTION),
-  L: (_TrackThicknessHalf.L + _THUMB_RADIUS_EXTENTION),
-  XL: (_TrackThicknessHalf.XL + _THUMB_RADIUS_EXTENTION),
-};
-
-const _ThumbCxStart = {
-  XS: _TrackThicknessHalf.XS,
-  S: _TrackThicknessHalf.S,
-  M: _TrackThicknessHalf.M,
-  L: _TrackThicknessHalf.L,
-  XL: _TrackThicknessHalf.XL,
-};
-
-const _ClipPathThumbStart = {
-  XS: `M ${ _ThumbCxStart.XS } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.XS } ${ _ThumbShadowRadius.XS } -90 1 0 ${ _ThumbCxStart.XS } ${ _TrackThickness.XS + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.XS } ${ _ThumbShadowRadius.XS } -90 1 0 ${ _ThumbCxStart.XS } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  S: `M ${ _ThumbCxStart.S } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.S } ${ _ThumbShadowRadius.S } -90 1 0 ${ _ThumbCxStart.S } ${ _TrackThickness.S + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.S } ${ _ThumbShadowRadius.S } -90 1 0 ${ _ThumbCxStart.S } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  M: `M ${ _ThumbCxStart.M } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.M } ${ _ThumbShadowRadius.M } -90 1 0 ${ _ThumbCxStart.M } ${ _TrackThickness.M + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.M } ${ _ThumbShadowRadius.M } -90 1 0 ${ _ThumbCxStart.M } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  L: `M ${ _ThumbCxStart.L } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.L } ${ _ThumbShadowRadius.L } -90 1 0 ${ _ThumbCxStart.L } ${ _TrackThickness.L + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.L } ${ _ThumbShadowRadius.L } -90 1 0 ${ _ThumbCxStart.L } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  XL: `M ${ _ThumbCxStart.XL } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.XL } ${ _ThumbShadowRadius.XL } -90 1 0 ${ _ThumbCxStart.XL } ${ _TrackThickness.XL + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.XL } ${ _ThumbShadowRadius.XL } -90 1 0 ${ _ThumbCxStart.XL } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-};
-
-const _ThumbCxEnd = {
-  XS: (_TrackLength.XS - _TrackThicknessHalf.XS),
-  S: (_TrackLength.S - _TrackThicknessHalf.S),
-  M: (_TrackLength.M - _TrackThicknessHalf.M),
-  L: (_TrackLength.L - _TrackThicknessHalf.L),
-  XL: (_TrackLength.XL - _TrackThicknessHalf.XL),
-};
-
-const _ClipPathThumbEnd = {
-  XS: `M ${ _ThumbCxEnd.XS } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.XS } ${ _ThumbShadowRadius.XS } -90 1 0 ${ _ThumbCxEnd.XS } ${ _TrackThickness.XS + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.XS } ${ _ThumbShadowRadius.XS } -90 1 0 ${ _ThumbCxEnd.XS } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  S: `M ${ _ThumbCxEnd.S } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.S } ${ _ThumbShadowRadius.S } -90 1 0 ${ _ThumbCxEnd.S } ${ _TrackThickness.S + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.S } ${ _ThumbShadowRadius.S } -90 1 0 ${ _ThumbCxEnd.S } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  M: `M ${ _ThumbCxEnd.M } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.M } ${ _ThumbShadowRadius.M } -90 1 0 ${ _ThumbCxEnd.M } ${ _TrackThickness.M + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.M } ${ _ThumbShadowRadius.M } -90 1 0 ${ _ThumbCxEnd.M } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  L: `M ${ _ThumbCxEnd.L } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.L } ${ _ThumbShadowRadius.L } -90 1 0 ${ _ThumbCxEnd.L } ${ _TrackThickness.L + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.L } ${ _ThumbShadowRadius.L } -90 1 0 ${ _ThumbCxEnd.L } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-  XL: `M ${ _ThumbCxEnd.XL } ${ _THUMB_RADIUS_EXTENTION * -1 } A ${ _ThumbShadowRadius.XL } ${ _ThumbShadowRadius.XL } -90 1 0 ${ _ThumbCxEnd.XL } ${ _TrackThickness.XL + _THUMB_RADIUS_EXTENTION } A ${ _ThumbShadowRadius.XL } ${ _ThumbShadowRadius.XL } -90 1 0 ${ _ThumbCxEnd.XL } ${ _THUMB_RADIUS_EXTENTION * -1 }`,
-};
-
-const _ClipPathTrack = {
-  XS: `M 0 0 L ${ _TrackLength.XS } 0 L ${ _TrackLength.XS } ${ _TrackThickness.XS } L 0 ${ _TrackThickness.XS } z`,
-  S: `M 0 0 L ${ _TrackLength.S } 0 L ${ _TrackLength.S } ${ _TrackThickness.S } L 0 ${ _TrackThickness.S } z`,
-  M: `M 0 0 L ${ _TrackLength.M } 0 L ${ _TrackLength.M } ${ _TrackThickness.M } L 0 ${ _TrackThickness.M } z`,
-  L: `M 0 0 L ${ _TrackLength.L } 0 L ${ _TrackLength.L } ${ _TrackThickness.L } L 0 ${ _TrackThickness.L } z`,
-  XL: `M 0 0 L ${ _TrackLength.XL } 0 L ${ _TrackLength.XL } ${ _TrackThickness.XL } L 0 ${ _TrackThickness.XL } z`,
-};
-
-const _ClipPathStart = {
-  XS: `${ _ClipPathTrack.XS } ${ _ClipPathThumbStart.XS }`,
-  S: `${ _ClipPathTrack.S } ${ _ClipPathThumbStart.S }`,
-  M: `${ _ClipPathTrack.M } ${ _ClipPathThumbStart.M }`,
-  L: `${ _ClipPathTrack.L } ${ _ClipPathThumbStart.L }`,
-  XL: `${ _ClipPathTrack.XL } ${ _ClipPathThumbStart.XL }`,
-};
-
-const _ClipPathEnd = {
-  XS: `${ _ClipPathTrack.XS } ${ _ClipPathThumbEnd.XS }`,
-  S: `${ _ClipPathTrack.S } ${ _ClipPathThumbEnd.S }`,
-  M: `${ _ClipPathTrack.M } ${ _ClipPathThumbEnd.M }`,
-  L: `${ _ClipPathTrack.L } ${ _ClipPathThumbEnd.L }`,
-  XL: `${ _ClipPathTrack.XL } ${ _ClipPathThumbEnd.XL }`,
-};
-
 const _MAIN_CONTENT_TEMPLATE = `
-  <div class="switch-control">
-    <div class="switch-track">
-      <div class="switch-track-surface"></div>
-      <div class="switch-track-frame"></div>
-    </div>
-    <div class="switch-movablepart">
-      <div class="switch-thumb-extension"></div>
-      <div class="switch-thumb"></div>
-    </div>
+<div class="switch-control">
+  <div class="switch-track">
+    <div class="switch-track-surface"></div>
+    <div class="switch-track-frame"></div>
+    <div class="switch-thumb-shadow"></div>
   </div>
-  <output class="switch-value-label"></output>
+  <div class="switch-thumb">
+    <div class="switch-thumb-glow"></div>
+    <div class="switch-thumb-surface"></div>
+  </div>
+</div>
+<output class="switch-value-label"></output>
 `;
 //TODO hover でコントラスト上げ、activeで明るくする
-//TODO clip-pathが writing-mode:vertical-* に非対応（どうしようもないような？writing-modeは横固定にして、data-direction=ltr|rtl|ttb|bttとかで設定するようにするしか？）
-//TODO clip-pathが direction: rtl に非対応（:dirがfirefoxのみなので、対応するならwritin-modeと同様）（方向をどう検知するかは置いといて、clip-pathを生成するよりtranformで座標返還したほうが早いのでは。SVGにしてしまえばclip-path生成の100行くらい削れる）
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
 //TODO attatchInternals safariが対応したら
@@ -127,6 +28,7 @@ const _MAIN_CONTENT_TEMPLATE = `
 //XXX slot名は無くしたいが、他では名前使うかも。そうなると名前は統一したいのでとりあえず名前ありにしておく
 //TODO 値ラベルの幅は長いほうに合わせて固定にしたい（幅算出してwidth指定するか、不可視にして同じ位置に重ねて表示を切り替えるか。いちいちリフローがかかるので後者が良い？リフローなしでOffscreenCanvasで文字幅だけなら取れるがdataに子要素があったり装飾されてたりしたら正確に取れない。重ねる方法だと:emptyで空かどうか判別できなくなるので空状態かどうかを保持するプロパティが余計に必要）
 //TODO 値ラベルを可視に設定しても値ラベルが両方空の場合は、column-gapを0にしたい
+//TODO shadowなしで、白枠常時表示てもいいかも
 
 const _STYLE = `
 :host {
@@ -166,38 +68,10 @@ const _STYLE = `
   background-color: var(--widget-main-color);
   block-size: inherit;
   border-radius: calc(var(--widget-size) / 4);
-  clip-path: path(evenodd, "${ _ClipPathStart.M }");
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   /*overflow: hidden;*/
   position: relative;
   transition: clip-path var(--switch-switching-time);
-}
-
-:host(*[data-size="x-small"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathStart.XS }");
-}
-:host(*[data-size="small"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathStart.S }");
-}
-:host(*[data-size="large"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathStart.L }");
-}
-:host(*[data-size="x-large"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathStart.XL }");
-}
-:host(*[aria-checked="true"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathEnd.M }");
-}
-:host(*[aria-checked="true"][data-size="x-small"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathEnd.XS }");
-}
-:host(*[aria-checked="true"][data-size="small"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathEnd.S }");
-}
-:host(*[aria-checked="true"][data-size="large"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathEnd.L }");
-}
-:host(*[aria-checked="true"][data-size="x-large"]) *.switch-track {
-  clip-path: path(evenodd, "${ _ClipPathEnd.XL }");
 }
 
 *.switch-track-surface,
@@ -220,37 +94,51 @@ const _STYLE = `
   inset: 0;
   transition: opacity var(--switch-switching-time);
 }
-*.switch-movablepart {
-  block-size: var(--switch-block-size);
-  inline-size: var(--switch-block-size);
+
+*.switch-thumb-shadow,
+*.switch-thumb {
   inset-block-start: 0;
   inset-inline-start: 0;
   position: absolute;
   transition: inset-inline-start var(--switch-switching-time);
 }
-:host(*[aria-checked="true"]) *.switch-movablepart {
+*.switch-thumb-shadow {
+  --switch-thumb-shadow-extent: calc(var(--switch-space) + var(--widget-border-width));
+  background-color: var(--widget-main-color);
+  block-size: calc(var(--switch-block-size) + calc(var(--switch-thumb-shadow-extent) * 2));
+  border-radius: 50%;
+  inline-size: calc(var(--switch-block-size) + calc(var(--switch-thumb-shadow-extent) * 2));
+  margin: calc(var(--switch-thumb-shadow-extent) * -1);
+}
+
+*.switch-thumb {
+  block-size: var(--switch-block-size);
+  inline-size: var(--switch-block-size);
+}
+:host(*[aria-checked="true"]) *.switch-thumb-shadow,
+:host(*[aria-checked="true"]) *.switch-thumb {
   inset-inline-start: calc(var(--switch-inline-size) - var(--switch-block-size));
 }
-*.switch-thumb-extension,
-*.switch-thumb {
+*.switch-thumb-glow,
+*.switch-thumb-surface {
   border-radius: 50%;
   inset: calc(var(--switch-space) * -1);
   position: absolute;
 }
-*.switch-thumb-extension {
+*.switch-thumb-glow {
   background-color: var(--widget-main-color);
   margin: 0;
   transition: margin 200ms;
 }
-*.widget-event-target:hover + *.switch *.switch-thumb-extension {
+*.widget-event-target:hover + *.switch *.switch-thumb-glow {
   margin: -2px;
 }
-:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension,
-:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension,
-:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension {
+:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow,
+:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow,
+:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow {
   margin: 0 !important;
 }
-*.switch-thumb-extension::before {
+*.switch-thumb-glow::before {
   background-color: var(--widget-accent-color);
   border-radius: inherit;
   content: "";
@@ -260,24 +148,24 @@ const _STYLE = `
   position: absolute;
   transition: margin 200ms;
 }
-*.widget-event-target:hover + *.switch *.switch-thumb-extension::before {
+*.widget-event-target:hover + *.switch *.switch-thumb-glow::before {
   margin: -4px;
 }
-:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before,
-:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before,
-:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-extension::before {
+:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow::before,
+:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow::before,
+:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow::before {
   margin: 0 !important;
 }
 
 
 
 
-*.switch-thumb {
+*.switch-thumb-surface {
   background-color: var(--widget-main-color);
   border: var(--widget-border-width) solid var(--widget-accent-color);
   transition: background-color var(--switch-switching-time);
 }
-:host(*[aria-checked="true"]) *.switch-thumb {
+:host(*[aria-checked="true"]) *.switch-thumb-surface {
   background-color: var(--widget-accent-color);
 }
 @keyframes switch-ripple {
@@ -494,7 +382,7 @@ class Switch extends Input {
 
     const ripple = document.createElement("div");
     ripple.classList.add("switch-ripple");
-    (this._main.querySelector("*.switch-thumb-extension") as Element).append(ripple);
+    (this._main.querySelector("*.switch-thumb-glow") as Element).append(ripple);
     globalThis.setTimeout(() => {
       ripple.remove();
     }, 1000);
