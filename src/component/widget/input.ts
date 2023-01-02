@@ -2,15 +2,26 @@ import { Aria } from "./aria";
 import { Widget } from "./widget";
 
 const _STYLE = `
+:host(*[aria-readonly="true"]) *.switch-container *.widget-event-target {
+  cursor: default;
+}
 `;
 
 abstract class Input extends Widget {
+  static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
+
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
+
+  static {
+    Input.#styleSheet.replaceSync(_STYLE);
+  }
 
   constructor(init: Widget.Init) {
     super(init);
 
     this.#readOnly = false;
+
+    this._appendStyleSheet(Input.#styleSheet);
   }
 
   get readOnly(): boolean {

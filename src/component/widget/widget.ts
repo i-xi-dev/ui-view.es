@@ -16,63 +16,64 @@ const _WidgetDimension = {
   [_WidgetSize.X_LARGE]: 44,
 } as const;
 
-const _STYLE = `:host {
-display: block;
+const _STYLE = `
+:host {
+  display: block;
 }
 :host(*[aria-hidden="true"]) {
-display: none;
+  display: none;
 }
 *.widget-container {
---accent-color: #136ed2;
---border-width: 2px;
---focus-color: orange;
---main-color: #fff;
---widget-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
-align-items: center;
-block-size: var(--widget-size);
-display: flex;
-flex-flow: row nowrap;
-inline-size: 100%;
-justify-content: stretch;
-min-block-size: var(--widget-size);
-min-inline-size: var(--widget-size);
-position: relative;
+  --widget-accent-color: #136ed2;
+  --widget-border-width: 2px;
+  --widget-focusring-color: orange;
+  --widget-main-color: #fff;
+  --widget-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
+  align-items: center;
+  block-size: var(--widget-size);
+  display: flex;
+  flex-flow: row nowrap;
+  inline-size: 100%;
+  justify-content: stretch;
+  min-block-size: var(--widget-size);
+  min-inline-size: var(--widget-size);
+  position: relative;
 }
 :host(*[data-size="x-small"]) *.widget-container {
---widget-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
+  --widget-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
 }
 :host(*[data-size="small"]) *.widget-container {
---widget-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
+  --widget-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
 }
 :host(*[data-size="large"]) *.widget-container {
---widget-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
+  --widget-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
 }
 :host(*[data-size="x-large"]) *.widget-container {
---widget-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
+  --widget-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
 }
 *.widget-event-target {
-inset: 0;
-position: absolute;
+  inset: 0;
+  position: absolute;
 }
 *.widget-event-target:focus {
-box-shadow: 0 0 0 2px var(--focus-color);
-outline: none;
+  box-shadow: 0 0 0 2px var(--widget-focusring-color);
+  outline: none;
 }
 :host(*[aria-busy="true"]) *.widget-container *.widget-event-target,
 :host(*[aria-busy="true"][aria-disabled="true"]) *.widget-container *.widget-event-target {
-cursor: wait;
+  cursor: wait;
 }
 :host(*[aria-disabled="true"]) *.widget-container *.widget-event-target {
-cursor: not-allowed;
+  cursor: not-allowed;
 }
 *.widget,
 *.widget * {
-pointer-events: none;
+  pointer-events: none;
 }
 :host(*[aria-busy="true"]) *.widget,
 :host(*[aria-disabled="true"]) *.widget {
-filter: contrast(0.5) grayscale(1);
-opacity: 0.6;
+  filter: contrast(0.5) grayscale(1);
+  opacity: 0.6;
 }
 `;
 
@@ -147,10 +148,7 @@ abstract class Widget extends HTMLElement {
     container.classList.add("widget-container");
     container.classList.add(`${ init.className }-container`);
 
-    this.#eventTarget = this.ownerDocument.createElement("div");
-    this.#eventTarget.classList.add("widget-event-target");
-
-    const dataList = this.ownerDocument.createElement("div");
+    const dataList = this.ownerDocument.createElement("datalist");
     dataList.hidden = true;
     dataList.classList.add("widget-datalist");
 
@@ -158,11 +156,14 @@ abstract class Widget extends HTMLElement {
     this.#dataListSlot.name = "datalist";
     dataList.append(this.#dataListSlot);
 
+    this.#eventTarget = this.ownerDocument.createElement("div");
+    this.#eventTarget.classList.add("widget-event-target");
+
     this.#main = this.ownerDocument.createElement("div");
     this.#main.classList.add("widget");
     this.#main.classList.add(init.className);
 
-    container.append(this.#eventTarget, dataList, this.#main);
+    container.append(dataList, this.#eventTarget, this.#main);
     this.#root.append(container);
   }
 
@@ -230,22 +231,24 @@ abstract class Widget extends HTMLElement {
     return this.#eventTarget;
   }
 
-  #getAssignedDataElements(): Array<HTMLDataElement> {
+  #getAssignedOptionElements(): Array<HTMLOptionElement> {
     //TODO slotchangeがおきるまで要素への参照キャッシュする
     const assignedElements = this.#dataListSlot.assignedElements();
     console.log(assignedElements)
     return assignedElements.filter((element) => {
-      return (element.localName === "data");//XXX これだけだとHTMLDataElementの確証がないが実用上は問題ないか
-    }) as Array<HTMLDataElement>;
+      return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
+    }) as Array<HTMLOptionElement>;
     //XXX 値重複は警告する？
   }
 
   protected get _assignedDataListItems(): Array<Widget.DataListItem> {
     // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
-    return this.#getAssignedDataElements().map((element) => {
+    return this.#getAssignedOptionElements().map((element) => {
       return {
-        value: element.value ?? "",
-        label: element.textContent ?? "",
+        value: element.value,
+        label: element.label,
+        disabled: element.disabled,
+        selected: element.selected,
       };
     });
   }
@@ -460,6 +463,8 @@ namespace Widget {
   export type DataListItem = {
     label: string,
     value: string,
+    disabled?: boolean,
+    selected?: boolean,
   };
     
   export const Dimension = _WidgetDimension;

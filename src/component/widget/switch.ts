@@ -128,7 +128,8 @@ const _MAIN_CONTENT_TEMPLATE = `
 //TODO 値ラベルの幅は長いほうに合わせて固定にしたい（幅算出してwidth指定するか、不可視にして同じ位置に重ねて表示を切り替えるか。いちいちリフローがかかるので後者が良い？リフローなしでOffscreenCanvasで文字幅だけなら取れるがdataに子要素があったり装飾されてたりしたら正確に取れない。重ねる方法だと:emptyで空かどうか判別できなくなるので空状態かどうかを保持するプロパティが余計に必要）
 //TODO 値ラベルを可視に設定しても値ラベルが両方空の場合は、column-gapを0にしたい
 
-const _STYLE = `:host {
+const _STYLE = `
+:host {
   flex: none;
   inline-size: max-content;
 }
@@ -137,16 +138,12 @@ const _STYLE = `:host {
   cursor: pointer;
   margin-inline: -8px;
 }
-:host(*[aria-readonly="true"]) *.switch-container *.widget-event-target {
-  cursor: default;
-}
-
 
 *.switch {
   --switch-space: ${ _TRACK_OFFSET_INLINE_START }px;
-  --switching-time: 150ms;
-  --track-length: calc(var(--widget-size) * 1.25);
-  --track-thickness: calc(var(--widget-size) / 2);
+  --switch-switching-time: 150ms;
+  --switch-inline-size: calc(var(--widget-size) * 1.25);
+  --switch-block-size: calc(var(--widget-size) / 2);
   align-items: center;
   block-size: 100%;
   column-gap: 0;
@@ -160,19 +157,19 @@ const _STYLE = `:host {
   flex-flow: row-reverse nowrap;
 }
 *.switch-control {
-  block-size: var(--track-thickness);
-  inline-size: var(--track-length);
+  block-size: var(--switch-block-size);
+  inline-size: var(--switch-inline-size);
   margin-inline: var(--switch-space);
   position: relative;
 }
 *.switch-track {
-  background-color: var(--main-color);
+  background-color: var(--widget-main-color);
   block-size: inherit;
   border-radius: calc(var(--widget-size) / 4);
   clip-path: path(evenodd, "${ _ClipPathStart.M }");
   /*overflow: hidden;*/
   position: relative;
-  transition: clip-path var(--switching-time);
+  transition: clip-path var(--switch-switching-time);
 }
 
 :host(*[data-size="x-small"]) *.switch-track {
@@ -208,31 +205,31 @@ const _STYLE = `:host {
   position: absolute;
 }
 *.switch-track-surface {
-  background-color: var(--accent-color);
+  background-color: var(--widget-accent-color);
   border-radius: inherit;
   inset: 1px;
   opacity: 0;
-  transition: opacity var(--switching-time);
+  transition: opacity var(--switch-switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-track-surface {
   opacity: 1;
 }
 *.switch-track-frame {
-  border: 2px solid var(--accent-color);
+  border: 2px solid var(--widget-accent-color);
   border-radius: inherit;
   inset: 0;
-  transition: opacity var(--switching-time);
+  transition: opacity var(--switch-switching-time);
 }
 *.switch-movablepart {
-  block-size: var(--track-thickness);
-  inline-size: var(--track-thickness);
+  block-size: var(--switch-block-size);
+  inline-size: var(--switch-block-size);
   inset-block-start: 0;
   inset-inline-start: 0;
   position: absolute;
-  transition: inset-inline-start var(--switching-time);
+  transition: inset-inline-start var(--switch-switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-movablepart {
-  inset-inline-start: calc(var(--track-length) - var(--track-thickness));
+  inset-inline-start: calc(var(--switch-inline-size) - var(--switch-block-size));
 }
 *.switch-thumb-extension,
 *.switch-thumb {
@@ -241,7 +238,7 @@ const _STYLE = `:host {
   position: absolute;
 }
 *.switch-thumb-extension {
-  background-color: var(--main-color);
+  background-color: var(--widget-main-color);
   margin: 0;
   transition: margin 200ms;
 }
@@ -254,7 +251,7 @@ const _STYLE = `:host {
   margin: 0 !important;
 }
 *.switch-thumb-extension::before {
-  background-color: var(--accent-color);
+  background-color: var(--widget-accent-color);
   border-radius: inherit;
   content: "";
   inset: 0;
@@ -276,12 +273,12 @@ const _STYLE = `:host {
 
 
 *.switch-thumb {
-  background-color: var(--main-color);
-  border: var(--border-width) solid var(--accent-color);
-  transition: background-color var(--switching-time);
+  background-color: var(--widget-main-color);
+  border: var(--widget-border-width) solid var(--widget-accent-color);
+  transition: background-color var(--switch-switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-thumb {
-  background-color: var(--accent-color);
+  background-color: var(--widget-accent-color);
 }
 @keyframes switch-ripple {
   0% {
@@ -295,7 +292,7 @@ const _STYLE = `:host {
 }
 *.switch-ripple {
   animation: switch-ripple 600ms both;
-  background-color: var(--accent-color);
+  background-color: var(--widget-accent-color);
   border-radius: 50%;
   inset: 0;
   position: absolute;
@@ -392,6 +389,8 @@ class Switch extends Input {
     this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
   }
 
+  //TODO itemのdisabledは無視するで良いか
+  //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
   get #value(): Widget.DataListItem {
     const assignedDataListItems = this._assignedDataListItems;
     console.log(assignedDataListItems)

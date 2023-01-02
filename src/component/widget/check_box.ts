@@ -15,6 +15,18 @@ const _MAIN_CONTENT_TEMPLATE = `
   <div class="checkbox-label"></div>
 `;
 
+const _STYLE = `
+:host {
+  flex: none;
+  inline-size: max-content;
+}
+*.switch-container *.widget-event-target {
+  border-radius: 4px;
+  cursor: pointer;
+  margin-inline: -8px;
+}
+`;
+
 class CheckBox extends Input {
 }
 Object.freeze(CheckBox);
