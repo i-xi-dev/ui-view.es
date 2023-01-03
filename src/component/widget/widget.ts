@@ -45,15 +45,19 @@ const _STYLE = `
   position: relative;
 }
 :host(*[data-size="x-small"]) *.widget-container {
+  --widget-corner-radius: 3px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
 }
 :host(*[data-size="small"]) *.widget-container {
+  --widget-corner-radius: 4px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
 }
 :host(*[data-size="large"]) *.widget-container {
+  --widget-corner-radius: 6px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
 }
 :host(*[data-size="x-large"]) *.widget-container {
+  --widget-corner-radius: 7px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
 }
 

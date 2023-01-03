@@ -14,7 +14,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <wc-switch id="test1" onchange="console.log(event)"></wc-switch>
       </div>
-      <div style="overflow-y:scroll;height:60vh;">
+      <div class="test-dynamic-editor">
         <fieldset>
           <legend>busy prop</legend>
           <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
@@ -110,16 +110,16 @@ customElements.define("wc-switch", Switch);
 
     <div class="test-static">
       <div>
-        <div>aria-checked</div>
-        <wc-switch aria-checked="true"></wc-switch>
-        <wc-switch aria-checked="false"></wc-switch>
-        <wc-switch aria-checked="mixed"></wc-switch>
-      </div>
-      <div>
         <div>aria-busy</div>
         <wc-switch aria-busy="true"></wc-switch>
         <wc-switch aria-busy="false"></wc-switch>
         <wc-switch aria-busy="true" aria-checked="true"></wc-switch>
+      </div>
+      <div>
+        <div>aria-checked</div>
+        <wc-switch aria-checked="true"></wc-switch>
+        <wc-switch aria-checked="false"></wc-switch>
+        <wc-switch aria-checked="mixed"></wc-switch>
       </div>
       <div>
         <div>aria-disabled</div>

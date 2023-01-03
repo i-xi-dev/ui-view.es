@@ -2,6 +2,7 @@ namespace Aria {
   export const Role = {
     CHECKBOX: "checkbox",
     SWITCH: "switch",
+    TEXTBOX: "textbox",
   } as const;
 
   export type Role = typeof Role[keyof typeof Role];

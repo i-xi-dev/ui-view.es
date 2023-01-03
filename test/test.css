@@ -19,3 +19,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
+
+*.test-dynamic-editor {
+  height: 50vh;
+  overflow-y: scroll;
+}

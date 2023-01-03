@@ -42,7 +42,7 @@ const _STYLE = `
   flex-flow: row nowrap;
 }
 :host(*[data-value-label-visible="true"]) *.checkbox {
-  column-gap: 6px;
+  column-gap: 4px;
 }
 :host(*[data-value-label-position="before"]) *.checkbox {
   flex-flow: row-reverse nowrap;
@@ -109,8 +109,11 @@ const _STYLE = `
 *.checkbox-mark-line {
   fill: none;
   stroke: var(--widget-main-color);
+  stroke-width: 2px;
+  /*
   stroke-width: 3px;
   vector-effect: non-scaling-stroke;
+  */
 }
 :host(*[aria-checked="true"]) *.checkbox-mark-line {
   stroke-linecap: square;
