@@ -62,8 +62,13 @@ const _STYLE = `
 }
 
 *.widget-event-target {
+  cursor: pointer;
   inset: 0;
   position: absolute;
+  padding-inline: 12px;
+}
+*.widget-event-target[contenteditable] {
+  cursor: text;/*TODO vertical-text */
 }
 *.widget-event-target:focus {
   box-shadow: 0 0 0 2px var(--widget-focusring-color);
@@ -209,6 +214,7 @@ abstract class Widget extends HTMLElement {
     this._readOnly = false;
     this.#actions = new Map([
       ["click", new Set()],
+      ["focus", new Set()],
       ["keydown", new Set()],
     ]);
     this.#reflectingInProgress = "";
@@ -229,19 +235,35 @@ abstract class Widget extends HTMLElement {
 
     this.#eventTarget = this.ownerDocument.createElement("div");
     this.#eventTarget.classList.add("widget-event-target");
+    if (init?.textEditable === true) {
+      this.#eventTarget.setAttribute("contenteditable", "true");
+    }
 
     this.#main = this.ownerDocument.createElement("div");
     this.#main.classList.add("widget");
     this.#main.classList.add(init.className);
 
-    container.append(dataList, this.#eventTarget, this.#main);
+    container.append(dataList, this.#main, this.#eventTarget);
+
+    this.#eventTarget.addEventListener("focus", (event: FocusEvent) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+        return;
+      }
+      const focusActions = this.#actions.get("focus");
+      if (focusActions && (focusActions.size ?? 0) > 0) {
+        const filteredActions = [...focusActions];
+        for (const action of filteredActions) {
+          action.func(event);
+        }
+      }
+    }, { passive: true });
 
     this.#eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
       if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
         return;
       }
       const clickActions = this.#actions.get("click");
-      if (clickActions) {
+      if (clickActions && (clickActions.size ?? 0) > 0) {
         const filteredActions = [...clickActions];
         if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
           event.preventDefault();
@@ -257,7 +279,7 @@ abstract class Widget extends HTMLElement {
         return;
       }
       const keyDownActions = this.#actions.get("keydown");
-      if (keyDownActions) {
+      if (keyDownActions && (keyDownActions.size ?? 0) > 0) {
         const filteredActions = [...keyDownActions].filter((action) => action.keys?.includes(event.key));
         if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
           event.preventDefault();
@@ -610,6 +632,7 @@ namespace Widget {
   export type Init = {
     role: Aria.Role,
     className: string,
+    textEditable?: boolean,
   };
 
   export type Reflections = {

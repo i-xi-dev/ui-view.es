@@ -40,7 +40,6 @@ const _STYLE = `
 }
 *.switch-container *.widget-event-target {
   border-radius: 4px;
-  cursor: pointer;
   margin-inline: -8px;
 }
 
@@ -214,7 +213,7 @@ class Switch extends Input {
     });
 
     this._addAction("keydown", {
-      keys: [" ", "Enter"],
+      keys: [" "/*, "Enter"*/],
       func: () => {
         this.checked = !(this.#checked);
         this._dispatchChangeEvent();
@@ -267,14 +266,6 @@ class Switch extends Input {
 
     this._connected = true;
   }
-
-  // override disconnectedCallback(): void {
-  //   super.disconnectedCallback();
-  // }
-
-  // override adoptedCallback(): void {
-  //
-  // }
 
   override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(name, oldValue, newValue);

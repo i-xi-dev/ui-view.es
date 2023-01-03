@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>textbox</title>
+    <link rel="stylesheet" href="./test.css"/>
+    <script src="./test.js"></script>
+    <script type="module">
+import { TextBox } from "../dist/index.js";
+customElements.define("wc-textbox", TextBox);
+    </script>
+  </head>
+  <body>
+    <div class="test-dynamic">
+      <div>
+        <wc-textbox id="test1" onchange="console.log(event)"></wc-textbox>
+      </div>
+    </div>
+  </body>
+</html>

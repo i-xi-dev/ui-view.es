@@ -9,7 +9,6 @@ const _MAIN_CONTENT_TEMPLATE = `
     <div class="textbox-box-surface"></div>
     <div class="widget-effects"></div>
     <div class="textbox-value-label"></div>
-    <input class="textbox-value-view" type="text"/>
   </div>
 </div>
 `;
@@ -18,6 +17,36 @@ const _STYLE = `
 :host {
   flex: 1 1 100%;
   min-inline-size: 44px;
+}
+*.textbox-container *.widget-event-target {
+  border-radius: var(--widget-corner-radius);
+}
+
+*.textbox {
+  align-items: center;
+  block-size: 100%;
+  column-gap: 0;
+  display: flex;
+  flex: 1 1 100%;
+  flex-flow: row nowrap;
+}
+
+*.textbox-control {
+  block-size: 100%;
+  flex: 1 1 100%;
+  position: relative;
+}
+*.textbox-box {
+  block-size: inherit;
+  position: relative;
+}
+
+*.textbox-box-surface {
+  background-color: var(--widget-main-color);
+  border: 2px solid var(--widget-accent-color);
+  border-radius: var(--widget-corner-radius);
+  inset: 0;
+  position: absolute;
 }
 `;
 
@@ -41,6 +70,7 @@ class TextBox extends Input {
     super({
       role: Aria.Role.TEXTBOX,
       className: TextBox.#className,
+      textEditable: true,
     });
 
     this.#multiline = false;
@@ -57,6 +87,7 @@ class TextBox extends Input {
 
     //TODO this._addAction("keydown", {
 
+
   }
 
   //TODO get value, set value
@@ -70,4 +101,37 @@ class TextBox extends Input {
     ].flat();
   }
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+
+    if (this.isConnected !== true) {
+      return;
+    }
+
+    //TODO
+
+    this._connected = true;//TODO 更に継承する場合どうする
+  }
+
+  override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
+    super.attributeChangedCallback(name, oldValue, newValue);
+
+    if (this._reflectingInProgress === name) {
+      return;
+    }
+
+    switch (name) {
+      //TODO
+
+      default:
+        break;
+    }
+  }
+
 }
+namespace TextBox {
+
+}
+Object.freeze(TextBox);
+
+export { TextBox };
