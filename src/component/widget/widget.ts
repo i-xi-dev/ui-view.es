@@ -23,11 +23,16 @@ const _STYLE = `
 :host(*[aria-hidden="true"]) {
   display: none;
 }
+
 *.widget-container {
   --widget-accent-color: #136ed2;
   --widget-border-width: 2px;
+  --widget-corner-radius: 5px;
   --widget-focusring-color: orange;
+  --widget-glow-blur-radius: 6px;
+  --widget-glow-extent: 2px;
   --widget-main-color: #fff;
+  --widget-ripple-opacity: 0.6;
   --widget-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
   align-items: center;
   block-size: var(--widget-size);
@@ -51,6 +56,7 @@ const _STYLE = `
 :host(*[data-size="x-large"]) *.widget-container {
   --widget-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
 }
+
 *.widget-event-target {
   inset: 0;
   position: absolute;
@@ -66,6 +72,7 @@ const _STYLE = `
 :host(*[aria-disabled="true"]) *.widget-container *.widget-event-target {
   cursor: not-allowed;
 }
+
 *.widget,
 *.widget * {
   pointer-events: none;
@@ -74,6 +81,59 @@ const _STYLE = `
 :host(*[aria-disabled="true"]) *.widget {
   filter: contrast(0.5) grayscale(1);
   opacity: 0.6;
+}
+
+*.widget-glow {
+  background-color: currentcolor;
+  border-radius: var(--widget-corner-radius);
+  box-shadow: 0 0 0 0 currentcolor;
+  color: var(--widget-main-color);
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  transition: box-shadow 200ms, opacity 200ms;
+}
+*.widget-event-target:hover + *.widget *.widget-glow {
+  box-shadow: 0 0 0 var(--widget-glow-extent) currentcolor;
+  opacity: 1;
+}
+:host(*[aria-busy="true"]) *.widget-event-target:hover + *.widget *.widget-glow,
+:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.widget *.widget-glow,
+:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.widget *.widget-glow {
+  box-shadow: 0 0 0 0 currentcolor !important;
+  opacity: 0 !important;
+}
+*.widget-glow::before {
+  background-color: currentcolor;
+  border-radius: var(--widget-corner-radius);
+  box-shadow: 0 0 0 0 currentcolor;
+  color: var(--widget-accent-color);
+  content: "";
+  inset: 0;
+  opacity: 0;
+  position: absolute;
+  transition: box-shadow 200ms, opacity 200ms;
+}
+*.widget-event-target:hover + *.widget *.widget-glow::before {
+  box-shadow: 0 0 0 var(--widget-glow-blur-radius) currentcolor;
+  opacity: 0.5;
+}
+:host(*[aria-busy="true"]) *.widget-event-target:hover + *.widget *.widget-glow::before,
+:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.widget *.widget-glow::before,
+:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.widget *.widget-glow::before {
+  box-shadow: 0 0 0 0 currentcolor !important;
+  opacity: 0 !important;
+}
+
+*.widget-effects {
+  inset: 0;
+  position: absolute;
+}
+
+*.widget-ripple {
+  background-color: var(--widget-accent-color);
+  border-radius: 50%;
+  position: absolute;
 }
 `;
 
@@ -108,9 +168,11 @@ abstract class Widget extends HTMLElement {
   #disabled: boolean; // Aria仕様では各サブクラスで定義されるが、disabledにならない物は実装予定がないのでここで定義する
   #hidden: boolean;
   #label: string;
+  protected _readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
+  readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
   readonly #main: Element;
-  readonly #eventTarget: Element;
+  readonly #eventTarget: HTMLElement;
   readonly #dataListSlot: HTMLSlotElement;
 
   protected static _ReflectionsOnConnected: Widget.Reflections = {
@@ -140,6 +202,11 @@ abstract class Widget extends HTMLElement {
     this.#disabled = false;
     this.#hidden = false;
     this.#label = "";
+    this._readOnly = false;
+    this.#actions = new Map([
+      ["click", new Set()],
+      ["keydown", new Set()],
+    ]);
     this.#reflectingInProgress = "";
 
     this._appendStyleSheet(Widget.#styleSheet);
@@ -164,6 +231,42 @@ abstract class Widget extends HTMLElement {
     this.#main.classList.add(init.className);
 
     container.append(dataList, this.#eventTarget, this.#main);
+
+    this.#eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
+      if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+        return;
+      }
+      const clickActions = this.#actions.get("click");
+      if (clickActions) {
+        const filteredActions = [...clickActions];
+        if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
+          event.preventDefault();
+        }
+        for (const action of filteredActions) {
+          action.func(event);
+        }
+      }
+    }) as EventListener, { passive: false });
+
+    this.#eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+        return;
+      }
+      const keyDownActions = this.#actions.get("keydown");
+      if (keyDownActions) {
+        const filteredActions = [...keyDownActions].filter((action) => action.keys?.includes(event.key));
+        if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
+          event.preventDefault();
+        }
+        if (event.repeat === true) {
+          return;
+        }
+        for (const action of filteredActions) {
+          action.func(event);
+        }
+      }
+    }, { passive: false });
+
     this.#root.append(container);
   }
 
@@ -227,10 +330,6 @@ abstract class Widget extends HTMLElement {
     return this.#main;
   }
 
-  protected get _eventTarget(): Element {
-    return this.#eventTarget;
-  }
-
   get #assignedOptionElements(): Array<HTMLOptionElement> {
     //TODO slotchangeがおきるまで要素への参照キャッシュする
     const assignedElements = this.#dataListSlot.assignedElements();
@@ -259,6 +358,16 @@ abstract class Widget extends HTMLElement {
       }
     }
     return items;
+  }
+
+  protected _addAction(name: string, action: Widget.Action): void {
+    const actionSet = this.#actions.get(name) as Set<Widget.Action>;
+    if (["keydown"].includes(name) === true) {
+      if (Array.isArray(action.keys) !== true) {
+        throw new Error("TODO");
+      }
+    }
+    actionSet.add(action);
   }
 
   static get observedAttributes(): Array<string> {
@@ -422,23 +531,23 @@ abstract class Widget extends HTMLElement {
   }
 
   #reflectBusyToContent(): void {
-    if (this._eventTarget) {
+    if (this.#eventTarget) {
       if ((this.#busy === true) || (this.#disabled === true)) {
-        this._eventTarget.removeAttribute("tabindex");
+        this.#eventTarget.removeAttribute("tabindex");
       }
       else {
-        this._eventTarget.setAttribute("tabindex", "0");
+        this.#eventTarget.setAttribute("tabindex", "0");
       }
     }
   }
 
   #reflectDisabledToContent(): void {
-    if (this._eventTarget) {
+    if (this.#eventTarget) {
       if ((this.#busy === true) || (this.#disabled === true)) {
-        this._eventTarget.removeAttribute("tabindex");
+        this.#eventTarget.removeAttribute("tabindex");
       }
       else {
-        this._eventTarget.setAttribute("tabindex", "0");
+        this.#eventTarget.setAttribute("tabindex", "0");
       }
     }
   }
@@ -463,6 +572,18 @@ abstract class Widget extends HTMLElement {
     this._reflectToAttr(DataAttr.SIZE, ((this.#size !== Widget.Size.MEDIUM) ? this.#size : undefined));
   }
 
+  protected _addRipple(): void {
+    if ((this._connected !== true) || (this.hidden === true)) {//XXX this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
+      return;
+    }
+
+    const ripple = this.ownerDocument.createElement("div");
+    ripple.classList.add("widget-ripple");
+    (this._main.querySelector("*.widget-effects") as Element).append(ripple);
+    globalThis.setTimeout(() => {
+      ripple.remove();
+    }, 1000);
+  }
 }
 namespace Widget {
   export const Size = _WidgetSize;
@@ -490,6 +611,13 @@ namespace Widget {
   export type Reflections = {
     content: ContentReflection,
     attr: AttrReflection,
+  };
+
+  export type Action = {
+    func: (event: Event) => void,
+    keys?: Array<string>,
+    noPreventDefault?: boolean,
+    //TODO AbortSignal
   };
 
 }

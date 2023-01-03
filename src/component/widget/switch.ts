@@ -8,11 +8,11 @@ const _MAIN_CONTENT_TEMPLATE = `
 <div class="switch-control">
   <div class="switch-track">
     <div class="switch-track-surface"></div>
-    <div class="switch-track-frame"></div>
     <div class="switch-thumb-shadow"></div>
   </div>
   <div class="switch-thumb">
-    <div class="switch-thumb-glow"></div>
+    <div class="widget-glow"></div>
+    <div class="widget-effects"></div>
     <div class="switch-thumb-surface"></div>
   </div>
 </div>
@@ -28,9 +28,10 @@ const _MAIN_CONTENT_TEMPLATE = `
 //XXX slot名は無くしたいが、他では名前使うかも。そうなると名前は統一したいのでとりあえず名前ありにしておく
 //TODO 値ラベルの幅は長いほうに合わせて固定にしたい（幅算出してwidth指定するか、不可視にして同じ位置に重ねて表示を切り替えるか。いちいちリフローがかかるので後者が良い？リフローなしでOffscreenCanvasで文字幅だけなら取れるがdataに子要素があったり装飾されてたりしたら正確に取れない。重ねる方法だと:emptyで空かどうか判別できなくなるので空状態かどうかを保持するプロパティが余計に必要）
 //TODO 値ラベルを可視に設定しても値ラベルが両方空の場合は、column-gapを0にしたい
-//TODO shadowなしで、白枠常時表示てもいいかも
+//XXX shadowなしで、白枠常時表示てもいいかも
 //XXX itemのdisabledは無視する
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
+//TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 
 const _STYLE = `
 :host {
@@ -67,7 +68,6 @@ const _STYLE = `
   position: relative;
 }
 *.switch-track {
-  background-color: var(--widget-main-color);
   block-size: inherit;
   border-radius: calc(var(--widget-size) / 4);
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
@@ -76,24 +76,16 @@ const _STYLE = `
   transition: clip-path var(--switch-switching-time);
 }
 
-*.switch-track-surface,
-*.switch-track-frame {
-  position: absolute;
-}
 *.switch-track-surface {
-  background-color: var(--widget-accent-color);
-  border-radius: inherit;
-  inset: 1px;
-  opacity: 0;
-  transition: opacity var(--switch-switching-time);
-}
-:host(*[aria-checked="true"]) *.switch-track-surface {
-  opacity: 1;
-}
-*.switch-track-frame {
-  border: 2px solid var(--widget-accent-color);
+  background-color: var(--widget-main-color);
+  border: var(--widget-border-width) solid var(--widget-accent-color);
   border-radius: inherit;
   inset: 0;
+  position: absolute;
+  transition: background-color var(--switch-switching-time);
+}
+:host(*[aria-checked="true"]) *.switch-track-surface {
+  background-color: var(--widget-accent-color);
 }
 
 *.switch-thumb-shadow,
@@ -120,71 +112,41 @@ const _STYLE = `
 :host(*[aria-checked="true"]) *.switch-thumb {
   inset-inline-start: calc(var(--switch-inline-size) - var(--switch-block-size));
 }
-*.switch-thumb-glow,
+*.widget-glow,
+*.widget-effects,
 *.switch-thumb-surface {
   border-radius: 50%;
-  inset: calc(var(--switch-space) * -1);
-  position: absolute;
+  margin: calc(var(--switch-space) * -1);
 }
-*.switch-thumb-glow {
-  background-color: var(--widget-main-color);
-  margin: 0;
-  transition: margin 200ms;
-}
-*.widget-event-target:hover + *.switch *.switch-thumb-glow {
-  margin: -2px;
-}
-:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow,
-:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow,
-:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow {
-  margin: 0 !important;
-}
-*.switch-thumb-glow::before {
-  background-color: var(--widget-accent-color);
+*.widget-glow::before {
   border-radius: inherit;
-  content: "";
-  inset: 0;
-  margin: 0;
-  opacity: 0.5;
-  position: absolute;
-  transition: margin 200ms;
 }
-*.widget-event-target:hover + *.switch *.switch-thumb-glow::before {
-  margin: -4px;
-}
-:host(*[aria-busy="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow::before,
-:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow::before,
-:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.switch *.switch-thumb-glow::before {
-  margin: 0 !important;
-}
-
-
-
 
 *.switch-thumb-surface {
   background-color: var(--widget-main-color);
   border: var(--widget-border-width) solid var(--widget-accent-color);
+  inset: 0;
+  position: absolute;
   transition: background-color var(--switch-switching-time);
 }
 :host(*[aria-checked="true"]) *.switch-thumb-surface {
   background-color: var(--widget-accent-color);
 }
+
 @keyframes switch-ripple {
   0% {
-    opacity: 0.6;
+    opacity: var(--widget-ripple-opacity);
     transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(2);
+    transform: scale(2.4);
   }
 }
-*.switch-ripple {
+*.widget-ripple {
   animation: switch-ripple 600ms both;
-  background-color: var(--widget-accent-color);
-  border-radius: 50%;
   inset: 0;
-  position: absolute;
+  mix-blend-mode: color-burn; /*TODO darkのとき変える */
 }
 
 *.switch-value-label {
@@ -244,22 +206,20 @@ class Switch extends Input {
     main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
     this.#valueLabelElement = main.querySelector("*.switch-value-label") as Element;
 
-    this._eventTarget.addEventListener("click", () => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
-        return;
-      }
-      this.checked = !(this.#checked);
-      this._dispatchChangeEvent();
-    }, { passive: true });
-    (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
-        return;
-      }
-      if (["Enter", " "].includes(event.key) === true) {
+    this._addAction("click", {
+      func: () => {
         this.checked = !(this.#checked);
         this._dispatchChangeEvent();
-      }
-    }, { passive: true });
+      },
+    });
+
+    this._addAction("keydown", {
+      keys: [" ", "Enter"],
+      func: () => {
+        this.checked = !(this.#checked);
+        this._dispatchChangeEvent();
+      },
+    });
   }
 
   get checked(): boolean {
@@ -355,21 +315,8 @@ class Switch extends Input {
   }
 
   #reflectCheckedToContent(): void {
-    this.#addRipple();
+    this._addRipple();
     this.#valueLabelElement.textContent = this.#value.label;
-  }
-
-  #addRipple(): void {
-    if ((this._connected !== true) || (this.hidden === true)) {//TODO this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
-      return;
-    }
-
-    const ripple = document.createElement("div");
-    ripple.classList.add("switch-ripple");
-    (this._main.querySelector("*.switch-thumb-glow") as Element).append(ripple);
-    globalThis.setTimeout(() => {
-      ripple.remove();
-    }, 1000);
   }
 }
 namespace Switch {

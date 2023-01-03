@@ -7,19 +7,18 @@ import { Input } from "./input";
 const _MAIN_CONTENT_TEMPLATE = `
 <div class="checkbox-control">
   <div class="checkbox-box">
-    <div class="checkbox-box-glow"></div>
+    <div class="widget-glow"></div>
     <div class="checkbox-box-surface"></div>
-    <div class="checkbox-box-frame"></div>
   </div>
   <div class="checkbox-mark">
-    
-
+    <div class="widget-effects"></div>
+    <div class="checkbox-mark-canvas"></div>
   </div>
 </div>
 <div class="checkbox-value-label"></div>
 `;
 
-const _BOX_OFFSET_INLINE_START = 4;
+const _BOX_OFFSET_INLINE_START = 5;
 
 const _STYLE = `
 :host {
@@ -35,7 +34,7 @@ const _STYLE = `
 *.checkbox {
   --checkbox-space: ${ _BOX_OFFSET_INLINE_START }px;
   --checkbox-switching-time: 150ms;
-  --checkbox-size: calc(var(--widget-size) * 0.625);
+  --checkbox-size: calc(calc(var(--widget-size) * 0.75) - 4px);
   align-items: center;
   block-size: 100%;
   column-gap: 0;
@@ -56,42 +55,29 @@ const _STYLE = `
   position: relative;
 }
 *.checkbox-box {
-  background-color: var(--widget-main-color);
   block-size: inherit;
-  border-radius: 4px;
   position: relative;
 }
 
-*.checkbox-box-glow,
-*.checkbox-box-surface,
-*.checkbox-box-frame {
-  position: absolute;
-}
-*.checkbox-box-glow {
-
-}
 *.checkbox-box-surface {
-  background-color: var(--widget-accent-color);
-  border-radius: 3px;
-  inset: 1px;
-  opacity: 0;
-  transition: opacity var(--checkbox-switching-time);
+  background-color: var(--widget-main-color);
+  border: 2px solid var(--widget-accent-color);
+  border-radius: var(--widget-corner-radius);
+  inset: 0;
+  position: absolute;
+  transition: background-color var(--checkbox-switching-time);
 }
 :host(*[aria-checked="true"]) *.checkbox-box-surface,
 :host(*[aria-checked="mixed"]) *.checkbox-box-surface {
-  opacity: 1;
-}
-*.checkbox-box-frame {
-  border: 2px solid var(--widget-accent-color);
-  border-radius: inherit;
-  inset: 0;
+  background-color: var(--widget-accent-color);
 }
 
-*.checkbox-mark {
-  inset: 2px;
+*.checkbox-mark,
+*.checkbox-mark-canvas {
+  inset: 0;
   position: absolute;
 }
-@keyframes checkbox-mark-shape-checked {
+@keyframes checkbox-mark-graph-checked {
   0% {
     clip-path: polygon(0 50%, 50% 100%, 0 100%);
   }
@@ -99,7 +85,7 @@ const _STYLE = `
     clip-path: polygon(0 -100%, 200% 100%, 0 100%);
   }
 }
-@keyframes checkbox-mark-shape-indeterminate {
+@keyframes checkbox-mark-graph-indeterminate {
   0% {
     clip-path: polygon(40% 0, 60% 0, 60% 100%, 40% 100%);
   }
@@ -107,16 +93,18 @@ const _STYLE = `
     clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
   }
 }
-*.checkbox-mark-shape {
-  block-size: 100%;
-  inline-size: 100%;
+*.checkbox-mark-graph {
+  block-size: calc(100% - 4px);
+  inline-size: calc(100% - 4px);
+  inset: 2px;
   overflow: visible;
+  position: absolute;
 }
-:host(*[aria-checked="true"]) *.checkbox-mark-shape {
-  animation: checkbox-mark-shape-checked 300ms both;
+:host(*[aria-checked="true"]) *.checkbox-mark-graph {
+  animation: checkbox-mark-graph-checked 300ms both;
 }
-:host(*[aria-checked="mixed"]) *.checkbox-mark-shape {
-  animation: checkbox-mark-shape-indeterminate 300ms both;
+:host(*[aria-checked="mixed"]) *.checkbox-mark-graph {
+  animation: checkbox-mark-graph-indeterminate 300ms both;
 }
 *.checkbox-mark-line {
   fill: none;
@@ -131,6 +119,21 @@ const _STYLE = `
   stroke-linecap: round;
 }
 
+@keyframes checkbox-ripple {
+  0% {
+    opacity: var(--widget-ripple-opacity);
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+*.widget-ripple {
+  animation: checkbox-ripple 600ms both;
+  inset: 0;
+  mix-blend-mode: color-burn; /*TODO darkのとき変える */
+}
 
 *.checkbox-value-label {
   display: none;
@@ -187,22 +190,20 @@ class CheckBox extends Input {
     main.append((CheckBox.#template as HTMLTemplateElement).content.cloneNode(true));
     this.#valueLabelElement = main.querySelector("*.checkbox-value-label") as Element;
 
-    this._eventTarget.addEventListener("click", () => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
-        return;
-      }
-      this.checked = !(this.#checked);
-      this._dispatchChangeEvent();
-    }, { passive: true });
-    (this._eventTarget as HTMLElement).addEventListener("keydown", (event) => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
-        return;
-      }
-      if (["Enter", " "].includes(event.key) === true) {
+    this._addAction("click", {
+      func: () => {
         this.checked = !(this.#checked);
         this._dispatchChangeEvent();
-      }
-    }, { passive: true });
+      },
+    });
+
+    this._addAction("keydown", {
+      keys: [" ", "Enter"],
+      func: () => {
+        this.checked = !(this.#checked);
+        this._dispatchChangeEvent();
+      },
+    });
   }
 
   get checked(): boolean {
@@ -313,20 +314,20 @@ class CheckBox extends Input {
 
   #reflectCheckedToContent(): void {
     this.#drawMark();
-    this.#addRipple();
+    this._addRipple();
     this.#valueLabelElement.textContent = this.#value.label;
   }
 
   #drawMark(): void {
-    const mark = this._main.querySelector("*.checkbox-mark") as SVGElement;
-    const prevShape = mark.querySelector("*.checkbox-mark-shape");
+    const mark = this._main.querySelector("*.checkbox-mark-canvas") as SVGElement;
+    const prevShape = mark.querySelector("*.checkbox-mark-graph");
     if (prevShape) {
       prevShape.remove();
     }
 
     const shape = this.ownerDocument.createElementNS(Ns.SVG, "svg");
     shape.setAttribute("viewBox", "0 0 12 12");
-    shape.classList.add("checkbox-mark-shape");
+    shape.classList.add("checkbox-mark-graph");
 
     let d: string = "";
     if (this.#indeterminate === true) {
@@ -343,10 +344,6 @@ class CheckBox extends Input {
     path.classList.add("checkbox-mark-line");
     shape.append(path);
     mark.append(shape);
-  }
-
-  #addRipple(): void {
-    //TODO
   }
 }
 namespace CheckBox {

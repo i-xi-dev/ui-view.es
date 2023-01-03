@@ -10,8 +10,6 @@ const _STYLE = `
 abstract class Input extends Widget {
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
 
-  #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
-
   static {
     Input.#styleSheet.replaceSync(_STYLE);
   }
@@ -19,13 +17,11 @@ abstract class Input extends Widget {
   constructor(init: Widget.Init) {
     super(init);
 
-    this.#readOnly = false;
-
     this._appendStyleSheet(Input.#styleSheet);
   }
 
   get readOnly(): boolean {
-    return this.#readOnly;
+    return this._readOnly;
   }
 
   set readOnly(value: boolean) {
@@ -76,9 +72,9 @@ abstract class Input extends Widget {
   }
 
   #setReadOnly(value: boolean, reflections: Widget.Reflections): void {
-    const changed = (this.#readOnly !== value);
+    const changed = (this._readOnly !== value);
     if (changed === true) {
-      this.#readOnly = value;
+      this._readOnly = value;
     }
     // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
     // }
@@ -88,7 +84,7 @@ abstract class Input extends Widget {
   }
 
   #reflectToAriaReadonly(): void {
-    this._reflectToAttr(Aria.Property.READONLY, ((this.#readOnly === true) ? "true" : undefined));
+    this._reflectToAttr(Aria.Property.READONLY, ((this._readOnly === true) ? "true" : undefined));
   }
 
   protected _dispatchChangeEvent(): void {
