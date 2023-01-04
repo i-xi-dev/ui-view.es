@@ -18,6 +18,7 @@ namespace Aria {
 
   export const Property = {
     LABEL: "aria-label",
+    MULTILINE: "aria-multiline",
     READONLY: "aria-readonly",
   } as const;
 

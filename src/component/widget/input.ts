@@ -55,7 +55,11 @@ abstract class Input extends Widget {
     this.#setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
   }
 
-  protected get _isCompositing(): boolean {
+  protected get _textEditable(): boolean {
+    return this.#textEditable;
+  }
+
+  protected get _textCompositing(): boolean {
     return this.#textCompositing;
   }
 

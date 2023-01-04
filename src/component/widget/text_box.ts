@@ -22,6 +22,13 @@ const _STYLE = `
   border-radius: var(--widget-corner-radius);
   cursor: text;
 }
+:host(*[aria-multiline="true"]) *.textbox-container *.widget-event-target {
+  align-items: start;
+}
+:host(*:not(*[aria-multiline="true"])) *.textbox-container *.widget-event-target {
+  align-items: center;
+}
+/*TODO 0文字の時、centerにならない ::beforeで何か付けても無駄だった */
 
 *.textbox {
   align-items: center;
@@ -86,9 +93,38 @@ class TextBox extends Input {
     }
     main.append((TextBox.#template as HTMLTemplateElement).content.cloneNode(true));
 
-    //TODO this._addAction("keydown", {
+    this._addAction("keydown", {
+      keys: ["Enter"],
+      func: (event: Event) => {
+        if (this._textEditable !== true) {
+          return;
+        }
+        if (this._textCompositing === true) {
+          return;
+        }
 
+        event.preventDefault();
+        if (this.#multiline === true) {
+          const char = "\n";
+          //const textNode = this._eventTarget.lastChild as Text;
+          //textNode.data = textNode.data + char;
+          this._eventTarget.textContent = this._eventTarget.textContent + char;
+          this._eventTarget.dispatchEvent(new InputEvent("input", {
+            data: char,
+          }));
+        }
+        //TODO this._dispatchChangeEvent();
+      },
+      noPreventDefault: true,
+      allowRepeat: true,
+    });
 
+    this._addAction("input", {
+      func: (event: Event) => {
+//TODO カーソル移動
+      },
+    });
+//TODO enterkeyhint
   }
 
   //TODO get value, set value
@@ -97,9 +133,19 @@ class TextBox extends Input {
     return [
       Input.observedAttributes,
       [
+        Aria.Property.MULTILINE,
         //TODO
       ],
     ].flat();
+  }
+
+  get multiline(): boolean {
+    return this.#multiline;
+  }
+
+  set multiline(value: boolean) {
+    const adjustedMultiLine = !!value;//(value === true);
+    this.#setMultiLine(adjustedMultiLine, Widget._ReflectionsOnPropChanged);
   }
 
   override connectedCallback(): void {
@@ -109,6 +155,7 @@ class TextBox extends Input {
       return;
     }
 
+    this.#setMultiLineFromString(this.getAttribute(Aria.Property.MULTILINE) ?? "", Widget._ReflectionsOnConnected);
     //TODO
 
     this._connected = true;//TODO 更に継承する場合どうする
@@ -122,6 +169,10 @@ class TextBox extends Input {
     }
 
     switch (name) {
+      case Aria.Property.MULTILINE:
+        this.#setMultiLineFromString(newValue, Widget._ReflectionsOnAttrChanged);
+        break;
+
       //TODO
 
       default:
@@ -129,6 +180,30 @@ class TextBox extends Input {
     }
   }
 
+  #setMultiLineFromString(value: string, reflections: Widget.Reflections): void {
+    this.#setMultiLine((value === "true"), reflections);
+  }
+
+  #setMultiLine(value: boolean, reflections: Widget.Reflections): void {
+    const changed = (this.#multiline !== value);
+    if (changed === true) {
+      this.#multiline = value;
+    }
+    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
+      this.#reflectMultiLineToContent();
+    }
+    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
+      this.#reflectToAriaMultiLine();
+    }
+  }
+
+  #reflectToAriaMultiLine(): void {
+    this._reflectToAttr(Aria.Property.MULTILINE, ((this.#multiline === true) ? "true" : undefined));
+  }
+
+  #reflectMultiLineToContent(): void {
+    //TODO
+  }
 }
 namespace TextBox {
 

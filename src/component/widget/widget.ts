@@ -38,6 +38,7 @@ const _STYLE = `
   block-size: var(--widget-size);
   display: flex;
   flex-flow: row nowrap;
+  font-size: 16px;
   inline-size: 100%;
   justify-content: stretch;
   min-block-size: var(--widget-size);
@@ -47,22 +48,28 @@ const _STYLE = `
 :host(*[data-size="x-small"]) *.widget-container {
   --widget-corner-radius: 3px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
+  font-size: 12px;
 }
 :host(*[data-size="small"]) *.widget-container {
   --widget-corner-radius: 4px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
+  font-size: 14px;
 }
 :host(*[data-size="large"]) *.widget-container {
   --widget-corner-radius: 6px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
+  font-size: 18px;
 }
 :host(*[data-size="x-large"]) *.widget-container {
   --widget-corner-radius: 7px;
   --widget-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
+  font-size: 20px;
 }
 
 *.widget-event-target {
   cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
   inset: 0;
   position: absolute;
   padding-inline: 12px;
@@ -211,7 +218,8 @@ abstract class Widget extends HTMLElement {
     this._readOnly = false;
     this.#actions = new Map([
       ["click", new Set()],
-      ["focus", new Set()],
+      //["focus", new Set()],
+      ["input", new Set()],
       ["keydown", new Set()],
     ]);
     this.#reflectingInProgress = "";
@@ -239,18 +247,18 @@ abstract class Widget extends HTMLElement {
 
     container.append(dataList, this.#main, this._eventTarget);
 
-    this._eventTarget.addEventListener("focus", (event: FocusEvent) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
-        return;
-      }
-      const focusActions = this.#actions.get("focus");
-      if (focusActions && (focusActions.size ?? 0) > 0) {
-        const filteredActions = [...focusActions];
-        for (const action of filteredActions) {
-          action.func(event);
-        }
-      }
-    }, { passive: true });
+    // this._eventTarget.addEventListener("focus", (event: FocusEvent) => {
+    //   if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+    //     return;
+    //   }
+    //   const focusActions = this.#actions.get("focus");
+    //   if (focusActions && (focusActions.size ?? 0) > 0) {
+    //     const filteredActions = [...focusActions];
+    //     for (const action of filteredActions) {
+    //       action.func(event);
+    //     }
+    //   }
+    // }, { passive: true });
 
     this._eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
       if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
@@ -268,6 +276,10 @@ abstract class Widget extends HTMLElement {
       }
     }) as EventListener, { passive: false });
 
+    this._eventTarget.addEventListener("input", (event: Event) => {
+      console.log(event)
+    }, { passive: true });
+
     this._eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
       if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
         return;
@@ -278,7 +290,7 @@ abstract class Widget extends HTMLElement {
         if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
           event.preventDefault();
         }
-        if (event.repeat === true) {
+        if (filteredActions.some((action) => action.allowRepeat !== true) && (event.repeat === true)) {
           return;
         }
         for (const action of filteredActions) {
@@ -634,6 +646,7 @@ namespace Widget {
     func: (event: Event) => void,
     keys?: Array<string>,
     noPreventDefault?: boolean,
+    allowRepeat?: boolean,
     //TODO AbortSignal
   };
 
