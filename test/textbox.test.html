@@ -15,5 +15,47 @@ customElements.define("wc-textbox", TextBox);
         <wc-textbox id="test1" onchange="console.log(event)"></wc-textbox>
       </div>
     </div>
+
+    <div class="test-static">
+      <div>
+        <div>aria-busy</div>
+        <wc-textbox aria-busy="true"></wc-textbox>
+        <wc-textbox aria-busy="false"></wc-textbox>
+      </div>
+      <div>
+        <div>aria-disabled</div>
+        <wc-textbox aria-disabled="true"></wc-textbox>
+        <wc-textbox aria-disabled="false"></wc-textbox>
+      </div>
+      <div>
+        <div>aria-hidden</div>
+        <wc-textbox aria-hidden="true"></wc-textbox>
+        <wc-textbox aria-hidden="false"></wc-textbox>
+      </div>
+      <div>
+        <div>aria-label</div>
+        <wc-textbox aria-label=""></wc-textbox>
+        <wc-textbox aria-label="Label"></wc-textbox>
+      </div>
+      <div>
+        <div>aria-multiline</div>
+        <wc-textbox aria-multiline="true"></wc-textbox>
+        <wc-textbox aria-multiline="false"></wc-textbox>
+      </div>
+      <div>
+        <div>aria-readonly</div>
+        <wc-textbox aria-readonly="true"></wc-textbox>
+        <wc-textbox aria-readonly="false"></wc-textbox>
+      </div>
+      <div>
+        <div>data-size</div>
+        <wc-textbox data-size=""></wc-textbox>
+        <wc-textbox data-size="x-small" aria-label="X-Small"></wc-textbox>
+        <wc-textbox data-size="small" aria-label="Small"></wc-textbox>
+        <wc-textbox data-size="medium" aria-label="Medium"></wc-textbox>
+        <wc-textbox data-size="large" aria-label="Large"></wc-textbox>
+        <wc-textbox data-size="x-large" aria-label="X-Large"></wc-textbox>
+      </div>
+    </div>
   </body>
 </html>

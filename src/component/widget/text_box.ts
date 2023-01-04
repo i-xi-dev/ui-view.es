@@ -20,6 +20,7 @@ const _STYLE = `
 }
 *.textbox-container *.widget-event-target {
   border-radius: var(--widget-corner-radius);
+  cursor: text;
 }
 
 *.textbox {

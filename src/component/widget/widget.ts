@@ -67,9 +67,6 @@ const _STYLE = `
   position: absolute;
   padding-inline: 12px;
 }
-*.widget-event-target[contenteditable] {
-  cursor: text;/*TODO vertical-text */
-}
 *.widget-event-target:focus {
   box-shadow: 0 0 0 2px var(--widget-focusring-color);
   outline: none;
@@ -181,7 +178,7 @@ abstract class Widget extends HTMLElement {
   readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
   readonly #main: Element;
-  readonly #eventTarget: HTMLElement;
+  protected readonly _eventTarget: HTMLElement;
   readonly #dataListSlot: HTMLSlotElement;
 
   protected static _ReflectionsOnConnected: Widget.Reflections = {
@@ -233,19 +230,16 @@ abstract class Widget extends HTMLElement {
     this.#dataListSlot.name = "datalist";
     dataList.append(this.#dataListSlot);
 
-    this.#eventTarget = this.ownerDocument.createElement("div");
-    this.#eventTarget.classList.add("widget-event-target");
-    if (init?.textEditable === true) {
-      this.#eventTarget.setAttribute("contenteditable", "true");
-    }
+    this._eventTarget = this.ownerDocument.createElement("div");
+    this._eventTarget.classList.add("widget-event-target");
 
     this.#main = this.ownerDocument.createElement("div");
     this.#main.classList.add("widget");
     this.#main.classList.add(init.className);
 
-    container.append(dataList, this.#main, this.#eventTarget);
+    container.append(dataList, this.#main, this._eventTarget);
 
-    this.#eventTarget.addEventListener("focus", (event: FocusEvent) => {
+    this._eventTarget.addEventListener("focus", (event: FocusEvent) => {
       if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
         return;
       }
@@ -258,7 +252,7 @@ abstract class Widget extends HTMLElement {
       }
     }, { passive: true });
 
-    this.#eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
+    this._eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
       if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
         return;
       }
@@ -274,7 +268,7 @@ abstract class Widget extends HTMLElement {
       }
     }) as EventListener, { passive: false });
 
-    this.#eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
+    this._eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
       if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
         return;
       }
@@ -471,7 +465,7 @@ abstract class Widget extends HTMLElement {
       this.#busy = value;
     }
     if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-      this.#reflectBusyToContent();
+      this._reflectBusyToContent();
     }
     if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaBusy();
@@ -488,7 +482,7 @@ abstract class Widget extends HTMLElement {
       this.#disabled = value;
     }
     if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-      this.#reflectDisabledToContent();
+      this._reflectDisabledToContent();
     }
     if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaDisabled();
@@ -556,26 +550,23 @@ abstract class Widget extends HTMLElement {
     this.#reflectingInProgress = "";
   }
 
-  #reflectBusyToContent(): void {
-    if (this.#eventTarget) {
+  #resetFocusable(): void {
+    if (this._eventTarget) {
       if ((this.#busy === true) || (this.#disabled === true)) {
-        this.#eventTarget.removeAttribute("tabindex");
+        this._eventTarget.removeAttribute("tabindex");
       }
       else {
-        this.#eventTarget.setAttribute("tabindex", "0");
+        this._eventTarget.setAttribute("tabindex", "0");
       }
     }
   }
 
-  #reflectDisabledToContent(): void {
-    if (this.#eventTarget) {
-      if ((this.#busy === true) || (this.#disabled === true)) {
-        this.#eventTarget.removeAttribute("tabindex");
-      }
-      else {
-        this.#eventTarget.setAttribute("tabindex", "0");
-      }
-    }
+  protected _reflectBusyToContent(): void {
+    this.#resetFocusable();
+  }
+
+  protected _reflectDisabledToContent(): void {
+    this.#resetFocusable();
   }
 
   #reflectToAriaBusy(): void {
@@ -632,7 +623,6 @@ namespace Widget {
   export type Init = {
     role: Aria.Role,
     className: string,
-    textEditable?: boolean,
   };
 
   export type Reflections = {

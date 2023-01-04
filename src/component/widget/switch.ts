@@ -31,6 +31,7 @@ const _MAIN_CONTENT_TEMPLATE = `
 //XXX shadowなしで、白枠常時表示てもいいかも
 //XXX itemのdisabledは無視する
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
+//TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 
 const _STYLE = `
