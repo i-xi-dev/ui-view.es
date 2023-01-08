@@ -16,140 +16,6 @@ const _WidgetDimension = {
   [_WidgetSize.X_LARGE]: 44,
 } as const;
 
-const _STYLE = `
-:host {
-  display: block;
-}
-:host(*[aria-hidden="true"]) {
-  display: none;
-}
-
-*.widget-container {
-  --widget-accent-color: #136ed2;
-  --widget-border-width: 2px;
-  --widget-corner-radius: 5px;
-  --widget-focusring-color: orange;
-  --widget-glow-blur-radius: 6px;
-  --widget-glow-extent: 2px;
-  --widget-main-color: #fff;
-  --widget-ripple-opacity: 0.6;
-  --widget-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
-  align-items: center;
-  block-size: var(--widget-size);
-  display: flex;
-  flex-flow: row nowrap;
-  font-size: 16px;
-  inline-size: 100%;
-  justify-content: stretch;
-  min-block-size: var(--widget-size);
-  min-inline-size: var(--widget-size);
-  position: relative;
-}
-:host(*[data-size="x-small"]) *.widget-container {
-  --widget-corner-radius: 3px;
-  --widget-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
-  font-size: 12px;
-}
-:host(*[data-size="small"]) *.widget-container {
-  --widget-corner-radius: 4px;
-  --widget-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
-  font-size: 14px;
-}
-:host(*[data-size="large"]) *.widget-container {
-  --widget-corner-radius: 6px;
-  --widget-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
-  font-size: 18px;
-}
-:host(*[data-size="x-large"]) *.widget-container {
-  --widget-corner-radius: 7px;
-  --widget-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
-  font-size: 20px;
-}
-
-*.widget-event-target {
-  cursor: pointer;
-  display: flex;
-  flex-flow: row nowrap;
-  inset: 0;
-  position: absolute;
-  padding-inline: 12px;
-}
-*.widget-event-target:focus {
-  box-shadow: 0 0 0 2px var(--widget-focusring-color);
-  outline: none;
-}
-:host(*[aria-busy="true"]) *.widget-container *.widget-event-target,
-:host(*[aria-busy="true"][aria-disabled="true"]) *.widget-container *.widget-event-target {
-  cursor: wait;
-}
-:host(*[aria-disabled="true"]) *.widget-container *.widget-event-target {
-  cursor: not-allowed;
-}
-
-*.widget,
-*.widget * {
-  pointer-events: none;
-}
-:host(*[aria-busy="true"]) *.widget,
-:host(*[aria-disabled="true"]) *.widget {
-  filter: contrast(0.5) grayscale(1);
-  opacity: 0.6;
-}
-
-*.widget-glow {
-  background-color: currentcolor;
-  border-radius: var(--widget-corner-radius);
-  box-shadow: 0 0 0 0 currentcolor;
-  color: var(--widget-main-color);
-  inset: 0;
-  opacity: 0;
-  position: absolute;
-  transition: box-shadow 200ms, opacity 200ms;
-}
-*.widget-event-target:hover + *.widget *.widget-glow {
-  box-shadow: 0 0 0 var(--widget-glow-extent) currentcolor;
-  opacity: 1;
-}
-:host(*[aria-busy="true"]) *.widget-event-target:hover + *.widget *.widget-glow,
-:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.widget *.widget-glow,
-:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.widget *.widget-glow {
-  box-shadow: 0 0 0 0 currentcolor !important;
-  opacity: 0 !important;
-}
-*.widget-glow::before {
-  background-color: currentcolor;
-  border-radius: var(--widget-corner-radius);
-  box-shadow: 0 0 0 0 currentcolor;
-  color: var(--widget-accent-color);
-  content: "";
-  inset: 0;
-  opacity: 0;
-  position: absolute;
-  transition: box-shadow 200ms, opacity 200ms;
-}
-*.widget-event-target:hover + *.widget *.widget-glow::before {
-  box-shadow: 0 0 0 var(--widget-glow-blur-radius) currentcolor;
-  opacity: 0.5;
-}
-:host(*[aria-busy="true"]) *.widget-event-target:hover + *.widget *.widget-glow::before,
-:host(*[aria-disabled="true"]) *.widget-event-target:hover + *.widget *.widget-glow::before,
-:host(*[aria-readonly="true"]) *.widget-event-target:hover + *.widget *.widget-glow::before {
-  box-shadow: 0 0 0 0 currentcolor !important;
-  opacity: 0 !important;
-}
-
-*.widget-effects {
-  inset: 0;
-  position: absolute;
-}
-
-*.widget-ripple {
-  background-color: var(--widget-accent-color);
-  border-radius: 50%;
-  position: absolute;
-}
-`;
-
 const _ShadowRootInit: ShadowRootInit = {
   mode: "closed",
   delegatesFocus: true,
@@ -171,9 +37,156 @@ const DataAttr = {
 } as const;
 
 abstract class Widget extends HTMLElement {
+  static readonly CLASS_NAME: string = "widget";
+  static readonly #STYLE = `
+    :host {
+      display: block;
+    }
+    :host(*[aria-hidden="true"]) {
+      display: none;
+    }
+
+    *.${ Widget.CLASS_NAME }-container {
+      --${ Widget.CLASS_NAME }-accent-color: #136ed2;
+      --${ Widget.CLASS_NAME }-border-width: 2px;
+      --${ Widget.CLASS_NAME }-corner-radius: 5px;
+      --${ Widget.CLASS_NAME }-focusring-color: orange;
+      --${ Widget.CLASS_NAME }-glow-blur-radius: 6px;
+      --${ Widget.CLASS_NAME }-glow-extent: 2px;
+      --${ Widget.CLASS_NAME }-main-color: #fff;
+      --${ Widget.CLASS_NAME }-ripple-opacity: 0.6;
+      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
+      align-items: center;
+      block-size: var(--${ Widget.CLASS_NAME }-size);
+      display: flex;
+      flex-flow: row nowrap;
+      font-size: 16px;
+      inline-size: 100%;
+      justify-content: stretch;
+      min-block-size: var(--${ Widget.CLASS_NAME }-size);
+      min-inline-size: var(--${ Widget.CLASS_NAME }-size);
+      position: relative;
+    }
+    :host(*[data-size="x-small"]) *.${ Widget.CLASS_NAME }-container {
+      --${ Widget.CLASS_NAME }-corner-radius: 3px;
+      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
+      font-size: 12px;
+    }
+    :host(*[data-size="small"]) *.${ Widget.CLASS_NAME }-container {
+      --${ Widget.CLASS_NAME }-corner-radius: 4px;
+      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
+      font-size: 14px;
+    }
+    :host(*[data-size="large"]) *.${ Widget.CLASS_NAME }-container {
+      --${ Widget.CLASS_NAME }-corner-radius: 6px;
+      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
+      font-size: 18px;
+    }
+    :host(*[data-size="x-large"]) *.${ Widget.CLASS_NAME }-container {
+      --${ Widget.CLASS_NAME }-corner-radius: 7px;
+      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
+      font-size: 20px;
+    }
+
+    *.${ Widget.CLASS_NAME }-event-target {
+      cursor: pointer;
+      display: flex;
+      flex-flow: row nowrap;
+      inset: 0;
+      position: absolute;
+      padding-inline: 12px;
+    }
+    *.${ Widget.CLASS_NAME }-event-target[contenteditable] {
+      /* textareaを使うなら不要
+      cursor: text;
+      white-space: pre;
+      */
+    }
+    *.${ Widget.CLASS_NAME }-event-target:focus {
+      box-shadow: 0 0 0 2px var(--${ Widget.CLASS_NAME }-focusring-color);
+      outline: none;
+    }
+    :host(*[aria-busy="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[aria-busy="true"][aria-disabled="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[aria-busy="true"][aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[aria-busy="true"][aria-disabled="true"][aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+      cursor: wait;
+    }
+    :host(*[aria-disabled="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[aria-disabled="true"][aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+      cursor: not-allowed;
+    }
+    :host(*[aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+      cursor: default;
+    }
+
+    *.widget,
+    *.widget * {
+      pointer-events: none;
+    }
+    :host(*[aria-busy="true"]) *.widget,
+    :host(*[aria-disabled="true"]) *.widget {
+      filter: contrast(0.5) grayscale(1);
+      opacity: 0.6;
+    }
+
+    *.${ Widget.CLASS_NAME }-glow {
+      background-color: currentcolor;
+      border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
+      box-shadow: 0 0 0 0 currentcolor;
+      color: var(--${ Widget.CLASS_NAME }-main-color);
+      inset: 0;
+      opacity: 0;
+      position: absolute;
+      transition: box-shadow 200ms, opacity 200ms;
+    }
+    *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow {
+      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-glow-extent) currentcolor;
+      opacity: 1;
+    }
+    :host(*[aria-busy="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
+    :host(*[aria-disabled="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
+    :host(*[aria-readonly="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow {
+      box-shadow: 0 0 0 0 currentcolor !important;
+      opacity: 0 !important;
+    }
+    *.${ Widget.CLASS_NAME }-glow::before {
+      background-color: currentcolor;
+      border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
+      box-shadow: 0 0 0 0 currentcolor;
+      color: var(--${ Widget.CLASS_NAME }-accent-color);
+      content: "";
+      inset: 0;
+      opacity: 0;
+      position: absolute;
+      transition: box-shadow 200ms, opacity 200ms;
+    }
+    *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before {
+      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-glow-blur-radius) currentcolor;
+      opacity: 0.5;
+    }
+    :host(*[aria-busy="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
+    :host(*[aria-disabled="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
+    :host(*[aria-readonly="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before {
+      box-shadow: 0 0 0 0 currentcolor !important;
+      opacity: 0 !important;
+    }
+
+    *.${ Widget.CLASS_NAME }-effects {
+      inset: 0;
+      position: absolute;
+    }
+
+    *.${ Widget.CLASS_NAME }-ripple {
+      background-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      border-radius: 50%;
+      position: absolute;
+    }
+  `;
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
 
-  readonly #role: string;
+  protected readonly _init: Readonly<Widget.Init>;
+
   readonly #root: ShadowRoot;
   #connected: boolean;
   #size: Widget.Size;
@@ -181,11 +194,12 @@ abstract class Widget extends HTMLElement {
   #disabled: boolean; // Aria仕様では各サブクラスで定義されるが、disabledにならない物は実装予定がないのでここで定義する
   #hidden: boolean;
   #label: string;
-  protected _readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
+  #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
+  #textCompositing: boolean;
   readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
   readonly #main: Element;
-  protected readonly _eventTarget: HTMLElement;
+  readonly #eventTarget: HTMLElement;
   readonly #dataListSlot: HTMLSlotElement;
 
   protected static _ReflectionsOnConnected: Widget.Reflections = {
@@ -202,53 +216,15 @@ abstract class Widget extends HTMLElement {
   };
 
   static {
-    Widget.#styleSheet.replaceSync(_STYLE);
+    Widget.#styleSheet.replaceSync(Widget.#STYLE);
   }
 
-  constructor(init: Widget.Init) {
-    super();
-    this.#role = init.role;
-    this.#root = this.attachShadow(_ShadowRootInit);
-    this.#connected = false;
-    this.#size = Widget.Size.MEDIUM;
-    this.#busy = false;
-    this.#disabled = false;
-    this.#hidden = false;
-    this.#label = "";
-    this._readOnly = false;
-    this.#actions = new Map([
-      ["click", new Set()],
-      //["focus", new Set()],
-      ["input", new Set()],
-      ["keydown", new Set()],
-    ]);
-    this.#reflectingInProgress = "";
+  protected _buildEventTarget(): HTMLElement {
+    const eventTarget = this.ownerDocument.createElement("div");
+    eventTarget.classList.add(`${ Widget.CLASS_NAME }-event-target`);
 
-    this._appendStyleSheet(Widget.#styleSheet);
-
-    const container = this.ownerDocument.createElement("div");
-    container.classList.add("widget-container");
-    container.classList.add(`${ init.className }-container`);
-
-    const dataList = this.ownerDocument.createElement("datalist");
-    dataList.hidden = true;
-    dataList.classList.add("widget-datalist");
-
-    this.#dataListSlot = this.ownerDocument.createElement("slot");
-    this.#dataListSlot.name = "datalist";
-    dataList.append(this.#dataListSlot);
-
-    this._eventTarget = this.ownerDocument.createElement("div");
-    this._eventTarget.classList.add("widget-event-target");
-
-    this.#main = this.ownerDocument.createElement("div");
-    this.#main.classList.add("widget");
-    this.#main.classList.add(init.className);
-
-    container.append(dataList, this.#main, this._eventTarget);
-
-    // this._eventTarget.addEventListener("focus", (event: FocusEvent) => {
-    //   if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+    // eventTarget.addEventListener("focus", (event: FocusEvent) => {
+    //   if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
     //     return;
     //   }
     //   const focusActions = this.#actions.get("focus");
@@ -260,8 +236,8 @@ abstract class Widget extends HTMLElement {
     //   }
     // }, { passive: true });
 
-    this._eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
-      if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+    eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
+      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
         return;
       }
       const clickActions = this.#actions.get("click");
@@ -276,12 +252,12 @@ abstract class Widget extends HTMLElement {
       }
     }) as EventListener, { passive: false });
 
-    this._eventTarget.addEventListener("input", (event: Event) => {
+    eventTarget.addEventListener("input", (event: Event) => {
       console.log(event)
     }, { passive: true });
 
-    this._eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this._readOnly === true)) {
+    eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
         return;
       }
       const keyDownActions = this.#actions.get("keydown");
@@ -298,6 +274,67 @@ abstract class Widget extends HTMLElement {
         }
       }
     }, { passive: false });
+
+    if (this._init.textEditable === true) {
+      eventTarget.setAttribute("contenteditable", "true");
+
+      eventTarget.addEventListener("compositionstart", (event: CompositionEvent) => {
+        void event;
+        console.log("compositionstart");
+        this.#textCompositing = true;
+      }, { passive: true });
+
+      eventTarget.addEventListener("compositionend", (event: CompositionEvent) => {
+        void event;
+        console.log("compositionend");
+        this.#textCompositing = false;
+      }, { passive: true });
+    }
+
+    return eventTarget;
+  }
+
+  constructor(init: Widget.Init) {
+    super();
+    this._init = Object.freeze(globalThis.structuredClone(init));
+    this.#root = this.attachShadow(_ShadowRootInit);
+    this.#connected = false;
+    this.#size = Widget.Size.MEDIUM;
+    this.#busy = false;
+    this.#disabled = false;
+    this.#hidden = false;
+    this.#label = "";
+    this.#readOnly = false;
+    this.#textCompositing = false;
+    this.#actions = new Map([
+      ["click", new Set()],
+      //["focus", new Set()],
+      ["input", new Set()],
+      ["keydown", new Set()],
+    ]);
+    this.#reflectingInProgress = "";
+
+    this._appendStyleSheet(Widget.#styleSheet);
+
+    const container = this.ownerDocument.createElement("div");
+    container.classList.add(`${ Widget.CLASS_NAME }-container`);
+    container.classList.add(`${ this._init.className }-container`);
+
+    const dataList = this.ownerDocument.createElement("datalist");
+    dataList.hidden = true;
+    dataList.classList.add(`${ Widget.CLASS_NAME }-datalist`);
+
+    this.#dataListSlot = this.ownerDocument.createElement("slot");
+    this.#dataListSlot.name = "datalist";
+    dataList.append(this.#dataListSlot);
+
+    this.#eventTarget = this._buildEventTarget();
+
+    this.#main = this.ownerDocument.createElement("div");
+    this.#main.classList.add(Widget.CLASS_NAME);
+    this.#main.classList.add(this._init.className);
+
+    container.append(dataList, this.#eventTarget, this.#main);
 
     this.#root.append(container);
   }
@@ -354,6 +391,15 @@ abstract class Widget extends HTMLElement {
     this.#setLabel(adjustedLabel, Widget._ReflectionsOnPropChanged);
   }
 
+  get readOnly(): boolean {
+    return this.#readOnly;
+  }
+
+  set readOnly(value: boolean) {
+    const adjustedReadOnly = !!value;//(value === true);
+    this._setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
+  }
+
   protected get _reflectingInProgress(): string {
     return this.#reflectingInProgress;
   }
@@ -369,6 +415,10 @@ abstract class Widget extends HTMLElement {
       return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
     }) as Array<HTMLOptionElement>;
     //XXX 値重複は警告する？
+  }
+
+  protected get _textCompositing(): boolean {
+    return this.#textCompositing;
   }
 
   // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
@@ -405,6 +455,7 @@ abstract class Widget extends HTMLElement {
   static get observedAttributes(): Array<string> {
     return [
       Aria.Property.LABEL, // 外部labelを使用する場合は使用しない
+      Aria.Property.READONLY,
       Aria.State.BUSY,
       Aria.State.DISABLED,
       Aria.State.HIDDEN,
@@ -423,6 +474,9 @@ abstract class Widget extends HTMLElement {
     this.#setDisabledFromString(this.getAttribute(Aria.State.DISABLED) ?? "", Widget._ReflectionsOnConnected);
     this.#setHiddenFromString(this.getAttribute(Aria.State.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
     this.#setLabel(this.getAttribute(Aria.Property.LABEL) ?? "", Widget._ReflectionsOnConnected);
+    if (this._init.inputable === true) {
+      this.#setReadOnlyFromString(this.getAttribute(Aria.Property.READONLY) ?? "", Widget._ReflectionsOnConnected);
+    }
     this.#setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
     //this.#connected = true;
@@ -444,6 +498,10 @@ abstract class Widget extends HTMLElement {
     switch (name) {
       case Aria.Property.LABEL:
         this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
+        break;
+
+      case Aria.Property.READONLY:
+        this.#setReadOnlyFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       case Aria.State.BUSY:
@@ -529,6 +587,25 @@ abstract class Widget extends HTMLElement {
     }
   }
 
+  #setReadOnlyFromString(value: string, reflections: Widget.Reflections): void {
+    this._setReadOnly((value === "true"), reflections);
+  }
+
+  protected _setReadOnly(value: boolean, reflections: Widget.Reflections): void {
+    if (this._init.inputable === true) {
+      const changed = (this.#readOnly !== value);
+      if (changed === true) {
+        this.#readOnly = value;
+      }
+      if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
+        this.#reflectReadOnlyToContent();
+      }
+      if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
+        this.#reflectToAriaReadonly();
+      }
+    }
+  }
+
   #setSize(value: string, reflections: Widget.Reflections): void {
     const valueIsWidgetSize = Object.values(Widget.Size).includes(value as Widget.Size);
     const adjustedSize = (valueIsWidgetSize === true) ? (value as Widget.Size) : Widget.Size.MEDIUM;
@@ -548,7 +625,7 @@ abstract class Widget extends HTMLElement {
   }
 
   #reflectToRole(): void {
-    this.setAttribute("role", this.#role);
+    this.setAttribute("role", this._init.role);
   }
 
   protected _reflectToAttr(name: string, value?: string): void {
@@ -563,22 +640,39 @@ abstract class Widget extends HTMLElement {
   }
 
   #resetFocusable(): void {
-    if (this._eventTarget) {
+    if (this.#eventTarget) {
       if ((this.#busy === true) || (this.#disabled === true)) {
-        this._eventTarget.removeAttribute("tabindex");
+        this.#eventTarget.removeAttribute("tabindex");
       }
       else {
-        this._eventTarget.setAttribute("tabindex", "0");
+        this.#eventTarget.setAttribute("tabindex", "0");
+      }
+    }
+  }
+
+  #resetEditable(): void {
+    if (this.#eventTarget && (this._init.textEditable === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+        this.#eventTarget.removeAttribute("contenteditable");
+      }
+      else {
+        this.#eventTarget.setAttribute("contenteditable", "true");
       }
     }
   }
 
   protected _reflectBusyToContent(): void {
     this.#resetFocusable();
+    this.#resetEditable();
   }
 
   protected _reflectDisabledToContent(): void {
     this.#resetFocusable();
+    this.#resetEditable();
+  }
+
+  #reflectReadOnlyToContent(): void {
+    this.#resetEditable();
   }
 
   #reflectToAriaBusy(): void {
@@ -597,6 +691,10 @@ abstract class Widget extends HTMLElement {
     this._reflectToAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
   }
 
+  #reflectToAriaReadonly(): void {
+    this._reflectToAttr(Aria.Property.READONLY, ((this.#readOnly === true) ? "true" : undefined));
+  }
+
   #reflectToDataSize(): void {
     this._reflectToAttr(DataAttr.SIZE, ((this.#size !== Widget.Size.MEDIUM) ? this.#size : undefined));
   }
@@ -607,11 +705,17 @@ abstract class Widget extends HTMLElement {
     }
 
     const ripple = this.ownerDocument.createElement("div");
-    ripple.classList.add("widget-ripple");
-    (this._main.querySelector("*.widget-effects") as Element).append(ripple);
+    ripple.classList.add(`${ Widget.CLASS_NAME }-ripple`);
+    (this._main.querySelector(`*.${ Widget.CLASS_NAME }-effects`) as Element).append(ripple);
     globalThis.setTimeout(() => {
       ripple.remove();
     }, 1000);
+  }
+
+  protected _dispatchChangeEvent(): void {
+    this.dispatchEvent(new Event("change", {
+      bubbles: true,
+    }));
   }
 }
 namespace Widget {
@@ -635,6 +739,8 @@ namespace Widget {
   export type Init = {
     role: Aria.Role,
     className: string,
+    inputable: boolean,
+    textEditable: boolean,
   };
 
   export type Reflections = {

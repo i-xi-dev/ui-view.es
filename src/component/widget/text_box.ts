@@ -1,13 +1,12 @@
 import { Aria } from "./aria";
 import { Widget } from "./widget";
-import { Input } from "./input";
 
 const _MAIN_CONTENT_TEMPLATE = `
 <div class="textbox-control">
   <div class="textbox-box">
-    <div class="widget-glow"></div>
+    <div class="${ Widget.CLASS_NAME }-glow"></div>
     <div class="textbox-box-surface"></div>
-    <div class="widget-effects"></div>
+    <div class="${ Widget.CLASS_NAME }-effects"></div>
     <div class="textbox-value-label"></div>
   </div>
 </div>
@@ -18,14 +17,14 @@ const _STYLE = `
   flex: 1 1 100%;
   min-inline-size: 44px;
 }
-*.textbox-container *.widget-event-target {
-  border-radius: var(--widget-corner-radius);
+*.textbox-container *.${ Widget.CLASS_NAME }-event-target {
+  border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
   cursor: text;
 }
-:host(*[aria-multiline="true"]) *.textbox-container *.widget-event-target {
+:host(*[aria-multiline="true"]) *.textbox-container *.${ Widget.CLASS_NAME }-event-target {
   align-items: start;
 }
-:host(*:not(*[aria-multiline="true"])) *.textbox-container *.widget-event-target {
+:host(*:not(*[aria-multiline="true"])) *.textbox-container *.${ Widget.CLASS_NAME }-event-target {
   align-items: center;
 }
 /*TODO 0文字の時、centerにならない ::beforeで何か付けても無駄だった */
@@ -50,15 +49,15 @@ const _STYLE = `
 }
 
 *.textbox-box-surface {
-  background-color: var(--widget-main-color);
-  border: 2px solid var(--widget-accent-color);
-  border-radius: var(--widget-corner-radius);
+  background-color: var(--${ Widget.CLASS_NAME }-main-color);
+  border: 2px solid var(--${ Widget.CLASS_NAME }-accent-color);
+  border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
   inset: 0;
   position: absolute;
 }
 `;
 
-class TextBox extends Input {
+class TextBox extends Widget {
   static readonly #className: string = "textbox";
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
@@ -78,6 +77,7 @@ class TextBox extends Input {
     super({
       role: Aria.Role.TEXTBOX,
       className: TextBox.#className,
+      inputable: true,
       textEditable: true,
     });
 
@@ -96,9 +96,9 @@ class TextBox extends Input {
     this._addAction("keydown", {
       keys: ["Enter"],
       func: (event: Event) => {
-        if (this._textEditable !== true) {
-          return;
-        }
+        // if (this._textEditable !== true) {
+        //   return;
+        // }
         if (this._textCompositing === true) {
           return;
         }
@@ -108,10 +108,11 @@ class TextBox extends Input {
           const char = "\n";
           //const textNode = this._eventTarget.lastChild as Text;
           //textNode.data = textNode.data + char;
-          this._eventTarget.textContent = this._eventTarget.textContent + char;
-          this._eventTarget.dispatchEvent(new InputEvent("input", {
-            data: char,
-          }));
+
+          // this._eventTarget.textContent = this._eventTarget.textContent + char;
+          // this._eventTarget.dispatchEvent(new InputEvent("input", {
+          //   data: char,
+          // }));
         }
         //TODO this._dispatchChangeEvent();
       },
@@ -131,7 +132,7 @@ class TextBox extends Input {
 
   static override get observedAttributes(): Array<string> {
     return [
-      Input.observedAttributes,
+      Widget.observedAttributes,
       [
         Aria.Property.MULTILINE,
         //TODO

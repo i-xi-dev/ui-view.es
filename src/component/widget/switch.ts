@@ -1,23 +1,11 @@
+import { Ns } from "./ns";
 import { Aria } from "./aria";
 import { Widget } from "./widget";
-import { Input } from "./input";
 
 const _TRACK_OFFSET_INLINE_START = 4;
 
-const _MAIN_CONTENT_TEMPLATE = `
-<div class="switch-control">
-  <div class="switch-track">
-    <div class="switch-track-surface"></div>
-    <div class="switch-thumb-shadow"></div>
-  </div>
-  <div class="switch-thumb">
-    <div class="widget-glow"></div>
-    <div class="widget-effects"></div>
-    <div class="switch-thumb-surface"></div>
-  </div>
-</div>
-<output class="switch-value-label"></output>
-`;
+const _ENCODED_MASK = globalThis.encodeURIComponent(`<svg xmlns="${ Ns.SVG }" width="48" height="48"><clipPath id="c1"><path d="M 0 0 L 48 0 L 48 48 L 0 48 z M 24 16 A 8 8 -90 0 0 24 32 A 8 8 -90 0 0 24 16 z"/></clipPath><rect width="48" height="48" fill="#000" clip-path="url(#c1)"/></svg>`);
+
 //TODO hover でコントラスト上げ、activeで明るくする
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
@@ -33,145 +21,167 @@ const _MAIN_CONTENT_TEMPLATE = `
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
 //TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
-
-const _STYLE = `
-:host {
-  flex: none;
-  inline-size: max-content;
-}
-*.switch-container *.widget-event-target {
-  border-radius: 4px;
-  margin-inline: -8px;
-}
-
-*.switch {
-  --switch-space: ${ _TRACK_OFFSET_INLINE_START }px;
-  --switch-switching-time: 150ms;
-  --switch-inline-size: calc(var(--widget-size) * 1.25);
-  --switch-block-size: calc(var(--widget-size) / 2);
-  align-items: center;
-  block-size: 100%;
-  column-gap: 0;
-  display: flex;
-  flex-flow: row nowrap;
-}
-:host(*[data-value-label-visible="true"]) *.switch {
-  column-gap: 6px;
-}
-:host(*[data-value-label-position="before"]) *.switch {
-  flex-flow: row-reverse nowrap;
-}
-*.switch-control {
-  block-size: var(--switch-block-size);
-  inline-size: var(--switch-inline-size);
-  margin-inline: var(--switch-space);
-  position: relative;
-}
-*.switch-track {
-  block-size: inherit;
-  border-radius: calc(var(--widget-size) / 4);
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-  /*overflow: hidden;*/
-  position: relative;
-  transition: clip-path var(--switch-switching-time);
-}
-
-*.switch-track-surface {
-  background-color: var(--widget-main-color);
-  border: var(--widget-border-width) solid var(--widget-accent-color);
-  border-radius: inherit;
-  inset: 0;
-  position: absolute;
-  transition: background-color var(--switch-switching-time);
-}
-:host(*[aria-checked="true"]) *.switch-track-surface {
-  background-color: var(--widget-accent-color);
-}
-
-*.switch-thumb-shadow,
-*.switch-thumb {
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  position: absolute;
-  transition: inset-inline-start var(--switch-switching-time);
-}
-*.switch-thumb-shadow {
-  --switch-thumb-shadow-extent: calc(var(--switch-space) + var(--widget-border-width));
-  background-color: var(--widget-main-color);
-  block-size: calc(var(--switch-block-size) + calc(var(--switch-thumb-shadow-extent) * 2));
-  border-radius: 50%;
-  inline-size: calc(var(--switch-block-size) + calc(var(--switch-thumb-shadow-extent) * 2));
-  margin: calc(var(--switch-thumb-shadow-extent) * -1);
-}
-
-*.switch-thumb {
-  block-size: var(--switch-block-size);
-  inline-size: var(--switch-block-size);
-}
-:host(*[aria-checked="true"]) *.switch-thumb-shadow,
-:host(*[aria-checked="true"]) *.switch-thumb {
-  inset-inline-start: calc(var(--switch-inline-size) - var(--switch-block-size));
-}
-*.widget-glow,
-*.widget-effects,
-*.switch-thumb-surface {
-  border-radius: 50%;
-  margin: calc(var(--switch-space) * -1);
-}
-*.widget-glow::before {
-  border-radius: inherit;
-}
-
-*.switch-thumb-surface {
-  background-color: var(--widget-main-color);
-  border: var(--widget-border-width) solid var(--widget-accent-color);
-  inset: 0;
-  position: absolute;
-  transition: background-color var(--switch-switching-time);
-}
-:host(*[aria-checked="true"]) *.switch-thumb-surface {
-  background-color: var(--widget-accent-color);
-}
-
-@keyframes switch-ripple {
-  0% {
-    opacity: var(--widget-ripple-opacity);
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(2.4);
-  }
-}
-*.widget-ripple {
-  animation: switch-ripple 600ms both;
-  inset: 0;
-  mix-blend-mode: color-burn; /*TODO darkのとき変える */
-}
-
-*.switch-value-label {
-  display: none;
-  user-select: none;
-  white-space: pre;
-}
-:host(*[data-value-label-visible="true"]) *.switch-value-label {
-  display: block;
-}
-*.switch-value-label:not(*:empty) {
-  text-align: start;
-}
-:host(*[data-value-label-position="before"]) *.switch-value-label:not(*:empty) {
-  text-align: end;
-}
-`;//TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
+//TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
 
 const DataAttr = {
   VALUE_LABEL_VISIBLE: "data-value-label-visible",
   VALUE_LABEL_POSITION: "data-value-label-position",
 } as const;
 
-class Switch extends Input {
-  static readonly #className: string = "switch";
+class Switch extends Widget {
+  static override readonly CLASS_NAME: string = "switch";
+  static readonly #TEMPLATE = `
+    <div class="${ Switch.CLASS_NAME }-control">
+      <div class="${ Switch.CLASS_NAME }-track">
+        <div class="${ Switch.CLASS_NAME }-track-surface"></div>
+        <div class="${ Switch.CLASS_NAME }-thumb-shadow"></div>
+      </div>
+      <div class="${ Switch.CLASS_NAME }-thumb">
+        <div class="${ Widget.CLASS_NAME }-glow"></div>
+        <div class="${ Widget.CLASS_NAME }-effects"></div>
+        <div class="${ Switch.CLASS_NAME }-thumb-surface"></div>
+      </div>
+    </div>
+    <output class="${ Switch.CLASS_NAME }-value-label"></output>
+  `;
+  static readonly #STYLE = `
+    :host {
+      flex: none;
+      inline-size: max-content;
+    }
+    *.${ Switch.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+      border-radius: 4px;
+      margin-inline: -8px;
+    }
+
+    *.${ Switch.CLASS_NAME } {
+      --${ Switch.CLASS_NAME }-space: ${ _TRACK_OFFSET_INLINE_START }px;
+      --${ Switch.CLASS_NAME }-switching-time: 150ms;
+      --${ Switch.CLASS_NAME }-inline-size: calc(var(--${ Widget.CLASS_NAME }-size) * 1.25);
+      --${ Switch.CLASS_NAME }-block-size: calc(var(--${ Widget.CLASS_NAME }-size) / 2);
+      --${ Switch.CLASS_NAME }-thumb-shadow-extent: calc(var(--${ Switch.CLASS_NAME }-space) + var(--${ Widget.CLASS_NAME }-border-width));
+      --${ Switch.CLASS_NAME }-thumb-shadow-size: calc(var(--${ Switch.CLASS_NAME }-block-size) + calc(var(--${ Switch.CLASS_NAME }-thumb-shadow-extent) * 2));
+      --${ Switch.CLASS_NAME }-track-mask-size: calc(var(--${ Switch.CLASS_NAME }-inline-size) * 1.5);
+      align-items: center;
+      block-size: 100%;
+      column-gap: 0;
+      display: flex;
+      flex-flow: row nowrap;
+    }
+    :host(*[data-value-label-visible="true"]) *.${ Switch.CLASS_NAME } {
+      column-gap: 6px;
+    }
+    :host(*[data-value-label-position="before"]) *.${ Switch.CLASS_NAME } {
+      flex-flow: row-reverse nowrap;
+    }
+    *.${ Switch.CLASS_NAME }-control {
+      block-size: var(--${ Switch.CLASS_NAME }-block-size);
+      inline-size: var(--${ Switch.CLASS_NAME }-inline-size);
+      margin-inline: var(--${ Switch.CLASS_NAME }-space);
+      position: relative;
+    }
+    *.${ Switch.CLASS_NAME }-track {
+      block-size: inherit;
+      border-radius: calc(var(--${ Widget.CLASS_NAME }-size) / 4);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      /* background-position-inline/blockが実装されないと。
+      mask-image: url("data:image/svg+xml,${ _ENCODED_MASK }");
+      mask-position: 0 0;
+      mask-repeat: no-repeat;
+      mask-size: var(--${ Switch.CLASS_NAME }-track-mask-size) var(--${ Switch.CLASS_NAME }-track-mask-size);
+      */
+      /*overflow: hidden;*/
+      position: relative;
+      transition: clip-path var(--${ Switch.CLASS_NAME }-switching-time);
+    }
+
+    *.${ Switch.CLASS_NAME }-track-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-main-color);
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-accent-color);
+      border-radius: inherit;
+      inset: 0;
+      position: absolute;
+      transition: background-color var(--${ Switch.CLASS_NAME }-switching-time);
+    }
+    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-track-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-accent-color);
+    }
+
+    *.${ Switch.CLASS_NAME }-thumb-shadow,
+    *.${ Switch.CLASS_NAME }-thumb {
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      position: absolute;
+      transition: inset-inline-start var(--${ Switch.CLASS_NAME }-switching-time);
+    }
+    *.${ Switch.CLASS_NAME }-thumb-shadow {
+      background-color: var(--${ Widget.CLASS_NAME }-main-color);
+      block-size: var(--${ Switch.CLASS_NAME }-thumb-shadow-size);
+      border-radius: 50%;
+      inline-size: var(--${ Switch.CLASS_NAME }-thumb-shadow-size);
+      margin: calc(var(--${ Switch.CLASS_NAME }-thumb-shadow-extent) * -1);
+    }
+
+    *.${ Switch.CLASS_NAME }-thumb {
+      block-size: var(--${ Switch.CLASS_NAME }-block-size);
+      inline-size: var(--${ Switch.CLASS_NAME }-block-size);
+    }
+    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-shadow,
+    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb {
+      inset-inline-start: calc(var(--${ Switch.CLASS_NAME }-inline-size) - var(--${ Switch.CLASS_NAME }-block-size));
+    }
+    *.${ Widget.CLASS_NAME }-glow,
+    *.${ Widget.CLASS_NAME }-effects,
+    *.${ Switch.CLASS_NAME }-thumb-surface {
+      border-radius: 50%;
+      margin: calc(var(--${ Switch.CLASS_NAME }-space) * -1);
+    }
+    *.${ Widget.CLASS_NAME }-glow::before {
+      border-radius: inherit;
+    }
+
+    *.${ Switch.CLASS_NAME }-thumb-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-main-color);
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-accent-color);
+      inset: 0;
+      position: absolute;
+      transition: background-color var(--${ Switch.CLASS_NAME }-switching-time);
+    }
+    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-accent-color);
+    }
+
+    @keyframes ${ Switch.CLASS_NAME }-ripple {
+      0% {
+        opacity: var(--${ Widget.CLASS_NAME }-ripple-opacity);
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(2.4);
+      }
+    }
+    *.${ Widget.CLASS_NAME }-ripple {
+      animation: ${ Switch.CLASS_NAME }-ripple 600ms both;
+      inset: 0;
+      mix-blend-mode: color-burn; /*TODO darkのとき変える */
+    }
+
+    *.${ Switch.CLASS_NAME }-value-label {
+      display: none;
+      user-select: none;
+      white-space: pre;
+    }
+    :host(*[data-value-label-visible="true"]) *.${ Switch.CLASS_NAME }-value-label {
+      display: block;
+    }
+    *.${ Switch.CLASS_NAME }-value-label:not(*:empty) {
+      text-align: start;
+    }
+    :host(*[data-value-label-position="before"]) *.${ Switch.CLASS_NAME }-value-label:not(*:empty) {
+      text-align: end;
+    }
+  `;
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
 
@@ -184,14 +194,16 @@ class Switch extends Input {
   #valueLabelElement: Element;
 
   static {
-    Switch.#styleSheet.replaceSync(_STYLE);
+    Switch.#styleSheet.replaceSync(Switch.#STYLE);
     Switch.#template = null;
   }
 
   constructor() {
     super({
       role: Aria.Role.SWITCH,
-      className: Switch.#className,
+      className: Switch.CLASS_NAME,
+      inputable: true,
+      textEditable: false,
     });
 
     this.#checked = false;
@@ -201,10 +213,10 @@ class Switch extends Input {
     const main = this._main;
     if ((Switch.#template && (Switch.#template.ownerDocument === this.ownerDocument)) !== true) {
       Switch.#template = this.ownerDocument.createElement("template");
-      Switch.#template.innerHTML = _MAIN_CONTENT_TEMPLATE;
+      Switch.#template.innerHTML = Switch.#TEMPLATE;
     }
     main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
-    this.#valueLabelElement = main.querySelector("*.switch-value-label") as Element;
+    this.#valueLabelElement = main.querySelector(`*.${ Switch.CLASS_NAME }-value-label`) as Element;
 
     this._addAction("click", {
       func: () => {
@@ -247,7 +259,7 @@ class Switch extends Input {
 
   static override get observedAttributes(): Array<string> {
     return [
-      Input.observedAttributes,
+      Widget.observedAttributes,
       [
         Aria.State.CHECKED,
         //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
