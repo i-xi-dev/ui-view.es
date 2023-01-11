@@ -34,12 +34,13 @@ class Switch extends Widget {
     <div class="${ Switch.CLASS_NAME }-control">
       <div class="${ Switch.CLASS_NAME }-track">
         <div class="${ Switch.CLASS_NAME }-track-surface"></div>
-        <div class="${ Switch.CLASS_NAME }-thumb-shadow"></div>
+        <div class="${ Switch.CLASS_NAME }-track-highlight"></div>
       </div>
       <div class="${ Switch.CLASS_NAME }-thumb">
         <div class="${ Widget.CLASS_NAME }-glow"></div>
         <div class="${ Widget.CLASS_NAME }-effects"></div>
         <div class="${ Switch.CLASS_NAME }-thumb-surface"></div>
+        <div class="${ Switch.CLASS_NAME }-thumb-highlight"></div>
       </div>
     </div>
     <output class="${ Switch.CLASS_NAME }-value-label"></output>
@@ -57,10 +58,8 @@ class Switch extends Widget {
     *.${ Switch.CLASS_NAME } {
       --${ Switch.CLASS_NAME }-space: ${ _TRACK_OFFSET_INLINE_START }px;
       --${ Switch.CLASS_NAME }-switching-time: 150ms;
-      --${ Switch.CLASS_NAME }-inline-size: calc(var(--${ Widget.CLASS_NAME }-size) * 1.25);
-      --${ Switch.CLASS_NAME }-block-size: calc(var(--${ Widget.CLASS_NAME }-size) / 2);
-      --${ Switch.CLASS_NAME }-thumb-shadow-extent: calc(var(--${ Switch.CLASS_NAME }-space) + var(--${ Widget.CLASS_NAME }-border-width));
-      --${ Switch.CLASS_NAME }-thumb-shadow-size: calc(var(--${ Switch.CLASS_NAME }-block-size) + calc(var(--${ Switch.CLASS_NAME }-thumb-shadow-extent) * 2));
+      --${ Switch.CLASS_NAME }-inline-size: calc(var(--${ Widget.CLASS_NAME }-size) * 1.5);
+      --${ Switch.CLASS_NAME }-block-size: calc(var(--${ Widget.CLASS_NAME }-size) * 0.75);
       --${ Switch.CLASS_NAME }-track-mask-size: calc(var(--${ Switch.CLASS_NAME }-inline-size) * 1.5);
       align-items: center;
       block-size: 100%;
@@ -82,8 +81,8 @@ class Switch extends Widget {
     }
     *.${ Switch.CLASS_NAME }-track {
       block-size: inherit;
-      border-radius: calc(var(--${ Widget.CLASS_NAME }-size) / 4);
-      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      border-radius: calc(var(--${ Widget.CLASS_NAME }-size) * 0.375);
+      /*clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);*/
       /* background-position-inline/blockが実装されないと。
       mask-image: url("data:image/svg+xml,${ _ENCODED_MASK }");
       mask-position: 0 0;
@@ -95,60 +94,86 @@ class Switch extends Widget {
       transition: clip-path var(--${ Switch.CLASS_NAME }-switching-time);
     }
 
-    *.${ Switch.CLASS_NAME }-track-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-main-color);
-      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-accent-color);
+    *.${ Switch.CLASS_NAME }-track-surface,
+    *.${ Switch.CLASS_NAME }-track-highlight {
       border-radius: inherit;
       inset: 0;
       position: absolute;
-      transition: background-color var(--${ Switch.CLASS_NAME }-switching-time);
+    }
+    *.${ Switch.CLASS_NAME }-track-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-main-bg-color);
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
+      transition: background-color var(--${ Switch.CLASS_NAME }-switching-time), border-color var(--${ Switch.CLASS_NAME }-switching-time);
     }
     :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-track-surface {
       background-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
     }
-
-    *.${ Switch.CLASS_NAME }-thumb-shadow,
-    *.${ Switch.CLASS_NAME }-thumb {
-      inset-block-start: 0;
-      inset-inline-start: 0;
-      position: absolute;
-      transition: inset-inline-start var(--${ Switch.CLASS_NAME }-switching-time);
+    *.${ Switch.CLASS_NAME }-track-highlight {
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid #0000;
+      box-shadow: 0 0 0 0 #0000;
+      transition: border-color 300ms, box-shadow 300ms;
     }
-    *.${ Switch.CLASS_NAME }-thumb-shadow {
-      background-color: var(--${ Widget.CLASS_NAME }-main-color);
-      block-size: var(--${ Switch.CLASS_NAME }-thumb-shadow-size);
-      border-radius: 50%;
-      inline-size: var(--${ Switch.CLASS_NAME }-thumb-shadow-size);
-      margin: calc(var(--${ Switch.CLASS_NAME }-thumb-shadow-extent) * -1);
+    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-track-highlight {
+      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
 
     *.${ Switch.CLASS_NAME }-thumb {
       block-size: var(--${ Switch.CLASS_NAME }-block-size);
       inline-size: var(--${ Switch.CLASS_NAME }-block-size);
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      position: absolute;
+      transition: inset-inline-start var(--${ Switch.CLASS_NAME }-switching-time);
     }
-    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-shadow,
     :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb {
       inset-inline-start: calc(var(--${ Switch.CLASS_NAME }-inline-size) - var(--${ Switch.CLASS_NAME }-block-size));
     }
     *.${ Widget.CLASS_NAME }-glow,
     *.${ Widget.CLASS_NAME }-effects,
-    *.${ Switch.CLASS_NAME }-thumb-surface {
+    *.${ Switch.CLASS_NAME }-thumb-surface,
+    *.${ Switch.CLASS_NAME }-thumb-highlight {
       border-radius: 50%;
-      margin: calc(var(--${ Switch.CLASS_NAME }-space) * -1);
+      margin: 3px;
+      transition: margin 300ms;
+    }
+    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *:is(
+      *.${ Widget.CLASS_NAME }-glow,
+      *.${ Widget.CLASS_NAME }-effects,
+      *.${ Switch.CLASS_NAME }-thumb-surface,
+      *.${ Switch.CLASS_NAME }-thumb-highlight
+    ) {
+      margin: 0;
+    }
+    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Widget.CLASS_NAME }-glow {
+      margin: -1px;
     }
     *.${ Widget.CLASS_NAME }-glow::before {
       border-radius: inherit;
     }
 
-    *.${ Switch.CLASS_NAME }-thumb-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-main-color);
-      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-accent-color);
+    *.${ Switch.CLASS_NAME }-thumb-surface,
+    *.${ Switch.CLASS_NAME }-thumb-highlight {
       inset: 0;
       position: absolute;
-      transition: background-color var(--${ Switch.CLASS_NAME }-switching-time);
+    }
+    *.${ Switch.CLASS_NAME }-thumb-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-main-bg-color);
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
+      transition: border-width var(--${ Switch.CLASS_NAME }-switching-time), margin 300ms;
     }
     :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      border-width: 0;
+    }
+    *.${ Switch.CLASS_NAME }-thumb-highlight {
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid #0000;
+      box-shadow: 0 0 0 0 #0000;
+      transition: border-color 300ms, box-shadow 300ms, margin 300ms;
+    }
+    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
+      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
 
     @keyframes ${ Switch.CLASS_NAME }-ripple {
