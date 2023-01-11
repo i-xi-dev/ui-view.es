@@ -93,6 +93,12 @@ class CheckBox extends Widget {
       inset: 0;
       position: absolute;
     }
+    *.${ CheckBox.CLASS_NAME }-mark-canvas {
+      transition: transform 300ms;
+    }
+    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-mark-canvas {
+      transform: scale(1.25);
+    }
     @keyframes ${ CheckBox.CLASS_NAME }-mark-graph-checked {
       0% {
         clip-path: polygon(0 50%, 50% 100%, 0 100%);
