@@ -12,6 +12,7 @@ class CheckBox extends Widget {
       <div class="${ CheckBox.CLASS_NAME }-box">
         <div class="${ Widget.CLASS_NAME }-glow"></div>
         <div class="${ CheckBox.CLASS_NAME }-box-surface"></div>
+        <div class="${ CheckBox.CLASS_NAME }-box-highlight"></div>
       </div>
       <div class="${ CheckBox.CLASS_NAME }-mark">
         <div class="${ Widget.CLASS_NAME }-effects"></div>
@@ -58,19 +59,35 @@ class CheckBox extends Widget {
       position: relative;
     }
 
-    *.${ CheckBox.CLASS_NAME }-box-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-main-color);
-      border: 2px solid var(--${ Widget.CLASS_NAME }-accent-color);
+    *.${ CheckBox.CLASS_NAME }-box-surface,
+    *.${ CheckBox.CLASS_NAME }-box-highlight {
       border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
       inset: 0;
       position: absolute;
-      transition: background-color var(--${ CheckBox.CLASS_NAME }-switching-time);
+    }
+    *.${ CheckBox.CLASS_NAME }-box-surface {
+      background-color: var(--${ Widget.CLASS_NAME }-main-bg-color);
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
+      transition: background-color var(--${ CheckBox.CLASS_NAME }-switching-time), border-width var(--${ CheckBox.CLASS_NAME }-switching-time);
     }
     :host(*[aria-checked="true"]) *.${ CheckBox.CLASS_NAME }-box-surface,
     :host(*[aria-checked="mixed"]) *.${ CheckBox.CLASS_NAME }-box-surface {
       background-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      border-width: 0;
+    }
+    *.${ CheckBox.CLASS_NAME }-box-highlight {
+      border: var(--${ Widget.CLASS_NAME }-border-width) solid #0000;
+      box-shadow: 0 0 0 0 #0000;
+      transition: border-color 300ms, box-shadow 300ms;
+    }
+    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-box-highlight {
+      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
 
+    *.widget-effects {
+      margin: -2px;
+    }
     *.${ CheckBox.CLASS_NAME }-mark,
     *.${ CheckBox.CLASS_NAME }-mark-canvas {
       inset: 0;
@@ -107,7 +124,7 @@ class CheckBox extends Widget {
     }
     *.${ CheckBox.CLASS_NAME }-mark-line {
       fill: none;
-      stroke: var(--${ Widget.CLASS_NAME }-main-color);
+      stroke: var(--${ Widget.CLASS_NAME }-main-bg-color);
       stroke-width: 2px;
       /*
       stroke-width: 3px;

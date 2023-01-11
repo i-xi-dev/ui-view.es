@@ -48,14 +48,17 @@ abstract class Widget extends HTMLElement {
 
     *.${ Widget.CLASS_NAME }-container {
       --${ Widget.CLASS_NAME }-accent-color: #136ed2;
-      --${ Widget.CLASS_NAME }-border-width: 2px;
+      --${ Widget.CLASS_NAME }-border-width: 1px;
       --${ Widget.CLASS_NAME }-corner-radius: 5px;
       --${ Widget.CLASS_NAME }-focusring-color: orange;
       --${ Widget.CLASS_NAME }-glow-blur-radius: 6px;
-      --${ Widget.CLASS_NAME }-glow-extent: 2px;
-      --${ Widget.CLASS_NAME }-main-color: #fff;
+      --${ Widget.CLASS_NAME }-glow-extent: 3px;
+      --${ Widget.CLASS_NAME }-main-bg-color: #fff;
+      --${ Widget.CLASS_NAME }-main-bg-color-06: #fffa;
+      --${ Widget.CLASS_NAME }-main-fg-color: #666;
       --${ Widget.CLASS_NAME }-ripple-opacity: 0.6;
       --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
+      --${ Widget.CLASS_NAME }-shadow: 0 2px 8px #0003, 0 1px 4px #0006;
       align-items: center;
       block-size: var(--${ Widget.CLASS_NAME }-size);
       display: flex;
@@ -134,7 +137,7 @@ abstract class Widget extends HTMLElement {
       background-color: currentcolor;
       border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
       box-shadow: 0 0 0 0 currentcolor;
-      color: var(--${ Widget.CLASS_NAME }-main-color);
+      color: var(--${ Widget.CLASS_NAME }-main-bg-color);
       inset: 0;
       opacity: 0;
       position: absolute;

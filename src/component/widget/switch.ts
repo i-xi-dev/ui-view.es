@@ -146,9 +146,6 @@ class Switch extends Widget {
     ) {
       margin: 0;
     }
-    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Widget.CLASS_NAME }-glow {
-      margin: -1px;
-    }
     *.${ Widget.CLASS_NAME }-glow::before {
       border-radius: inherit;
     }

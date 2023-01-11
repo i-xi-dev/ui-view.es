@@ -49,7 +49,7 @@ const _STYLE = `
 }
 
 *.textbox-box-surface {
-  background-color: var(--${ Widget.CLASS_NAME }-main-color);
+  background-color: var(--${ Widget.CLASS_NAME }-main-bg-color);
   border: 2px solid var(--${ Widget.CLASS_NAME }-accent-color);
   border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
   inset: 0;
