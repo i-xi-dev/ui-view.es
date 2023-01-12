@@ -164,12 +164,12 @@ class Switch extends Widget {
       border-width: 0;
     }
     *.${ Switch.CLASS_NAME }-thumb-highlight {
-      border: var(--${ Widget.CLASS_NAME }-border-width) solid #0000;
+      border: 0 solid var(--${ Widget.CLASS_NAME }-accent-color);
       box-shadow: 0 0 0 0 #0000;
-      transition: border-color 300ms, box-shadow 300ms, margin 300ms;
+      transition: border-width 300ms, box-shadow 300ms, margin 300ms;
     }
     :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
-      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
+      border-width: var(--${ Widget.CLASS_NAME }-border-width);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
 
@@ -224,6 +224,7 @@ class Switch extends Widget {
     super({
       role: Aria.Role.SWITCH,
       className: Switch.CLASS_NAME,
+      autoPointerCapture: true,
       inputable: true,
       textEditable: false,
     });

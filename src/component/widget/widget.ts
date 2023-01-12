@@ -239,6 +239,15 @@ abstract class Widget extends HTMLElement {
     //   }
     // }, { passive: true });
 
+    if (this._init.autoPointerCapture === true) {
+      eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
+        if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+          return;
+        }
+        eventTarget.setPointerCapture(event.pointerId);console.log(545)
+      }, { passive: true });
+    }
+
     eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
       if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
         return;
@@ -320,6 +329,7 @@ abstract class Widget extends HTMLElement {
     this._appendStyleSheet(Widget.#styleSheet);
 
     const container = this.ownerDocument.createElement("div");
+    container.setAttribute("draggable", "false");
     container.classList.add(`${ Widget.CLASS_NAME }-container`);
     container.classList.add(`${ this._init.className }-container`);
 
@@ -742,6 +752,7 @@ namespace Widget {
   export type Init = {
     role: Aria.Role,
     className: string,
+    autoPointerCapture: boolean,
     inputable: boolean,
     textEditable: boolean,
   };

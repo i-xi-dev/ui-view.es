@@ -77,6 +77,7 @@ class TextBox extends Widget {
     super({
       role: Aria.Role.TEXTBOX,
       className: TextBox.#className,
+      autoPointerCapture: false,
       inputable: true,
       textEditable: true,
     });

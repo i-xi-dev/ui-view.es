@@ -197,6 +197,7 @@ class CheckBox extends Widget {
     super({
       role: Aria.Role.CHECKBOX,
       className: CheckBox.CLASS_NAME,
+      autoPointerCapture: false,
       inputable: true,
       textEditable: false,
     });
