@@ -291,6 +291,8 @@ abstract class Widget extends HTMLElement {
     return eventTarget;
   }
 
+  //TODO stopPropagation ・・・すくなくともclickは。他？
+  //     全部stopして発火しなおす？
   #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
     target.addEventListener(eventType, ((event: T) => {
       if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
@@ -776,11 +778,24 @@ abstract class Widget extends HTMLElement {
     }, 1000);
   }
 
+  protected _dispatchCompatMouseEvent(type: string): void {
+    this.dispatchEvent(new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      pointerId: -1, //XXX Chromeは-1 他も？
+      pointerType: "",
+      //sourceCapabilities: null,
+      view: this.ownerDocument.defaultView,
+    }));
+  }
+
   protected _dispatchChangeEvent(): void {
     this.dispatchEvent(new Event("change", {
       bubbles: true,
     }));
   }
+
 }
 namespace Widget {
   export const Size = _WidgetSize;

@@ -217,18 +217,18 @@ class CheckBox extends Widget {
     this._addAction<PointerEvent>("click", {
       func: () => {
         this.checked = !(this.#checked);
+        this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
-        //TODO click発火
       },
       active: true,
     });
 
     this._addAction<KeyboardEvent>("keydown", {
-      keys: [" "/*, "Enter"*/],
+      keys: [" "],
       func: () => {
         this.checked = !(this.#checked);
+        this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
-        //TODO click発火
       },
       active: true,
     });
