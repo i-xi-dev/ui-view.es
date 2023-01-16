@@ -77,7 +77,6 @@ class TextBox extends Widget {
     super({
       role: Aria.Role.TEXTBOX,
       className: TextBox.#className,
-      autoPointerCapture: false,
       inputable: true,
       textEditable: true,
     });
@@ -117,7 +116,7 @@ class TextBox extends Widget {
         }
         //TODO this._dispatchChangeEvent();
       },
-      noPreventDefault: true,
+      active: true,
       allowRepeat: true,
     });
 

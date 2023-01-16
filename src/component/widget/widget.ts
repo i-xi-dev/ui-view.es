@@ -1,5 +1,10 @@
 import { Aria } from "./aria";
 
+type _Point = {
+  x: number,
+  y: number,
+};
+
 const _WidgetSize = {
   LARGE: "large",
   MEDIUM: "medium",
@@ -198,7 +203,10 @@ abstract class Widget extends HTMLElement {
   #hidden: boolean;
   #label: string;
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
-  #textCompositing: boolean;
+  #capturingPointer: string; // trueの状態でdisable等にした場合に非対応
+  #lastPointerCaptureX: number;
+  #lastPointerCaptureY: number;
+  #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
   readonly #main: Element;
@@ -239,72 +247,93 @@ abstract class Widget extends HTMLElement {
     //   }
     // }, { passive: true });
 
-    if (this._init.autoPointerCapture === true) {
-      eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
-        if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
-          return;
-        }
-        eventTarget.setPointerCapture(event.pointerId);console.log(545)
-      }, { passive: true });
-    }
+    this.#setEventListener<PointerEvent>("click", eventTarget, false);
+    this.#setEventListener<InputEvent>("input", eventTarget, true);
+    this.#setEventListener<KeyboardEvent>("keydown", eventTarget, false);
+    this.#setEventListener<PointerEvent>("pointercancel", eventTarget, true);
+    this.#setEventListener<PointerEvent>("pointerdown", eventTarget, true);
+    this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
+    this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
 
-    eventTarget.addEventListener("click", ((event: PointerEvent) => { //XXX はぁ？
-      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
-        return;
+    eventTarget.addEventListener("gotpointercapture", (event: PointerEvent) => {
+      if (event.isPrimary === true) {
+        this.#capturingPointer = `${ event.pointerType }__${ event.pointerId }`;
+        this.#lastPointerCaptureX = event.clientX;
+        this.#lastPointerCaptureY = event.clientY;
       }
-      const clickActions = this.#actions.get("click");
-      if (clickActions && (clickActions.size ?? 0) > 0) {
-        const filteredActions = [...clickActions];
-        if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
-          event.preventDefault();
-        }
-        for (const action of filteredActions) {
-          action.func(event);
-        }
-      }
-    }) as EventListener, { passive: false });
-
-    eventTarget.addEventListener("input", (event: Event) => {
-      console.log(event)
     }, { passive: true });
 
-    eventTarget.addEventListener("keydown", (event: KeyboardEvent) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
-        return;
-      }
-      const keyDownActions = this.#actions.get("keydown");
-      if (keyDownActions && (keyDownActions.size ?? 0) > 0) {
-        const filteredActions = [...keyDownActions].filter((action) => action.keys?.includes(event.key));
-        if (filteredActions.some((action) => action.noPreventDefault !== true) === true) {
-          event.preventDefault();
-        }
-        if (filteredActions.some((action) => action.allowRepeat !== true) && (event.repeat === true)) {
-          return;
-        }
-        for (const action of filteredActions) {
-          action.func(event);
-        }
-      }
-    }, { passive: false });
+    eventTarget.addEventListener("lostpointercapture", () => {
+      // if (event.isPrimary === true) { 途中でprimaryでなくなることはないのでチェックする必要はない
+        this.#capturingPointer = "";
+        this.#lastPointerCaptureX = Number.NaN;
+        this.#lastPointerCaptureY = Number.NaN;
+      // }
+    }, { passive: true });
 
-    if (this._init.textEditable === true) {
-      eventTarget.setAttribute("contenteditable", "true");
 
-      eventTarget.addEventListener("compositionstart", (event: CompositionEvent) => {
-        void event;
-        console.log("compositionstart");
-        this.#textCompositing = true;
-      }, { passive: true });
+    // if (this._init.textEditable === true) {
+    //   eventTarget.setAttribute("contenteditable", "true");
 
-      eventTarget.addEventListener("compositionend", (event: CompositionEvent) => {
-        void event;
-        console.log("compositionend");
-        this.#textCompositing = false;
-      }, { passive: true });
-    }
+    //   eventTarget.addEventListener("compositionstart", (event: CompositionEvent) => {
+    //     void event;
+    //     console.log("compositionstart");
+    //     this.#textCompositing = true;
+    //   }, { passive: true });
+
+    //   eventTarget.addEventListener("compositionend", (event: CompositionEvent) => {
+    //     void event;
+    //     console.log("compositionend");
+    //     this.#textCompositing = false;
+    //   }, { passive: true });
+    // }
 
     return eventTarget;
   }
+
+  #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
+    target.addEventListener(eventType, ((event: T) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+        return;
+      }
+      if (event instanceof PointerEvent) {
+        if (["click", "auxclick", "contextmenu"].includes(event.type) === true) {
+          //
+        }
+        else if (event.isPrimary !== true) {
+          return;
+        }
+      }
+      if ((event instanceof MouseEvent) && (event.detail > 1)) {
+        return;
+      }
+      const isKeyboardEvent = (event instanceof KeyboardEvent);
+      const actions = this.#actions.get(eventType);
+      if (actions && (actions.size ?? 0) > 0) {
+        const filteredActions = (isKeyboardEvent === true) ? [...actions].filter((action) => action.keys?.includes((event as unknown as KeyboardEvent).key)) : [...actions];
+        if (filteredActions.some((action) => action.active === true) === true) {
+          event.preventDefault();
+        }
+        if ((isKeyboardEvent === true) && filteredActions.some((action) => action.allowRepeat !== true) && ((event as unknown as KeyboardEvent).repeat === true)) {
+          return;
+        }
+        for (const action of filteredActions) {
+          action.func(event);
+        }
+      }
+    }) as EventListener, { passive });
+  }
+
+  _elementIntersectsPoint(element: Element, { x, y }: _Point): boolean {
+    return this.#root.elementsFromPoint(x, y).includes(element);
+  }
+
+  _setPointerCapture(pointerId: number): void {
+    this.#eventTarget.setPointerCapture(pointerId);
+  }
+  //TODO かならずsetPointerCaptureして、範囲外に出た場合にreleasePointerCaptureするか否かを設定に持たせる？
+  //     で、clickはlistenせずに、capture中のpointerupでactivateにする
+  //     pointerleave 
 
   constructor(init: Widget.Init) {
     super();
@@ -317,12 +346,19 @@ abstract class Widget extends HTMLElement {
     this.#hidden = false;
     this.#label = "";
     this.#readOnly = false;
+    this.#capturingPointer = "";
+    this.#lastPointerCaptureX = Number.NaN;
+    this.#lastPointerCaptureY = Number.NaN;
     this.#textCompositing = false;
     this.#actions = new Map([
       ["click", new Set()],
       //["focus", new Set()],
       ["input", new Set()],
       ["keydown", new Set()],
+      ["pointercancel", new Set()],
+      ["pointerdown", new Set()],
+      ["pointermove", new Set()],
+      ["pointerup", new Set()],
     ]);
     this.#reflectingInProgress = "";
 
@@ -430,6 +466,21 @@ abstract class Widget extends HTMLElement {
     //XXX 値重複は警告する？
   }
 
+  protected _getPointerInfo(event: PointerEvent): { inCapturing: boolean, movementX: number, movementY: number } {
+    const inCapturing = (this.#capturingPointer === `${ event.pointerType }__${ event.pointerId }`);
+    let movementX = Number.NaN;
+    let movementY = Number.NaN;
+    if (inCapturing === true) {
+      movementX = event.clientX - this.#lastPointerCaptureX;
+      movementY = event.clientY - this.#lastPointerCaptureY;
+    }
+    return {
+      inCapturing,
+      movementX,
+      movementY,
+    };
+  }
+
   protected get _textCompositing(): boolean {
     return this.#textCompositing;
   }
@@ -455,8 +506,8 @@ abstract class Widget extends HTMLElement {
     return items;
   }
 
-  protected _addAction(name: string, action: Widget.Action): void {
-    const actionSet = this.#actions.get(name) as Set<Widget.Action>;
+  protected _addAction<T extends Event>(name: string, action: Widget.Action<T>): void {
+    const actionSet = this.#actions.get(name) as Set<Widget.Action<T>>;
     if (["keydown"].includes(name) === true) {
       if (Array.isArray(action.keys) !== true) {
         throw new Error("TODO");
@@ -490,7 +541,7 @@ abstract class Widget extends HTMLElement {
     if (this._init.inputable === true) {
       this.#setReadOnlyFromString(this.getAttribute(Aria.Property.READONLY) ?? "", Widget._ReflectionsOnConnected);
     }
-    this.#setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
+    this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
     //this.#connected = true;
   }
@@ -530,7 +581,7 @@ abstract class Widget extends HTMLElement {
         break;
 
       case DataAttr.SIZE:
-        this.#setSize(newValue, Widget._ReflectionsOnAttrChanged);
+        this._setSize(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       default:
@@ -619,7 +670,7 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  #setSize(value: string, reflections: Widget.Reflections): void {
+  protected _setSize(value: string, reflections: Widget.Reflections): void {
     const valueIsWidgetSize = Object.values(Widget.Size).includes(value as Widget.Size);
     const adjustedSize = (valueIsWidgetSize === true) ? (value as Widget.Size) : Widget.Size.MEDIUM;
     const changed = (this.#size !== adjustedSize);
@@ -752,7 +803,6 @@ namespace Widget {
   export type Init = {
     role: Aria.Role,
     className: string,
-    autoPointerCapture: boolean,
     inputable: boolean,
     textEditable: boolean,
   };
@@ -762,10 +812,10 @@ namespace Widget {
     attr: AttrReflection,
   };
 
-  export type Action = {
-    func: (event: Event) => void,
+  export type Action<T extends Event = Event> = {
+    func: (event: T) => void,
     keys?: Array<string>,
-    noPreventDefault?: boolean,
+    active?: boolean,
     allowRepeat?: boolean,
     //TODO AbortSignal
   };

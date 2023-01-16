@@ -80,7 +80,7 @@ class CheckBox extends Widget {
       box-shadow: 0 0 0 0 #0000;
       transition: border-color 300ms, box-shadow 300ms;
     }
-    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-box-highlight {
+    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-box-highlight {
       border-color: var(--${ Widget.CLASS_NAME }-accent-color);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
@@ -96,7 +96,7 @@ class CheckBox extends Widget {
     *.${ CheckBox.CLASS_NAME }-mark-canvas {
       transition: transform 300ms;
     }
-    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-mark-canvas {
+    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-mark-canvas {
       transform: scale(1.25);
     }
     @keyframes ${ CheckBox.CLASS_NAME }-mark-graph-checked {
@@ -197,7 +197,6 @@ class CheckBox extends Widget {
     super({
       role: Aria.Role.CHECKBOX,
       className: CheckBox.CLASS_NAME,
-      autoPointerCapture: false,
       inputable: true,
       textEditable: false,
     });
@@ -215,19 +214,23 @@ class CheckBox extends Widget {
     main.append((CheckBox.#template as HTMLTemplateElement).content.cloneNode(true));
     this.#valueLabelElement = main.querySelector(`*.${ CheckBox.CLASS_NAME }-value-label`) as Element;
 
-    this._addAction("click", {
+    this._addAction<PointerEvent>("click", {
       func: () => {
         this.checked = !(this.#checked);
         this._dispatchChangeEvent();
+        //TODO click発火
       },
+      active: true,
     });
 
-    this._addAction("keydown", {
+    this._addAction<KeyboardEvent>("keydown", {
       keys: [" "/*, "Enter"*/],
       func: () => {
         this.checked = !(this.#checked);
         this._dispatchChangeEvent();
+        //TODO click発火
       },
+      active: true,
     });
   }
 

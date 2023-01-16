@@ -36,6 +36,7 @@ class Switch extends Widget {
         <div class="${ Switch.CLASS_NAME }-track-surface"></div>
         <div class="${ Switch.CLASS_NAME }-track-highlight"></div>
       </div>
+      <div class="${ Switch.CLASS_NAME }-thumb-hittest"></div>
       <div class="${ Switch.CLASS_NAME }-thumb">
         <div class="${ Widget.CLASS_NAME }-glow"></div>
         <div class="${ Widget.CLASS_NAME }-effects"></div>
@@ -114,11 +115,12 @@ class Switch extends Widget {
       box-shadow: 0 0 0 0 #0000;
       transition: border-color 300ms, box-shadow 300ms;
     }
-    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-track-highlight {
+    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-track-highlight {
       border-color: var(--${ Widget.CLASS_NAME }-accent-color);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
 
+    *.${ Switch.CLASS_NAME }-thumb-hittest,
     *.${ Switch.CLASS_NAME }-thumb {
       block-size: var(--${ Switch.CLASS_NAME }-block-size);
       inline-size: var(--${ Switch.CLASS_NAME }-block-size);
@@ -127,6 +129,12 @@ class Switch extends Widget {
       position: absolute;
       transition: inset-inline-start var(--${ Switch.CLASS_NAME }-switching-time);
     }
+    *.${ Switch.CLASS_NAME }-thumb-hittest {
+      pointer-events: auto;
+      opacity: 0;
+      z-index: -1;
+    }
+    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-hittest,
     :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb {
       inset-inline-start: calc(var(--${ Switch.CLASS_NAME }-inline-size) - var(--${ Switch.CLASS_NAME }-block-size));
     }
@@ -138,7 +146,7 @@ class Switch extends Widget {
       margin: 3px;
       transition: margin 300ms;
     }
-    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *:is(
+    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *:is(
       *.${ Widget.CLASS_NAME }-glow,
       *.${ Widget.CLASS_NAME }-effects,
       *.${ Switch.CLASS_NAME }-thumb-surface,
@@ -168,7 +176,7 @@ class Switch extends Widget {
       box-shadow: 0 0 0 0 #0000;
       transition: border-width 300ms, box-shadow 300ms, margin 300ms;
     }
-    :host(*:not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
+    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
       border-width: var(--${ Widget.CLASS_NAME }-border-width);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
@@ -213,7 +221,11 @@ class Switch extends Widget {
   ];
 
   #checked: boolean;
-  #valueLabelElement: Element;
+  #trackLength: number;
+  #thumbSize: number;
+  readonly #valueLabelElement: Element;
+  readonly #thumb: HTMLElement;
+  readonly #thumbHitTest: Element;
 
   static {
     Switch.#styleSheet.replaceSync(Switch.#STYLE);
@@ -224,12 +236,13 @@ class Switch extends Widget {
     super({
       role: Aria.Role.SWITCH,
       className: Switch.CLASS_NAME,
-      autoPointerCapture: true,
       inputable: true,
       textEditable: false,
     });
 
     this.#checked = false;
+    this.#trackLength = 0;
+    this.#thumbSize = 0;
 
     this._appendStyleSheet(Switch.#styleSheet);
 
@@ -240,20 +253,86 @@ class Switch extends Widget {
     }
     main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
     this.#valueLabelElement = main.querySelector(`*.${ Switch.CLASS_NAME }-value-label`) as Element;
-
-    this._addAction("click", {
-      func: () => {
-        this.checked = !(this.#checked);
-        this._dispatchChangeEvent();
+    this.#thumb = main.querySelector(`*.${ Switch.CLASS_NAME }-thumb`) as HTMLElement;
+    this.#thumbHitTest = main.querySelector(`*.${ Switch.CLASS_NAME }-thumb-hittest`) as Element;
+    this._addAction<PointerEvent>("pointerdown", {
+      func: (event: PointerEvent) => {
+        const thumbPointed = this._elementIntersectsPoint(this.#thumbHitTest, {
+          x: event.clientX,
+          y: event.clientY,
+        });
+        //TODO pointercapture中は無視する
+        if (thumbPointed === true) {
+          this._setPointerCapture(event.pointerId);//XXX firefox: pointercaptureがおそらくshadow DOM境界をまたげない
+        }
       },
     });
 
-    this._addAction("keydown", {
+    this._addAction<PointerEvent>("pointermove", {
+      func: (event: PointerEvent) => {
+        const { inCapturing, movementX } = this._getPointerInfo(event);
+        if (inCapturing !== true) {
+          return;
+        }
+
+        const range = this.#trackLength - this.#thumbSize;
+        //TODO writing-modeとdirectionを取得する必要
+        if (this.#checked !== true) {
+          let adjustedX = movementX;
+          if (movementX <= 0) {
+            adjustedX = 0;
+          }
+          else if (movementX >= range) {
+            adjustedX = range;
+          }
+          this.#thumb.style.setProperty("inset-inline-start", `${ adjustedX }px`);
+        }
+        else {
+          let adjustedX = movementX;
+          if (movementX >= 0) {
+            adjustedX = 0;
+          }
+          else if (movementX <= -range) {
+            adjustedX = -range;
+          }
+          this.#thumb.style.setProperty("inset-inline-start", `${ range + adjustedX }px`);
+        }
+      },
+    });
+    // chrome: trackをhostの外にドラッグしようとした後、host内のどこかclickするまでドラッグしようとするとできない（thumbも）
+
+    this._addAction<PointerEvent>("pointercancel", {
+      func: () => {
+        this.#thumb.style.removeProperty("inset-inline-start");
+      },
+    });
+    this._addAction<PointerEvent>("pointerup", {
+      func: (event: PointerEvent) => {
+        this.#thumb.style.removeProperty("inset-inline-start");
+        //if (this._getPointerInfo(event).inCapturing === true) {
+          this.checked = !(this.#checked);//TODO captureしててかつ動いてなければ変更しない
+          this._dispatchChangeEvent();
+          //TODO click発火
+        //}
+      },
+    });
+
+    // this._addAction<PointerEvent>("click", {
+    //   func: () => {
+    //     this.checked = !(this.#checked);
+    //     this._dispatchChangeEvent();
+    //   },
+    //   active: true,
+    // });
+
+    this._addAction<KeyboardEvent>("keydown", {
       keys: [" "/*, "Enter"*/],
       func: () => {
         this.checked = !(this.#checked);
         this._dispatchChangeEvent();
+        //TODO click発火
       },
+      active: true,
     });
   }
 
@@ -289,6 +368,13 @@ class Switch extends Widget {
         //DataAttr.VALUE_LABEL_POSITION, CSSのみ
       ],
     ].flat();
+  }
+
+  protected override _setSize(value: string, reflections: Widget.Reflections): void {
+    super._setSize(value, reflections);
+
+    this.#trackLength = Widget.Dimension[this._size] * 1.5;
+    this.#thumbSize = Widget.Dimension[this._size] * 0.75;
   }
 
   override connectedCallback(): void {
