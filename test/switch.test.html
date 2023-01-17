@@ -12,7 +12,10 @@ customElements.define("wc-switch", Switch);
   <body>
     <div class="test-dynamic">
       <div>
-        <wc-switch id="test1" onchange="console.log(event)"></wc-switch>
+        <wc-switch id="test1"
+        onclick="console.log(event)"
+        onchange="console.log(event)"
+        onkeydown="console.log(event)"></wc-switch>
       </div>
       <div class="test-dynamic-editor">
         <fieldset>

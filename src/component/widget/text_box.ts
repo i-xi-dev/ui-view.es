@@ -116,7 +116,7 @@ class TextBox extends Widget {
         }
         //TODO this._dispatchChangeEvent();
       },
-      active: true,
+      doPreventDefault: true,
       allowRepeat: true,
     });
 

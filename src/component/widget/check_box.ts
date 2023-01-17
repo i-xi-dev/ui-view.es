@@ -214,13 +214,15 @@ class CheckBox extends Widget {
     main.append((CheckBox.#template as HTMLTemplateElement).content.cloneNode(true));
     this.#valueLabelElement = main.querySelector(`*.${ CheckBox.CLASS_NAME }-value-label`) as Element;
 
+    //TODO pointerupにする？
     this._addAction<PointerEvent>("click", {
       func: () => {
         this.checked = !(this.#checked);
         this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
       },
-      active: true,
+      doPreventDefault: true,
+      doStopPropagation: true,
     });
 
     this._addAction<KeyboardEvent>("keydown", {
@@ -230,7 +232,7 @@ class CheckBox extends Widget {
         this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
       },
-      active: true,
+      doPreventDefault: true,
     });
   }
 

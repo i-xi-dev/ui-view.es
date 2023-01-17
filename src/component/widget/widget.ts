@@ -203,9 +203,13 @@ abstract class Widget extends HTMLElement {
   #hidden: boolean;
   #label: string;
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
-  #capturingPointer: string; // trueの状態でdisable等にした場合に非対応
-  #lastPointerCaptureX: number;
-  #lastPointerCaptureY: number;
+  #capturingPointer: {//TODO type外だし
+    id: number,
+    type: string,
+    startX: number,
+    startY: number,
+    timestamp: number,
+  } | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
@@ -255,20 +259,39 @@ abstract class Widget extends HTMLElement {
     this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
     this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
 
-    eventTarget.addEventListener("gotpointercapture", (event: PointerEvent) => {
-      if (event.isPrimary === true) {
-        this.#capturingPointer = `${ event.pointerType }__${ event.pointerId }`;
-        this.#lastPointerCaptureX = event.clientX;
-        this.#lastPointerCaptureY = event.clientY;
+    eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
+      if ((this.#capturingPointer === null) && (event.isPrimary === true)) {
+        this.#eventTarget.setPointerCapture(event.pointerId);
+        this.#capturingPointer = {
+          type: event.pointerType,
+          id: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          timestamp: performance.now(),
+        };
       }
     }, { passive: true });
 
-    eventTarget.addEventListener("lostpointercapture", () => {
-      // if (event.isPrimary === true) { 途中でprimaryでなくなることはないのでチェックする必要はない
-        this.#capturingPointer = "";
-        this.#lastPointerCaptureX = Number.NaN;
-        this.#lastPointerCaptureY = Number.NaN;
-      // }
+    // 自動的にreleasePointerCaptureされる
+    // eventTarget.addEventListener("pointercancel", (event: PointerEvent) => {
+    // }, { passive: true });
+
+    // 自動的にreleasePointerCaptureされる
+    // eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
+    // }, { passive: true });
+
+    //TODO 範囲外に出たらreleasePointerCaptureするかどうか設定に持たせる
+    // eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
+    // }, { passive: true });
+
+    // touchだと無条件でpointercaptureされるので、ここで#capturingPointerにセットするのはよくない
+    // eventTarget.addEventListener("gotpointercapture", (event: PointerEvent) => {
+    // }, { passive: true });
+
+    eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
+      if ((this.#capturingPointer?.type === event.pointerType) && (this.#capturingPointer?.id === event.pointerId)) {
+        this.#capturingPointer = null;
+      }
     }, { passive: true });
 
 
@@ -313,8 +336,11 @@ abstract class Widget extends HTMLElement {
       const actions = this.#actions.get(eventType);
       if (actions && (actions.size ?? 0) > 0) {
         const filteredActions = (isKeyboardEvent === true) ? [...actions].filter((action) => action.keys?.includes((event as unknown as KeyboardEvent).key)) : [...actions];
-        if (filteredActions.some((action) => action.active === true) === true) {
+        if (filteredActions.some((action) => action.doPreventDefault === true) === true) {
           event.preventDefault();
+        }
+        if (filteredActions.some((action) => action.doStopPropagation === true) === true) {
+          event.stopPropagation();
         }
         if ((isKeyboardEvent === true) && filteredActions.some((action) => action.allowRepeat !== true) && ((event as unknown as KeyboardEvent).repeat === true)) {
           return;
@@ -330,13 +356,6 @@ abstract class Widget extends HTMLElement {
     return this.#root.elementsFromPoint(x, y).includes(element);
   }
 
-  _setPointerCapture(pointerId: number): void {
-    this.#eventTarget.setPointerCapture(pointerId);
-  }
-  //TODO かならずsetPointerCaptureして、範囲外に出た場合にreleasePointerCaptureするか否かを設定に持たせる？
-  //     で、clickはlistenせずに、capture中のpointerupでactivateにする
-  //     pointerleave 
-
   constructor(init: Widget.Init) {
     super();
     this._init = Object.freeze(globalThis.structuredClone(init));
@@ -348,9 +367,7 @@ abstract class Widget extends HTMLElement {
     this.#hidden = false;
     this.#label = "";
     this.#readOnly = false;
-    this.#capturingPointer = "";
-    this.#lastPointerCaptureX = Number.NaN;
-    this.#lastPointerCaptureY = Number.NaN;
+    this.#capturingPointer = null;
     this.#textCompositing = false;
     this.#actions = new Map([
       ["click", new Set()],
@@ -469,18 +486,27 @@ abstract class Widget extends HTMLElement {
   }
 
   protected _getPointerInfo(event: PointerEvent): { inCapturing: boolean, movementX: number, movementY: number } {
-    const inCapturing = (this.#capturingPointer === `${ event.pointerType }__${ event.pointerId }`);
-    let movementX = Number.NaN;
-    let movementY = Number.NaN;
-    if (inCapturing === true) {
-      movementX = event.clientX - this.#lastPointerCaptureX;
-      movementY = event.clientY - this.#lastPointerCaptureY;
+    if (this.#capturingPointer) {
+      const inCapturing = (this.#capturingPointer.type === event.pointerType) && (this.#capturingPointer.id === event.pointerId);
+      let movementX = Number.NaN;
+      let movementY = Number.NaN;
+      if (inCapturing === true) {
+        movementX = event.clientX - this.#capturingPointer.startX;
+        movementY = event.clientY - this.#capturingPointer.startY;
+      }
+      return {
+        inCapturing,
+        movementX,
+        movementY,
+      };
     }
-    return {
-      inCapturing,
-      movementX,
-      movementY,
-    };
+    else {
+      return {
+        inCapturing: false,
+        movementX: Number.NaN,
+        movementY: Number.NaN,
+      };
+    }
   }
 
   protected get _textCompositing(): boolean {
@@ -830,7 +856,8 @@ namespace Widget {
   export type Action<T extends Event = Event> = {
     func: (event: T) => void,
     keys?: Array<string>,
-    active?: boolean,
+    doPreventDefault?: boolean,
+    doStopPropagation?: boolean,
     allowRepeat?: boolean,
     //TODO AbortSignal
   };

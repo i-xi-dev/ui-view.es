@@ -261,9 +261,9 @@ class Switch extends Widget {
           x: event.clientX,
           y: event.clientY,
         });
-        //TODO pointercapture中は無視する
+
         if (thumbPointed === true) {
-          this._setPointerCapture(event.pointerId);//XXX firefox: pointercaptureがおそらくshadow DOM境界をまたげない
+          //TODO this.#pointerDownedOnThumb = true; falseの場合は範囲外に出たらreleasepointercaptureする、trueの場合はpointerupした位置でon/off決める
         }
       },
     });
@@ -302,18 +302,26 @@ class Switch extends Widget {
     // chrome: trackをhostの外にドラッグしようとした後、host内のどこかclickするまでドラッグしようとするとできない（thumbも）
 
     this._addAction<PointerEvent>("pointercancel", {
-      func: () => {
+      func: (event: PointerEvent) => {
+        const { inCapturing } = this._getPointerInfo(event);
+        if (inCapturing !== true) {
+          return;
+        }
         this.#thumb.style.removeProperty("inset-inline-start");
       },
     });
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {
+        const { inCapturing } = this._getPointerInfo(event);
+        if (inCapturing !== true) {
+          return;
+        }
         this.#thumb.style.removeProperty("inset-inline-start");
-        //if (this._getPointerInfo(event).inCapturing === true) {
+
           this.checked = !(this.#checked);//TODO captureしててかつ動いてなければ変更しない
           this._dispatchChangeEvent();
           //TODO click発火
-        //}
+
       },
     });
 
@@ -322,7 +330,8 @@ class Switch extends Widget {
     //     this.checked = !(this.#checked);
     //     this._dispatchChangeEvent();
     //   },
-    //   active: true,
+    //   doPreventDefault: true,
+    //   doStopPropagation: true,
     // });
 
     this._addAction<KeyboardEvent>("keydown", {
@@ -332,7 +341,7 @@ class Switch extends Widget {
         this._dispatchChangeEvent();
         //TODO click発火
       },
-      active: true,
+      doPreventDefault: true,
     });
   }
 
