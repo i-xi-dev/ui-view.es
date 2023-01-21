@@ -227,6 +227,7 @@ class Switch extends Widget {
   readonly #valueLabelElement: Element;
   readonly #thumb: HTMLElement;
   readonly #thumbHitTest: Element;
+  #thumbMovement?: number;
 
   static {
     Switch.#styleSheet.replaceSync(Switch.#STYLE);
@@ -270,6 +271,7 @@ class Switch extends Widget {
       func: (event: PointerEvent) => {
         if (this._isCapturingPointer(event) === true) {
           this.#thumb.style.removeProperty("inset-inline-start");
+          this.#thumbMovement = undefined;
         }
       },
     });
@@ -279,8 +281,26 @@ class Switch extends Widget {
         if (this._isCapturingPointer(event) === true) {
           this.#thumb.style.removeProperty("inset-inline-start");
 
+          const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
+          if ((capturingPointer.startViewportX === event.clientX) && (capturingPointer.startViewportY === event.clientY)) {
+            // pointerupとpointerdownの座標が同じ場合はcheckedを変更する
+            //TODO pointerdownしてpointermoveして元の位置に戻ってpointerupした場合も？
+          }
+          else {
+            console.log(this.#thumbMovement);
+            // pointerdownからpointerupの間に少しでも動いている場合は、つまみがあまり動いていない場合はcheckedを変更しない
+            if ((this.checked === true) && ((this.#thumbMovement as number) > 0.6)) {
+              console.log("------------------------------------- no-change:true");
+              return;
+            }
+            else if ((this.checked !== true) && ((this.#thumbMovement as number) < 0.4)) {
+              console.log("------------------------------------- no-change:false");
+              return;
+            }
+          }
+          this.#thumbMovement = undefined;
+
           console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
-          //TODO-1 動いた形跡がなければ変更しない
           this.checked = !(this.#checked);
           //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
           this._dispatchChangeEvent();
@@ -329,6 +349,7 @@ class Switch extends Widget {
       thumbStart = range;
     }
     this.#thumb.style.setProperty("inset-inline-start", `${ thumbStart }px`);
+    this.#thumbMovement = thumbStart / range;
   }
 
   protected override _setPointerCapture(event: PointerEvent) {

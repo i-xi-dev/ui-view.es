@@ -261,6 +261,10 @@ abstract class Widget extends HTMLElement {
     eventTarget.classList.add(`${ Widget.CLASS_NAME }-event-target`);
 
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+        return;
+      }
+
       if ((this.#capturingPointer === null) && (event.isPrimary === true)) {
         console.log(`widget.pointerdown ${event.pointerType}-${event.pointerId}`);
         this._setPointerCapture(event);
@@ -272,6 +276,10 @@ abstract class Widget extends HTMLElement {
 
     // pointerupやpointercancelでは自動的にreleaseされる
     eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
+      // if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+      //   return;
+      // }
+
       if (this._isCapturingPointer(event) === true) {
         console.log(`widget.lostpointercapture ${event.pointerType}-${event.pointerId}`);
         console.log(Object.assign({}, this._capturingPointer));
@@ -280,6 +288,10 @@ abstract class Widget extends HTMLElement {
     }, { passive: true });
 
     eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+        return;
+      }
+
       if (this._isCapturingPointer(event) === true) {
         console.log(`widget.pointerup ${event.pointerType}-${event.pointerId}`);
         console.log(Object.assign({}, this._capturingPointer));
@@ -290,6 +302,10 @@ abstract class Widget extends HTMLElement {
     // pointercancelの場合は#capturingPointerは使わない
 
     eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
+      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+        return;
+      }
+
       if (this._isCapturingPointer(event) === true) {
         console.log(`widget.pointermove ${event.pointerType}-${event.pointerId}`);
         console.log(Object.assign({}, this._capturingPointer));

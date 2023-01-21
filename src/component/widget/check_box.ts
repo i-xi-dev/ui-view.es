@@ -222,12 +222,11 @@ class CheckBox extends Widget {
             console.log("------------------------------------- leaved");
             return;
           }
-          else {
-            console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
-            this.checked = !(this.#checked);
-            //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
-            this._dispatchChangeEvent();
-          }
+
+          console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
+          this.checked = !(this.#checked);
+          //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+          this._dispatchChangeEvent();
         }
       },
     });
