@@ -140,8 +140,26 @@ customElements.define("wc-switch", Switch);
         </div>
       </div>
       <div>
+        <div>vertical-rl, rtl</div>
+        <div style="writing-mode: vertical-rl; direction: rtl;">
+          <wc-switch data-value-label-visible="true">
+            <option slot="datalist" value="0">OFF</option>
+            <option slot="datalist" value="1">ON</option>
+          </wc-switch>
+        </div>
+      </div>
+      <div>
         <div>vertical-lr, ltr</div>
         <div style="writing-mode: vertical-lr; direction: ltr;">
+          <wc-switch data-value-label-visible="true">
+            <option slot="datalist" value="0">OFF</option>
+            <option slot="datalist" value="1">ON</option>
+          </wc-switch>
+        </div>
+      </div>
+      <div>
+        <div>vertical-lr, rtl</div>
+        <div style="writing-mode: vertical-lr; direction: rtl;">
           <wc-switch data-value-label-visible="true">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>

@@ -5,6 +5,8 @@ type _Point = {
   y: number,
 };
 
+const _EVENT_TARGET_PADDING_INLINE = 12;
+
 const _WidgetSize = {
   LARGE: "large",
   MEDIUM: "medium",
@@ -44,15 +46,19 @@ const DataAttr = {
 type _CapturingPointer = {
   readonly id: number,
   readonly type: string,
-  readonly params: Record<string, (string | number | boolean)>,
-  readonly startX: number,
-  readonly startY: number,
+  readonly startViewportX: number,//XXX 不要では
+  readonly startViewportY: number,//XXX 不要では
   readonly startTimestamp: number,
-  movementX: number,
-  movementY: number,
-  duration: number,
 
-  leaved: boolean,
+  leaved: boolean,//XXX 不要（leavedを読んでる側で判定できる）
+  readonly targetBoundingBox: _BoundingBox,
+};
+
+type _BoundingBox = {
+  readonly left: number,
+  readonly right: number,
+  readonly top: number,
+  readonly bottom: number,
 };
 
 const _WidgetDirection = {
@@ -127,7 +133,7 @@ abstract class Widget extends HTMLElement {
       flex-flow: row nowrap;
       inset: 0;
       position: absolute;
-      padding-inline: 12px;
+      padding-inline: ${ _EVENT_TARGET_PADDING_INLINE }px;
     }
     *.${ Widget.CLASS_NAME }-event-target[contenteditable] {
       /* textareaを使うなら不要
@@ -278,9 +284,6 @@ abstract class Widget extends HTMLElement {
         console.log(`widget.pointerup ${event.pointerType}-${event.pointerId}`);
         console.log(Object.assign({}, this._capturingPointer));
         const capturingPointer = this.#capturingPointer as _CapturingPointer;
-        capturingPointer.movementX = event.clientX - capturingPointer.startX;
-        capturingPointer.movementY = event.clientY - capturingPointer.startY;
-        capturingPointer.duration = event.timeStamp - capturingPointer.startTimestamp;
         capturingPointer.leaved = (this._elementIntersectsPoint(eventTarget, { x: event.clientX, y: event.clientY }) !== true);
       }
     }, { passive: true });
@@ -290,10 +293,6 @@ abstract class Widget extends HTMLElement {
       if (this._isCapturingPointer(event) === true) {
         console.log(`widget.pointermove ${event.pointerType}-${event.pointerId}`);
         console.log(Object.assign({}, this._capturingPointer));
-        const capturingPointer = this.#capturingPointer as _CapturingPointer;
-        capturingPointer.movementX = event.clientX - capturingPointer.startX;
-        capturingPointer.movementY = event.clientY - capturingPointer.startY;
-        capturingPointer.duration = event.timeStamp - capturingPointer.startTimestamp;
       }
     }, { passive: true });
 
@@ -324,6 +323,16 @@ abstract class Widget extends HTMLElement {
     return eventTarget;
   }
 
+  #getEventTargetBoundingBox(): _BoundingBox {
+    const { left, right, top, bottom } = this.#eventTarget.getBoundingClientRect();
+    return Object.freeze({
+      left,
+      right,
+      top,
+      bottom,
+    });
+  }
+
   protected _isCapturingPointer(event: PointerEvent): boolean {
     if (this.#capturingPointer) {
       return (this.#capturingPointer.type === event.pointerType) && (this.#capturingPointer.id === event.pointerId);
@@ -335,20 +344,17 @@ abstract class Widget extends HTMLElement {
     return this.#capturingPointer;
   }
 
-  protected _setPointerCapture(event: PointerEvent, params: Record<string, (string | number | boolean)> = {}): void {
+  protected _setPointerCapture(event: PointerEvent): void {
     this.#eventTarget.setPointerCapture(event.pointerId);
     const viewportX = event.clientX;
     const viewportY = event.clientY;
     this.#capturingPointer = {
       type: event.pointerType,
       id: event.pointerId,
-      params: Object.assign({}, params),
-      startX: viewportX,
-      startY: viewportY,
+      startViewportX: viewportX,
+      startViewportY: viewportY,
       startTimestamp: event.timeStamp,
-      movementX: 0,
-      movementY: 0,
-      duration: 0,
+      targetBoundingBox: this.#getEventTargetBoundingBox(),
       leaved: false,
     };
     //console.log(`x:${event.offsetX}, y:${event.offsetY}, targetW:${this.#eventTarget.offsetWidth}, targetH:${this.#eventTarget.offsetHeight}`)
@@ -525,30 +531,6 @@ abstract class Widget extends HTMLElement {
       return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
     }) as Array<HTMLOptionElement>;
     //XXX 値重複は警告する？
-  }
-
-  protected _getPointerInfo(event: PointerEvent): { inCapturing: boolean, movementX: number, movementY: number } {
-    if (this.#capturingPointer) {
-      const inCapturing = (this.#capturingPointer.type === event.pointerType) && (this.#capturingPointer.id === event.pointerId);
-      let movementX = Number.NaN;
-      let movementY = Number.NaN;
-      if (inCapturing === true) {
-        movementX = event.clientX - this.#capturingPointer.startX;
-        movementY = event.clientY - this.#capturingPointer.startY;
-      }
-      return {
-        inCapturing,
-        movementX,
-        movementY,
-      };
-    }
-    else {
-      return {
-        inCapturing: false,
-        movementX: Number.NaN,
-        movementY: Number.NaN,
-      };
-    }
   }
 
   protected get _textCompositing(): boolean {
@@ -903,6 +885,8 @@ namespace Widget {
   export const Size = _WidgetSize;
   export type Size = typeof Size[keyof typeof Size];
 
+  export const EVENT_TARGET_PADDING_INLINE = _EVENT_TARGET_PADDING_INLINE;
+
   export type DataListItem = {
     label: string,
     value: string,
@@ -938,6 +922,8 @@ namespace Widget {
     //XXX AbortSignal
   };
 
+  export type CapturingPointer = _CapturingPointer;
+  export type BoundingBox = _BoundingBox;
 }
 Object.freeze(Widget);
 

@@ -195,7 +195,7 @@ class Switch extends Widget {
     *.${ Widget.CLASS_NAME }-ripple {
       animation: ${ Switch.CLASS_NAME }-ripple 600ms both;
       inset: 0;
-      mix-blend-mode: color-burn; /*TODO darkのとき変える */
+      mix-blend-mode: color-burn; /*XXX darkのとき変える */
     }
 
     *.${ Switch.CLASS_NAME }-value-label {
@@ -260,32 +260,8 @@ class Switch extends Widget {
     this._addAction<PointerEvent>("pointermove", {
       func: (event: PointerEvent) => {
         if (this._isCapturingPointer(event) === true) {
-          const capturingPointer = this._capturingPointer;
-          if (capturingPointer?.params["thumbPointed"] === true) {
-            const range = this.#trackLength - this.#thumbSize;
-
-            //TODO-1 関数化
-            // if (this.#checked !== true) {
-            //   let adjustedX = capturingPointer.movementX;
-            //   if (adjustedX <= 0) {
-            //     adjustedX = 0;
-            //   }
-            //   else if (adjustedX >= range) {
-            //     adjustedX = range;
-            //   }
-            //   this.#thumb.style.setProperty("inset-inline-start", `${ adjustedX }px`);
-            // }
-            // else {
-            //   let adjustedX = capturingPointer.movementX;
-            //   if (adjustedX >= 0) {
-            //     adjustedX = 0;
-            //   }
-            //   else if (adjustedX <= -range) {
-            //     adjustedX = -range;
-            //   }
-            //   this.#thumb.style.setProperty("inset-inline-start", `${ range + adjustedX }px`);
-            // }
-          }
+          const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
+          this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
         }
       },
     });
@@ -303,20 +279,11 @@ class Switch extends Widget {
         if (this._isCapturingPointer(event) === true) {
           this.#thumb.style.removeProperty("inset-inline-start");
 
-          if ((this._capturingPointer?.leaved === true) && (this._capturingPointer?.params["thumbPointed"] !== true)) {
-            // thumbPointed:true                   → clickとみなす
-            // thumbPointed:false,範囲外に出ていない → clickとみなす
-            // thumbPointed:false,範囲外に出た      → clickとみなさない
-            console.log("------------------------------------- leaved");
-            return;
-          }
-          else {
-            console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
-            //TODO-1 thumbPointedしててかつ動いた形跡がなければ変更しない
-            this.checked = !(this.#checked);
-            //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
-            this._dispatchChangeEvent();
-          }
+          console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
+          //TODO-1 動いた形跡がなければ変更しない
+          this.checked = !(this.#checked);
+          //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+          this._dispatchChangeEvent();
         }
       },
     });
@@ -332,17 +299,46 @@ class Switch extends Widget {
     });
   }
 
+  //XXX sliderでも使う
+  #setThumbPosition(viewportX: number, viewportY: number, rect: Widget.BoundingBox) {
+    let trackStart: number;
+    let pointerCoord: number;
+    if (this._blockProgression === "tb") {
+      trackStart = (this._direction === "rtl") ? rect.right : rect.left;
+      pointerCoord = viewportX;
+    }
+    else {
+      trackStart = (this._direction === "rtl") ? rect.bottom : rect.top;
+      pointerCoord = viewportY;
+    }
+
+    let thumbStart = 0;
+    if (this._direction === "rtl") {
+      thumbStart = (trackStart - Widget.EVENT_TARGET_PADDING_INLINE) - pointerCoord;
+    }
+    else {
+      thumbStart = pointerCoord - (trackStart + Widget.EVENT_TARGET_PADDING_INLINE);
+    }
+    thumbStart = thumbStart - (this.#thumbSize / 2);
+
+    const range = this.#trackLength - this.#thumbSize;
+    if (thumbStart <= 0) {
+      thumbStart = 0;
+    }
+    else if (thumbStart >= range) {
+      thumbStart = range;
+    }
+    this.#thumb.style.setProperty("inset-inline-start", `${ thumbStart }px`);
+  }
+
   protected override _setPointerCapture(event: PointerEvent) {
-    const thumbPointed = this._elementIntersectsPoint(this.#thumbHitTest, {
-      x: event.clientX,
-      y: event.clientY,
-    });
-    const viewportX = event.clientX;
-    const viewportY = event.clientY;
-    //TODO-1 thumbPointedでなければその位置にthumbを移動
-    super._setPointerCapture(event, {
-      thumbPointed,
-    });
+    // const thumbPointed = this._elementIntersectsPoint(this.#thumbHitTest, {
+    //   x: event.clientX,
+    //   y: event.clientY,
+    // });
+    super._setPointerCapture(event);
+    const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
+    this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
   }
 
   get checked(): boolean {
