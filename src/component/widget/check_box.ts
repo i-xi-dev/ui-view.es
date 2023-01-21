@@ -25,6 +25,7 @@ class CheckBox extends Widget {
     :host {
       flex: none;
       inline-size: max-content;
+      user-select: none;/* これがないと、なぜかChromeで短時間に連続clickした後、pointerdownして数pixel pointermoveすると勝手にlostpointercaptureが起きる。Firefoxは無くても問題ない。Safariは未確認 */
     }
     *.${ CheckBox.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
       border-radius: 4px;
@@ -157,7 +158,7 @@ class CheckBox extends Widget {
     *.${ Widget.CLASS_NAME }-ripple {
       animation: ${ CheckBox.CLASS_NAME }-ripple 600ms both;
       inset: 0;
-      mix-blend-mode: color-burn; /*TODO darkのとき変える */
+      mix-blend-mode: color-burn; /*XXX darkのとき変える */
     }
 
     *.${ CheckBox.CLASS_NAME }-value-label {
@@ -214,15 +215,21 @@ class CheckBox extends Widget {
     main.append((CheckBox.#template as HTMLTemplateElement).content.cloneNode(true));
     this.#valueLabelElement = main.querySelector(`*.${ CheckBox.CLASS_NAME }-value-label`) as Element;
 
-    //TODO pointerupにする？
-    this._addAction<PointerEvent>("click", {
-      func: () => {
-        this.checked = !(this.#checked);
-        this._dispatchCompatMouseEvent("click");
-        this._dispatchChangeEvent();
+    this._addAction<PointerEvent>("pointerup", {
+      func: (event: PointerEvent) => {
+        if (this._isCapturingPointer(event) === true) {
+          if (this._capturingPointer?.leaved === true) {
+            console.log("------------------------------------- leaved");
+            return;
+          }
+          else {
+            console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
+            this.checked = !(this.#checked);
+            //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+            this._dispatchChangeEvent();
+          }
+        }
       },
-      doPreventDefault: true,
-      doStopPropagation: true,
     });
 
     this._addAction<KeyboardEvent>("keydown", {
@@ -268,7 +275,7 @@ class CheckBox extends Widget {
     else {
       return dataListItems[CheckBox.OptionIndex.OFF];
     }
-    //TODO busyのときエラーにするか待たせるか
+    //XXX busyのときエラーにするか待たせるか
   }
 
   static override get observedAttributes(): Array<string> {

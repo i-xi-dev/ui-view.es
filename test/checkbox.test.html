@@ -118,6 +118,49 @@ customElements.define("wc-checkbox", CheckBox);
 
     <div class="test-static">
       <div>
+        <div>horizontal-tb, ltr</div>
+        <div style="writing-mode: horizontal-tb; direction: ltr;">
+          <wc-checkbox data-value-label-visible="true">
+            <option slot="datalist" value="0">OFF</option>
+            <option slot="datalist" value="1">ON</option>
+            <option slot="datalist" value="">-</option>
+          </wc-checkbox>
+        </div>
+      </div>
+      <div>
+        <div>horizontal-tb, rtl</div>
+        <div style="writing-mode: horizontal-tb; direction: rtl;">
+          <wc-checkbox data-value-label-visible="true">
+            <option slot="datalist" value="0">OFF</option>
+            <option slot="datalist" value="1">ON</option>
+            <option slot="datalist" value="">-</option>
+          </wc-checkbox>
+        </div>
+      </div>
+      <div>
+        <div>vertical-rl, ltr</div>
+        <div style="writing-mode: vertical-rl; direction: ltr;">
+          <wc-checkbox data-value-label-visible="true">
+            <option slot="datalist" value="0">OFF</option>
+            <option slot="datalist" value="1">ON</option>
+            <option slot="datalist" value="">-</option>
+          </wc-checkbox>
+        </div>
+      </div>
+      <div>
+        <div>vertical-lr, ltr</div>
+        <div style="writing-mode: vertical-lr; direction: ltr;">
+          <wc-checkbox data-value-label-visible="true">
+            <option slot="datalist" value="0">OFF</option>
+            <option slot="datalist" value="1">ON</option>
+            <option slot="datalist" value="">-</option>
+          </wc-checkbox>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-static">
+      <div>
         <div>aria-busy</div>
         <wc-checkbox aria-busy="true"></wc-checkbox>
         <wc-checkbox aria-busy="false"></wc-checkbox>

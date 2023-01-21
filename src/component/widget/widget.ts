@@ -41,6 +41,26 @@ const DataAttr = {
   SIZE: "data-size",
 } as const;
 
+type _CapturingPointer = {
+  readonly id: number,
+  readonly type: string,
+  readonly params: Record<string, (string | number | boolean)>,
+  readonly startX: number,
+  readonly startY: number,
+  readonly startTimestamp: number,
+  movementX: number,
+  movementY: number,
+  duration: number,
+
+  leaved: boolean,
+};
+
+const _WidgetDirection = {
+  LTR: "ltr",
+  RTL: "rtl",
+} as const;
+type _WidgetDirection = typeof _WidgetDirection[keyof typeof _WidgetDirection];
+
 abstract class Widget extends HTMLElement {
   static readonly CLASS_NAME: string = "widget";
   static readonly #STYLE = `
@@ -95,6 +115,11 @@ abstract class Widget extends HTMLElement {
       --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
       font-size: 20px;
     }
+    :host(*[aria-busy="true"]) *.widget-container,
+    :host(*[aria-disabled="true"]) *.widget-container {
+      filter: contrast(0.5) grayscale(1);
+      opacity: 0.6;
+    }
 
     *.${ Widget.CLASS_NAME }-event-target {
       cursor: pointer;
@@ -131,11 +156,6 @@ abstract class Widget extends HTMLElement {
     *.widget,
     *.widget * {
       pointer-events: none;
-    }
-    :host(*[aria-busy="true"]) *.widget,
-    :host(*[aria-disabled="true"]) *.widget {
-      filter: contrast(0.5) grayscale(1);
-      opacity: 0.6;
     }
 
     *.${ Widget.CLASS_NAME }-glow {
@@ -203,19 +223,15 @@ abstract class Widget extends HTMLElement {
   #hidden: boolean;
   #label: string;
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
-  #capturingPointer: {//TODO type外だし
-    id: number,
-    type: string,
-    startX: number,
-    startY: number,
-    timestamp: number,
-  } | null; // trueの状態でdisable等にした場合に非対応
+  #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
   readonly #main: Element;
   readonly #eventTarget: HTMLElement;
   readonly #dataListSlot: HTMLSlotElement;
+  #direction: _WidgetDirection;
+  #blockProgression: string;
 
   protected static _ReflectionsOnConnected: Widget.Reflections = {
     content: "always",
@@ -238,62 +254,48 @@ abstract class Widget extends HTMLElement {
     const eventTarget = this.ownerDocument.createElement("div");
     eventTarget.classList.add(`${ Widget.CLASS_NAME }-event-target`);
 
-    // eventTarget.addEventListener("focus", (event: FocusEvent) => {
-    //   if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
-    //     return;
-    //   }
-    //   const focusActions = this.#actions.get("focus");
-    //   if (focusActions && (focusActions.size ?? 0) > 0) {
-    //     const filteredActions = [...focusActions];
-    //     for (const action of filteredActions) {
-    //       action.func(event);
-    //     }
-    //   }
-    // }, { passive: true });
-
-    this.#setEventListener<PointerEvent>("click", eventTarget, false);
-    this.#setEventListener<InputEvent>("input", eventTarget, true);
-    this.#setEventListener<KeyboardEvent>("keydown", eventTarget, false);
-    this.#setEventListener<PointerEvent>("pointercancel", eventTarget, true);
-    this.#setEventListener<PointerEvent>("pointerdown", eventTarget, true);
-    this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
-    this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
-
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
       if ((this.#capturingPointer === null) && (event.isPrimary === true)) {
-        this.#eventTarget.setPointerCapture(event.pointerId);
-        this.#capturingPointer = {
-          type: event.pointerType,
-          id: event.pointerId,
-          startX: event.clientX,
-          startY: event.clientY,
-          timestamp: performance.now(),
-        };
+        console.log(`widget.pointerdown ${event.pointerType}-${event.pointerId}`);
+        this._setPointerCapture(event);
+        console.log(Object.assign({}, this._capturingPointer));
       }
     }, { passive: true });
 
-    // 自動的にreleasePointerCaptureされる
-    // eventTarget.addEventListener("pointercancel", (event: PointerEvent) => {
-    // }, { passive: true });
+    // touchだと無条件でpointercaptureされるので、gotpointercaptureで#capturingPointerにセットするのはNG
 
-    // 自動的にreleasePointerCaptureされる
-    // eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
-    // }, { passive: true });
-
-    //TODO 範囲外に出たらreleasePointerCaptureするかどうか設定に持たせる
-    // eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
-    // }, { passive: true });
-
-    // touchだと無条件でpointercaptureされるので、ここで#capturingPointerにセットするのはよくない
-    // eventTarget.addEventListener("gotpointercapture", (event: PointerEvent) => {
-    // }, { passive: true });
-
+    // pointerupやpointercancelでは自動的にreleaseされる
     eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
-      if ((this.#capturingPointer?.type === event.pointerType) && (this.#capturingPointer?.id === event.pointerId)) {
+      if (this._isCapturingPointer(event) === true) {
+        console.log(`widget.lostpointercapture ${event.pointerType}-${event.pointerId}`);
+        console.log(Object.assign({}, this._capturingPointer));
         this.#capturingPointer = null;
       }
     }, { passive: true });
 
+    eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
+      if (this._isCapturingPointer(event) === true) {
+        console.log(`widget.pointerup ${event.pointerType}-${event.pointerId}`);
+        console.log(Object.assign({}, this._capturingPointer));
+        const capturingPointer = this.#capturingPointer as _CapturingPointer;
+        capturingPointer.movementX = event.clientX - capturingPointer.startX;
+        capturingPointer.movementY = event.clientY - capturingPointer.startY;
+        capturingPointer.duration = event.timeStamp - capturingPointer.startTimestamp;
+        capturingPointer.leaved = (this._elementIntersectsPoint(eventTarget, { x: event.clientX, y: event.clientY }) !== true);
+      }
+    }, { passive: true });
+    // pointercancelの場合は#capturingPointerは使わない
+
+    eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
+      if (this._isCapturingPointer(event) === true) {
+        console.log(`widget.pointermove ${event.pointerType}-${event.pointerId}`);
+        console.log(Object.assign({}, this._capturingPointer));
+        const capturingPointer = this.#capturingPointer as _CapturingPointer;
+        capturingPointer.movementX = event.clientX - capturingPointer.startX;
+        capturingPointer.movementY = event.clientY - capturingPointer.startY;
+        capturingPointer.duration = event.timeStamp - capturingPointer.startTimestamp;
+      }
+    }, { passive: true });
 
     // if (this._init.textEditable === true) {
     //   eventTarget.setAttribute("contenteditable", "true");
@@ -311,7 +313,45 @@ abstract class Widget extends HTMLElement {
     //   }, { passive: true });
     // }
 
+    this.#setEventListener<PointerEvent>("click", eventTarget, false);
+    this.#setEventListener<InputEvent>("input", eventTarget, true);
+    this.#setEventListener<KeyboardEvent>("keydown", eventTarget, false);
+    this.#setEventListener<PointerEvent>("pointercancel", eventTarget, true);
+    this.#setEventListener<PointerEvent>("pointerdown", eventTarget, true);
+    this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
+    this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
+
     return eventTarget;
+  }
+
+  protected _isCapturingPointer(event: PointerEvent): boolean {
+    if (this.#capturingPointer) {
+      return (this.#capturingPointer.type === event.pointerType) && (this.#capturingPointer.id === event.pointerId);
+    }
+    return false;
+  }
+
+  protected get _capturingPointer(): _CapturingPointer | null {
+    return this.#capturingPointer;
+  }
+
+  protected _setPointerCapture(event: PointerEvent, params: Record<string, (string | number | boolean)> = {}): void {
+    this.#eventTarget.setPointerCapture(event.pointerId);
+    const viewportX = event.clientX;
+    const viewportY = event.clientY;
+    this.#capturingPointer = {
+      type: event.pointerType,
+      id: event.pointerId,
+      params: Object.assign({}, params),
+      startX: viewportX,
+      startY: viewportY,
+      startTimestamp: event.timeStamp,
+      movementX: 0,
+      movementY: 0,
+      duration: 0,
+      leaved: false,
+    };
+    //console.log(`x:${event.offsetX}, y:${event.offsetY}, targetW:${this.#eventTarget.offsetWidth}, targetH:${this.#eventTarget.offsetHeight}`)
   }
 
   //TODO stopPropagation ・・・すくなくともclickは。他？
@@ -380,6 +420,8 @@ abstract class Widget extends HTMLElement {
       ["pointerup", new Set()],
     ]);
     this.#reflectingInProgress = "";
+    this.#direction = _WidgetDirection.LTR;
+    this.#blockProgression = "";
 
     this._appendStyleSheet(Widget.#styleSheet);
 
@@ -571,7 +613,41 @@ abstract class Widget extends HTMLElement {
     }
     this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
+    const style = this.ownerDocument.defaultView?.getComputedStyle(this);
+    if (style) {
+      const direction = style.getPropertyValue("direction");
+      this.#direction = (direction === _WidgetDirection.RTL) ? _WidgetDirection.RTL : _WidgetDirection.LTR;
+      const writingMode = style.getPropertyValue("writing-mode");
+      switch (writingMode) {
+        case "horizontal-tb":
+          this.#blockProgression = "tb";
+          break;
+        case "vertical-rl":
+        case "sideways-rl":
+          this.#blockProgression = "rl";
+          break;
+        case "vertical-lr":
+        case "sideways-lr":
+          this.#blockProgression = "lr";
+          break;
+        default:
+          this.#blockProgression = "tb";
+          break;
+      }
+    }
+    else {
+      this.#blockProgression = "tb";
+    }
+
     //this.#connected = true;
+  }
+
+  protected get _direction(): _WidgetDirection {
+    return this.#direction;//XXX connectedの後に変更された場合の検知が困難
+  }
+
+  protected get _blockProgression(): string {
+    return this.#blockProgression;//XXX connectedの後に変更された場合の検知が困難
   }
 
   disconnectedCallback(): void {
@@ -859,7 +935,7 @@ namespace Widget {
     doPreventDefault?: boolean,
     doStopPropagation?: boolean,
     allowRepeat?: boolean,
-    //TODO AbortSignal
+    //XXX AbortSignal
   };
 
 }

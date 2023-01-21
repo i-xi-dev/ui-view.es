@@ -50,6 +50,7 @@ class Switch extends Widget {
     :host {
       flex: none;
       inline-size: max-content;
+      user-select: none;/* これがないと、なぜかChromeで短時間に連続clickした後、pointerdownして数pixel pointermoveすると勝手にlostpointercaptureが起きる。Firefoxは無くても問題ない。Safariは未確認 */
     }
     *.${ Switch.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
       border-radius: 4px;
@@ -255,93 +256,92 @@ class Switch extends Widget {
     this.#valueLabelElement = main.querySelector(`*.${ Switch.CLASS_NAME }-value-label`) as Element;
     this.#thumb = main.querySelector(`*.${ Switch.CLASS_NAME }-thumb`) as HTMLElement;
     this.#thumbHitTest = main.querySelector(`*.${ Switch.CLASS_NAME }-thumb-hittest`) as Element;
-    this._addAction<PointerEvent>("pointerdown", {
-      func: (event: PointerEvent) => {
-        const thumbPointed = this._elementIntersectsPoint(this.#thumbHitTest, {
-          x: event.clientX,
-          y: event.clientY,
-        });
-
-        if (thumbPointed === true) {
-          //TODO this.#pointerDownedOnThumb = true; falseの場合は範囲外に出たらreleasepointercaptureする、trueの場合はpointerupした位置でon/off決める
-        }
-      },
-    });
 
     this._addAction<PointerEvent>("pointermove", {
       func: (event: PointerEvent) => {
-        const { inCapturing, movementX } = this._getPointerInfo(event);
-        if (inCapturing !== true) {
-          return;
-        }
+        if (this._isCapturingPointer(event) === true) {
+          const capturingPointer = this._capturingPointer;
+          if (capturingPointer?.params["thumbPointed"] === true) {
+            const range = this.#trackLength - this.#thumbSize;
 
-        const range = this.#trackLength - this.#thumbSize;
-        //TODO writing-modeとdirectionを取得する必要
-        if (this.#checked !== true) {
-          let adjustedX = movementX;
-          if (movementX <= 0) {
-            adjustedX = 0;
+            //TODO-1 関数化
+            // if (this.#checked !== true) {
+            //   let adjustedX = capturingPointer.movementX;
+            //   if (adjustedX <= 0) {
+            //     adjustedX = 0;
+            //   }
+            //   else if (adjustedX >= range) {
+            //     adjustedX = range;
+            //   }
+            //   this.#thumb.style.setProperty("inset-inline-start", `${ adjustedX }px`);
+            // }
+            // else {
+            //   let adjustedX = capturingPointer.movementX;
+            //   if (adjustedX >= 0) {
+            //     adjustedX = 0;
+            //   }
+            //   else if (adjustedX <= -range) {
+            //     adjustedX = -range;
+            //   }
+            //   this.#thumb.style.setProperty("inset-inline-start", `${ range + adjustedX }px`);
+            // }
           }
-          else if (movementX >= range) {
-            adjustedX = range;
-          }
-          this.#thumb.style.setProperty("inset-inline-start", `${ adjustedX }px`);
-        }
-        else {
-          let adjustedX = movementX;
-          if (movementX >= 0) {
-            adjustedX = 0;
-          }
-          else if (movementX <= -range) {
-            adjustedX = -range;
-          }
-          this.#thumb.style.setProperty("inset-inline-start", `${ range + adjustedX }px`);
         }
       },
     });
-    // chrome: trackをhostの外にドラッグしようとした後、host内のどこかclickするまでドラッグしようとするとできない（thumbも）
 
     this._addAction<PointerEvent>("pointercancel", {
       func: (event: PointerEvent) => {
-        const { inCapturing } = this._getPointerInfo(event);
-        if (inCapturing !== true) {
-          return;
+        if (this._isCapturingPointer(event) === true) {
+          this.#thumb.style.removeProperty("inset-inline-start");
         }
-        this.#thumb.style.removeProperty("inset-inline-start");
       },
     });
+
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {
-        const { inCapturing } = this._getPointerInfo(event);
-        if (inCapturing !== true) {
-          return;
+        if (this._isCapturingPointer(event) === true) {
+          this.#thumb.style.removeProperty("inset-inline-start");
+
+          if ((this._capturingPointer?.leaved === true) && (this._capturingPointer?.params["thumbPointed"] !== true)) {
+            // thumbPointed:true                   → clickとみなす
+            // thumbPointed:false,範囲外に出ていない → clickとみなす
+            // thumbPointed:false,範囲外に出た      → clickとみなさない
+            console.log("------------------------------------- leaved");
+            return;
+          }
+          else {
+            console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
+            //TODO-1 thumbPointedしててかつ動いた形跡がなければ変更しない
+            this.checked = !(this.#checked);
+            //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+            this._dispatchChangeEvent();
+          }
         }
-        this.#thumb.style.removeProperty("inset-inline-start");
-
-          this.checked = !(this.#checked);//TODO captureしててかつ動いてなければ変更しない
-          this._dispatchChangeEvent();
-          //TODO click発火
-
       },
     });
 
-    // this._addAction<PointerEvent>("click", {
-    //   func: () => {
-    //     this.checked = !(this.#checked);
-    //     this._dispatchChangeEvent();
-    //   },
-    //   doPreventDefault: true,
-    //   doStopPropagation: true,
-    // });
-
     this._addAction<KeyboardEvent>("keydown", {
-      keys: [" "/*, "Enter"*/],
+      keys: [" "],
       func: () => {
         this.checked = !(this.#checked);
+        this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
-        //TODO click発火
       },
       doPreventDefault: true,
+    });
+  }
+
+  protected override _setPointerCapture(event: PointerEvent) {
+    const thumbPointed = this._elementIntersectsPoint(this.#thumbHitTest, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+    const viewportX = event.clientX;
+    const viewportY = event.clientY;
+    //TODO-1 thumbPointedでなければその位置にthumbを移動
+    super._setPointerCapture(event, {
+      thumbPointed,
     });
   }
 
@@ -365,7 +365,7 @@ class Switch extends Widget {
     else {
       return dataListItems[Switch.OptionIndex.OFF];
     }
-    //TODO busyのときエラーにするか待たせるか
+    //XXX busyのときエラーにするか待たせるか
   }
 
   static override get observedAttributes(): Array<string> {
