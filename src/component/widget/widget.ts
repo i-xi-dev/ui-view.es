@@ -1,4 +1,4 @@
-import { Aria } from "./aria";
+import { Aria, type Role } from "./aria";
 
 type _Point = {
   x: number,
@@ -73,7 +73,7 @@ abstract class Widget extends HTMLElement {
     :host {
       display: block;
     }
-    :host(*[aria-hidden="true"]) {
+    :host(*[${ Aria.HIDDEN }="true"]) {
       display: none;
     }
 
@@ -121,8 +121,8 @@ abstract class Widget extends HTMLElement {
       --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
       font-size: 20px;
     }
-    :host(*[aria-busy="true"]) *.widget-container,
-    :host(*[aria-disabled="true"]) *.widget-container {
+    :host(*[${ Aria.BUSY }="true"]) *.widget-container,
+    :host(*[${ Aria.DISABLED }="true"]) *.widget-container {
       filter: contrast(0.5) grayscale(1);
       opacity: 0.6;
     }
@@ -145,17 +145,17 @@ abstract class Widget extends HTMLElement {
       box-shadow: 0 0 0 2px var(--${ Widget.CLASS_NAME }-focusring-color);
       outline: none;
     }
-    :host(*[aria-busy="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[aria-busy="true"][aria-disabled="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[aria-busy="true"][aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[aria-busy="true"][aria-disabled="true"][aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+    :host(*[${ Aria.BUSY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[${ Aria.BUSY }="true"][${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
       cursor: wait;
     }
-    :host(*[aria-disabled="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[aria-disabled="true"][aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+    :host(*[${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
+    :host(*[${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
       cursor: not-allowed;
     }
-    :host(*[aria-readonly="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
+    :host(*[${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
       cursor: default;
     }
 
@@ -178,9 +178,9 @@ abstract class Widget extends HTMLElement {
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-glow-extent) currentcolor;
       opacity: 1;
     }
-    :host(*[aria-busy="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
-    :host(*[aria-disabled="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
-    :host(*[aria-readonly="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow {
+    :host(*[${ Aria.BUSY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
+    :host(*[${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
+    :host(*[${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }
@@ -199,9 +199,9 @@ abstract class Widget extends HTMLElement {
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-glow-blur-radius) currentcolor;
       opacity: 0.5;
     }
-    :host(*[aria-busy="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
-    :host(*[aria-disabled="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
-    :host(*[aria-readonly="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before {
+    :host(*[${ Aria.BUSY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
+    :host(*[${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
+    :host(*[${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }
@@ -586,11 +586,11 @@ abstract class Widget extends HTMLElement {
 
   static get observedAttributes(): Array<string> {
     return [
-      Aria.Property.LABEL, // 外部labelを使用する場合は使用しない
-      Aria.Property.READONLY,
-      Aria.State.BUSY,
-      Aria.State.DISABLED,
-      Aria.State.HIDDEN,
+      Aria.LABEL, // 外部labelを使用する場合は使用しない
+      Aria.READONLY,
+      Aria.BUSY,
+      Aria.DISABLED,
+      Aria.HIDDEN,
       DataAttr.SIZE,
     ];
   }
@@ -602,12 +602,12 @@ abstract class Widget extends HTMLElement {
 
     this.#reflectToRole();
 
-    this.#setBusyFromString(this.getAttribute(Aria.State.BUSY) ?? "", Widget._ReflectionsOnConnected);
-    this.#setDisabledFromString(this.getAttribute(Aria.State.DISABLED) ?? "", Widget._ReflectionsOnConnected);
-    this.#setHiddenFromString(this.getAttribute(Aria.State.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
-    this.#setLabel(this.getAttribute(Aria.Property.LABEL) ?? "", Widget._ReflectionsOnConnected);
+    this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
+    this.#setDisabledFromString(this.getAttribute(Aria.DISABLED) ?? "", Widget._ReflectionsOnConnected);
+    this.#setHiddenFromString(this.getAttribute(Aria.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
+    this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
     if (this._init.inputable === true) {
-      this.#setReadOnlyFromString(this.getAttribute(Aria.Property.READONLY) ?? "", Widget._ReflectionsOnConnected);
+      this.#setReadOnlyFromString(this.getAttribute(Aria.READONLY) ?? "", Widget._ReflectionsOnConnected);
     }
     this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
@@ -662,23 +662,23 @@ abstract class Widget extends HTMLElement {
     }
 
     switch (name) {
-      case Aria.Property.LABEL:
+      case Aria.LABEL:
         this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.Property.READONLY:
+      case Aria.READONLY:
         this.#setReadOnlyFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.State.BUSY:
+      case Aria.BUSY:
         this.#setBusyFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.State.DISABLED:
+      case Aria.DISABLED:
         this.#setDisabledFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.State.HIDDEN:
+      case Aria.HIDDEN:
         this.#setHiddenFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
@@ -842,23 +842,23 @@ abstract class Widget extends HTMLElement {
   }
 
   #reflectToAriaBusy(): void {
-    this._reflectToAttr(Aria.State.BUSY, ((this.#busy === true) ? "true" : undefined));
+    this._reflectToAttr(Aria.BUSY, ((this.#busy === true) ? "true" : undefined));
   }
 
   #reflectToAriaDisabled(): void {
-    this._reflectToAttr(Aria.State.DISABLED, ((this.#disabled === true) ? "true" : undefined));
+    this._reflectToAttr(Aria.DISABLED, ((this.#disabled === true) ? "true" : undefined));
   }
 
   #reflectToAriaHidden(): void {
-    this._reflectToAttr(Aria.State.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
+    this._reflectToAttr(Aria.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
   }
 
   #reflectToAriaLabel(): void {
-    this._reflectToAttr(Aria.Property.LABEL, (this.#label) ? this.#label : undefined);
+    this._reflectToAttr(Aria.LABEL, (this.#label) ? this.#label : undefined);
   }
 
   #reflectToAriaReadonly(): void {
-    this._reflectToAttr(Aria.Property.READONLY, ((this.#readOnly === true) ? "true" : undefined));
+    this._reflectToAttr(Aria.READONLY, ((this.#readOnly === true) ? "true" : undefined));
   }
 
   #reflectToDataSize(): void {
@@ -918,7 +918,7 @@ namespace Widget {
   export const Dimension = _WidgetDimension;
 
   export type Init = {
-    role: Aria.Role,
+    role: Role,
     className: string,
     inputable: boolean,
     textEditable: boolean,

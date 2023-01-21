@@ -1,30 +1,23 @@
-namespace Aria {
-  export const Role = {
-    CHECKBOX: "checkbox",
-    SLIDER: "slider",
-    SWITCH: "switch",
-    TEXTBOX: "textbox",
-  } as const;
+const Aria = {
+  BUSY: "aria-busy",
+  CHECKED: "aria-checked",
+  DISABLED: "aria-disabled",
+  HIDDEN: "aria-hidden",
+  LABEL: "aria-label",
+  MULTILINE: "aria-multiline",
+  READONLY: "aria-readonly",
+} as const;
+type Aria = typeof Aria[keyof typeof Aria];
 
-  export type Role = typeof Role[keyof typeof Role];
+const Role = {
+  CHECKBOX: "checkbox",
+  SLIDER: "slider",
+  SWITCH: "switch",
+  TEXTBOX: "textbox",
+} as const;
+type Role = typeof Role[keyof typeof Role];
 
-  export const State = {
-    BUSY: "aria-busy",
-    CHECKED: "aria-checked",
-    DISABLED: "aria-disabled",
-    HIDDEN: "aria-hidden",
-  } as const;
-
-  export type State = typeof State[keyof typeof State];
-
-  export const Property = {
-    LABEL: "aria-label",
-    MULTILINE: "aria-multiline",
-    READONLY: "aria-readonly",
-  } as const;
-
-  export type Property = typeof Property[keyof typeof Property];
-
-  export type Attr = State | Property;
-}
-export { Aria };
+export {
+  Aria,
+  Role,
+};

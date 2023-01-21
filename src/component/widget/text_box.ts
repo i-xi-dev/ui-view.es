@@ -1,4 +1,4 @@
-import { Aria } from "./aria";
+import { Aria, Role } from "./aria";
 import { Widget } from "./widget";
 
 const _MAIN_CONTENT_TEMPLATE = `
@@ -75,7 +75,7 @@ class TextBox extends Widget {
 
   constructor() {
     super({
-      role: Aria.Role.TEXTBOX,
+      role: Role.TEXTBOX,
       className: TextBox.#className,
       inputable: true,
       textEditable: true,
@@ -134,7 +134,7 @@ class TextBox extends Widget {
     return [
       Widget.observedAttributes,
       [
-        Aria.Property.MULTILINE,
+        Aria.MULTILINE,
         //TODO
       ],
     ].flat();
@@ -156,7 +156,7 @@ class TextBox extends Widget {
       return;
     }
 
-    this.#setMultiLineFromString(this.getAttribute(Aria.Property.MULTILINE) ?? "", Widget._ReflectionsOnConnected);
+    this.#setMultiLineFromString(this.getAttribute(Aria.MULTILINE) ?? "", Widget._ReflectionsOnConnected);
     //TODO
 
     this._connected = true;//TODO 更に継承する場合どうする
@@ -170,7 +170,7 @@ class TextBox extends Widget {
     }
 
     switch (name) {
-      case Aria.Property.MULTILINE:
+      case Aria.MULTILINE:
         this.#setMultiLineFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
@@ -199,7 +199,7 @@ class TextBox extends Widget {
   }
 
   #reflectToAriaMultiLine(): void {
-    this._reflectToAttr(Aria.Property.MULTILINE, ((this.#multiline === true) ? "true" : undefined));
+    this._reflectToAttr(Aria.MULTILINE, ((this.#multiline === true) ? "true" : undefined));
   }
 
   #reflectMultiLineToContent(): void {

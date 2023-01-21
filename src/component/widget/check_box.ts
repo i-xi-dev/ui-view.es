@@ -1,6 +1,6 @@
 
 import { Ns } from "./ns";
-import { Aria } from "./aria";
+import { Aria, Role } from "./aria";
 import { Widget } from "./widget";
 
 const _BOX_OFFSET_INLINE_START = 5;
@@ -71,8 +71,8 @@ class CheckBox extends Widget {
       border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
       transition: background-color var(--${ CheckBox.CLASS_NAME }-switching-time), border-width var(--${ CheckBox.CLASS_NAME }-switching-time);
     }
-    :host(*[aria-checked="true"]) *.${ CheckBox.CLASS_NAME }-box-surface,
-    :host(*[aria-checked="mixed"]) *.${ CheckBox.CLASS_NAME }-box-surface {
+    :host(*[${ Aria.CHECKED }="true"]) *.${ CheckBox.CLASS_NAME }-box-surface,
+    :host(*[${ Aria.CHECKED }="mixed"]) *.${ CheckBox.CLASS_NAME }-box-surface {
       background-color: var(--${ Widget.CLASS_NAME }-accent-color);
       border-width: 0;
     }
@@ -81,7 +81,7 @@ class CheckBox extends Widget {
       box-shadow: 0 0 0 0 #0000;
       transition: border-color 300ms, box-shadow 300ms;
     }
-    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-box-highlight {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-box-highlight {
       border-color: var(--${ Widget.CLASS_NAME }-accent-color);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
@@ -97,7 +97,7 @@ class CheckBox extends Widget {
     *.${ CheckBox.CLASS_NAME }-mark-canvas {
       transition: transform 300ms;
     }
-    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-mark-canvas {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ CheckBox.CLASS_NAME } *.${ CheckBox.CLASS_NAME }-mark-canvas {
       transform: scale(1.25);
     }
     @keyframes ${ CheckBox.CLASS_NAME }-mark-graph-checked {
@@ -123,10 +123,10 @@ class CheckBox extends Widget {
       overflow: visible;
       position: absolute;
     }
-    :host(*[aria-checked="true"]) *.${ CheckBox.CLASS_NAME }-mark-graph {
+    :host(*[${ Aria.CHECKED }="true"]) *.${ CheckBox.CLASS_NAME }-mark-graph {
       animation: ${ CheckBox.CLASS_NAME }-mark-graph-checked 300ms both;
     }
-    :host(*[aria-checked="mixed"]) *.${ CheckBox.CLASS_NAME }-mark-graph {
+    :host(*[${ Aria.CHECKED }="mixed"]) *.${ CheckBox.CLASS_NAME }-mark-graph {
       animation: ${ CheckBox.CLASS_NAME }-mark-graph-indeterminate 300ms both;
     }
     *.${ CheckBox.CLASS_NAME }-mark-line {
@@ -138,10 +138,10 @@ class CheckBox extends Widget {
       vector-effect: non-scaling-stroke;
       */
     }
-    :host(*[aria-checked="true"]) *.${ CheckBox.CLASS_NAME }-mark-line {
+    :host(*[${ Aria.CHECKED }="true"]) *.${ CheckBox.CLASS_NAME }-mark-line {
       stroke-linecap: square;
     }
-    :host(*[aria-checked="mixed"]) *.${ CheckBox.CLASS_NAME }-mark-line {
+    :host(*[${ Aria.CHECKED }="mixed"]) *.${ CheckBox.CLASS_NAME }-mark-line {
       stroke-linecap: round;
     }
 
@@ -196,7 +196,7 @@ class CheckBox extends Widget {
 
   constructor() {
     super({
-      role: Aria.Role.CHECKBOX,
+      role: Role.CHECKBOX,
       className: CheckBox.CLASS_NAME,
       inputable: true,
       textEditable: false,
@@ -281,7 +281,7 @@ class CheckBox extends Widget {
     return [
       Widget.observedAttributes,
       [
-        Aria.State.CHECKED,
+        Aria.CHECKED,
         //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
         //DataAttr.VALUE_LABEL_POSITION, CSSのみ
       ],
@@ -295,7 +295,7 @@ class CheckBox extends Widget {
       return;
     }
 
-    this.#setCheckedAndIndeterminateFromString(this.getAttribute(Aria.State.CHECKED) ?? "", Widget._ReflectionsOnConnected);
+    this.#setCheckedAndIndeterminateFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
 
     this._connected = true;
   }
@@ -308,7 +308,7 @@ class CheckBox extends Widget {
     }
 
     switch (name) {
-      case Aria.State.CHECKED:
+      case Aria.CHECKED:
         this.#setCheckedAndIndeterminateFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
@@ -337,7 +337,7 @@ class CheckBox extends Widget {
 
   #reflectToAriaChecked(): void {
     const value = (this.#indeterminate === true) ? "mixed" : ((this.#checked === true) ? "true" : "false");
-    this._reflectToAttr(Aria.State.CHECKED, value);
+    this._reflectToAttr(Aria.CHECKED, value);
   }
 
   #reflectCheckedToContent(): void {

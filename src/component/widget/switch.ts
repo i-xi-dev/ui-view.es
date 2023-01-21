@@ -1,5 +1,5 @@
 import { Ns } from "./ns";
-import { Aria } from "./aria";
+import { Aria, Role } from "./aria";
 import { Widget } from "./widget";
 
 const _TRACK_OFFSET_INLINE_START = 4;
@@ -107,7 +107,7 @@ class Switch extends Widget {
       border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
       transition: background-color var(--${ Switch.CLASS_NAME }-switching-time), border-color var(--${ Switch.CLASS_NAME }-switching-time);
     }
-    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-track-surface {
+    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-track-surface {
       background-color: var(--${ Widget.CLASS_NAME }-accent-color);
       border-color: var(--${ Widget.CLASS_NAME }-accent-color);
     }
@@ -116,7 +116,7 @@ class Switch extends Widget {
       box-shadow: 0 0 0 0 #0000;
       transition: border-color 300ms, box-shadow 300ms;
     }
-    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-track-highlight {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-track-highlight {
       border-color: var(--${ Widget.CLASS_NAME }-accent-color);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
@@ -135,8 +135,8 @@ class Switch extends Widget {
       opacity: 0;
       z-index: -1;
     }
-    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-hittest,
-    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb {
+    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-thumb-hittest,
+    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-thumb {
       inset-inline-start: calc(var(--${ Switch.CLASS_NAME }-inline-size) - var(--${ Switch.CLASS_NAME }-block-size));
     }
     *.${ Widget.CLASS_NAME }-glow,
@@ -147,7 +147,7 @@ class Switch extends Widget {
       margin: 3px;
       transition: margin 300ms;
     }
-    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *:is(
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *:is(
       *.${ Widget.CLASS_NAME }-glow,
       *.${ Widget.CLASS_NAME }-effects,
       *.${ Switch.CLASS_NAME }-thumb-surface,
@@ -169,7 +169,7 @@ class Switch extends Widget {
       border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
       transition: border-width var(--${ Switch.CLASS_NAME }-switching-time), margin 300ms;
     }
-    :host(*[aria-checked="true"]) *.${ Switch.CLASS_NAME }-thumb-surface {
+    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-thumb-surface {
       border-width: 0;
     }
     *.${ Switch.CLASS_NAME }-thumb-highlight {
@@ -177,7 +177,7 @@ class Switch extends Widget {
       box-shadow: 0 0 0 0 #0000;
       transition: border-width 300ms, box-shadow 300ms, margin 300ms;
     }
-    :host(*:not(*[aria-busy="true"]):not(*[aria-disabled="true"]):not(*[aria-readonly="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
       border-width: var(--${ Widget.CLASS_NAME }-border-width);
       box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
     }
@@ -236,7 +236,7 @@ class Switch extends Widget {
 
   constructor() {
     super({
-      role: Aria.Role.SWITCH,
+      role: Role.SWITCH,
       className: Switch.CLASS_NAME,
       inputable: true,
       textEditable: false,
@@ -389,7 +389,7 @@ class Switch extends Widget {
     return [
       Widget.observedAttributes,
       [
-        Aria.State.CHECKED,
+        Aria.CHECKED,
         //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
         //DataAttr.VALUE_LABEL_POSITION, CSSのみ
       ],
@@ -410,7 +410,7 @@ class Switch extends Widget {
       return;
     }
 
-    this.#setCheckedFromString(this.getAttribute(Aria.State.CHECKED) ?? "", Widget._ReflectionsOnConnected);
+    this.#setCheckedFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
 
     this._connected = true;
   }
@@ -423,7 +423,7 @@ class Switch extends Widget {
     }
 
     switch (name) {
-      case Aria.State.CHECKED:
+      case Aria.CHECKED:
         this.#setCheckedFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
@@ -450,7 +450,7 @@ class Switch extends Widget {
   }
 
   #reflectToAriaChecked(): void {
-    this._reflectToAttr(Aria.State.CHECKED, ((this.#checked === true) ? "true" : "false"));
+    this._reflectToAttr(Aria.CHECKED, ((this.#checked === true) ? "true" : "false"));
   }
 
   #reflectCheckedToContent(): void {
