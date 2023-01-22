@@ -1,4 +1,4 @@
-import { Aria, type Role } from "./aria";
+import { Aria, type Role } from "../../aria";
 
 type _Point = {
   x: number,
@@ -450,7 +450,7 @@ abstract class Widget extends HTMLElement {
     const container = this.ownerDocument.createElement("div");
     container.setAttribute("draggable", "false");
     container.classList.add(`${ Widget.CLASS_NAME }-container`);
-    container.classList.add(`${ this._init.className }-container`);
+    container.classList.add(`internal-container`);
 
     const dataList = this.ownerDocument.createElement("datalist");
     dataList.hidden = true;
@@ -464,7 +464,7 @@ abstract class Widget extends HTMLElement {
 
     this.#main = this.ownerDocument.createElement("div");
     this.#main.classList.add(Widget.CLASS_NAME);
-    this.#main.classList.add(this._init.className);
+    this.#main.classList.add("internal");
 
     container.append(dataList, this.#eventTarget, this.#main);
 

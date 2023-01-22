@@ -1,10 +1,6 @@
-import { Ns } from "./ns";
-import { Aria, Role } from "./aria";
-import { Widget } from "./widget";
-
-const _TRACK_OFFSET_INLINE_START = 4;
-
-const _ENCODED_MASK = globalThis.encodeURIComponent(`<svg xmlns="${ Ns.SVG }" width="48" height="48"><clipPath id="c1"><path d="M 0 0 L 48 0 L 48 48 L 0 48 z M 24 16 A 8 8 -90 0 0 24 32 A 8 8 -90 0 0 24 16 z"/></clipPath><rect width="48" height="48" fill="#000" clip-path="url(#c1)"/></svg>`);
+import { Aria, Role } from "../../../aria";
+import { Widget } from "../widget";
+import Presentation from "./presentation";
 
 //TODO hover でコントラスト上げ、activeで明るくする
 //TODO inputイベント発火
@@ -30,189 +26,6 @@ const DataAttr = {
 
 class Switch extends Widget {
   static override readonly CLASS_NAME: string = "switch";
-  static readonly #TEMPLATE = `
-    <div class="${ Switch.CLASS_NAME }-control">
-      <div class="${ Switch.CLASS_NAME }-track">
-        <div class="${ Switch.CLASS_NAME }-track-surface"></div>
-        <div class="${ Switch.CLASS_NAME }-track-highlight"></div>
-      </div>
-      <div class="${ Switch.CLASS_NAME }-thumb-hittest"></div>
-      <div class="${ Switch.CLASS_NAME }-thumb">
-        <div class="${ Widget.CLASS_NAME }-glow"></div>
-        <div class="${ Widget.CLASS_NAME }-effects"></div>
-        <div class="${ Switch.CLASS_NAME }-thumb-surface"></div>
-        <div class="${ Switch.CLASS_NAME }-thumb-highlight"></div>
-      </div>
-    </div>
-    <output class="${ Switch.CLASS_NAME }-value-label"></output>
-  `;
-  static readonly #STYLE = `
-    :host {
-      flex: none;
-      inline-size: max-content;
-      user-select: none;/* これがないと、なぜかChromeで短時間に連続clickした後、pointerdownして数pixel pointermoveすると勝手にlostpointercaptureが起きる。Firefoxは無くても問題ない。Safariは未確認 */
-    }
-    *.${ Switch.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
-      border-radius: 4px;
-      margin-inline: -8px;
-    }
-
-    *.${ Switch.CLASS_NAME } {
-      --${ Switch.CLASS_NAME }-space: ${ _TRACK_OFFSET_INLINE_START }px;
-      --${ Switch.CLASS_NAME }-switching-time: 150ms;
-      --${ Switch.CLASS_NAME }-inline-size: calc(var(--${ Widget.CLASS_NAME }-size) * 1.5);
-      --${ Switch.CLASS_NAME }-block-size: calc(var(--${ Widget.CLASS_NAME }-size) * 0.75);
-      --${ Switch.CLASS_NAME }-track-mask-size: calc(var(--${ Switch.CLASS_NAME }-inline-size) * 1.5);
-      align-items: center;
-      block-size: 100%;
-      column-gap: 0;
-      display: flex;
-      flex-flow: row nowrap;
-    }
-    :host(*[data-value-label-visible="true"]) *.${ Switch.CLASS_NAME } {
-      column-gap: 6px;
-    }
-    :host(*[data-value-label-position="before"]) *.${ Switch.CLASS_NAME } {
-      flex-flow: row-reverse nowrap;
-    }
-    *.${ Switch.CLASS_NAME }-control {
-      block-size: var(--${ Switch.CLASS_NAME }-block-size);
-      inline-size: var(--${ Switch.CLASS_NAME }-inline-size);
-      margin-inline: var(--${ Switch.CLASS_NAME }-space);
-      position: relative;
-    }
-    *.${ Switch.CLASS_NAME }-track {
-      block-size: inherit;
-      border-radius: calc(var(--${ Widget.CLASS_NAME }-size) * 0.375);
-      /*clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);*/
-      /* background-position-inline/blockが実装されないと。
-      mask-image: url("data:image/svg+xml,${ _ENCODED_MASK }");
-      mask-position: 0 0;
-      mask-repeat: no-repeat;
-      mask-size: var(--${ Switch.CLASS_NAME }-track-mask-size) var(--${ Switch.CLASS_NAME }-track-mask-size);
-      */
-      /*overflow: hidden;*/
-      position: relative;
-      transition: clip-path var(--${ Switch.CLASS_NAME }-switching-time);
-    }
-
-    *.${ Switch.CLASS_NAME }-track-surface,
-    *.${ Switch.CLASS_NAME }-track-highlight {
-      border-radius: inherit;
-      inset: 0;
-      position: absolute;
-    }
-    *.${ Switch.CLASS_NAME }-track-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-main-bg-color);
-      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
-      transition: background-color var(--${ Switch.CLASS_NAME }-switching-time), border-color var(--${ Switch.CLASS_NAME }-switching-time);
-    }
-    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-track-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-accent-color);
-      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
-    }
-    *.${ Switch.CLASS_NAME }-track-highlight {
-      border: var(--${ Widget.CLASS_NAME }-border-width) solid #0000;
-      box-shadow: 0 0 0 0 #0000;
-      transition: border-color 300ms, box-shadow 300ms;
-    }
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-track-highlight {
-      border-color: var(--${ Widget.CLASS_NAME }-accent-color);
-      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
-    }
-
-    *.${ Switch.CLASS_NAME }-thumb-hittest,
-    *.${ Switch.CLASS_NAME }-thumb {
-      block-size: var(--${ Switch.CLASS_NAME }-block-size);
-      inline-size: var(--${ Switch.CLASS_NAME }-block-size);
-      inset-block-start: 0;
-      inset-inline-start: 0;
-      position: absolute;
-      transition: inset-inline-start var(--${ Switch.CLASS_NAME }-switching-time);
-    }
-    *.${ Switch.CLASS_NAME }-thumb-hittest {
-      pointer-events: auto;
-      opacity: 0;
-      z-index: -1;
-    }
-    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-thumb-hittest,
-    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-thumb {
-      inset-inline-start: calc(var(--${ Switch.CLASS_NAME }-inline-size) - var(--${ Switch.CLASS_NAME }-block-size));
-    }
-    *.${ Widget.CLASS_NAME }-glow,
-    *.${ Widget.CLASS_NAME }-effects,
-    *.${ Switch.CLASS_NAME }-thumb-surface,
-    *.${ Switch.CLASS_NAME }-thumb-highlight {
-      border-radius: 50%;
-      margin: 3px;
-      transition: margin 300ms;
-    }
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *:is(
-      *.${ Widget.CLASS_NAME }-glow,
-      *.${ Widget.CLASS_NAME }-effects,
-      *.${ Switch.CLASS_NAME }-thumb-surface,
-      *.${ Switch.CLASS_NAME }-thumb-highlight
-    ) {
-      margin: 0;
-    }
-    *.${ Widget.CLASS_NAME }-glow::before {
-      border-radius: inherit;
-    }
-
-    *.${ Switch.CLASS_NAME }-thumb-surface,
-    *.${ Switch.CLASS_NAME }-thumb-highlight {
-      inset: 0;
-      position: absolute;
-    }
-    *.${ Switch.CLASS_NAME }-thumb-surface {
-      background-color: var(--${ Widget.CLASS_NAME }-main-bg-color);
-      border: var(--${ Widget.CLASS_NAME }-border-width) solid var(--${ Widget.CLASS_NAME }-main-fg-color);
-      transition: border-width var(--${ Switch.CLASS_NAME }-switching-time), margin 300ms;
-    }
-    :host(*[${ Aria.CHECKED }="true"]) *.${ Switch.CLASS_NAME }-thumb-surface {
-      border-width: 0;
-    }
-    *.${ Switch.CLASS_NAME }-thumb-highlight {
-      border: 0 solid var(--${ Widget.CLASS_NAME }-accent-color);
-      box-shadow: 0 0 0 0 #0000;
-      transition: border-width 300ms, box-shadow 300ms, margin 300ms;
-    }
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ Widget.CLASS_NAME }-event-target:hover + *.${ Switch.CLASS_NAME } *.${ Switch.CLASS_NAME }-thumb-highlight {
-      border-width: var(--${ Widget.CLASS_NAME }-border-width);
-      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-border-width) var(--${ Widget.CLASS_NAME }-accent-color);
-    }
-
-    @keyframes ${ Switch.CLASS_NAME }-ripple {
-      0% {
-        opacity: var(--${ Widget.CLASS_NAME }-ripple-opacity);
-        transform: scale(1);
-      }
-      100% {
-        opacity: 0;
-        transform: scale(2.4);
-      }
-    }
-    *.${ Widget.CLASS_NAME }-ripple {
-      animation: ${ Switch.CLASS_NAME }-ripple 600ms both;
-      inset: 0;
-      mix-blend-mode: color-burn; /*XXX darkのとき変える */
-    }
-
-    *.${ Switch.CLASS_NAME }-value-label {
-      display: none;
-      user-select: none;
-      white-space: pre;
-    }
-    :host(*[data-value-label-visible="true"]) *.${ Switch.CLASS_NAME }-value-label {
-      display: block;
-    }
-    *.${ Switch.CLASS_NAME }-value-label:not(*:empty) {
-      text-align: start;
-    }
-    :host(*[data-value-label-position="before"]) *.${ Switch.CLASS_NAME }-value-label:not(*:empty) {
-      text-align: end;
-    }
-  `;
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
 
@@ -226,11 +39,10 @@ class Switch extends Widget {
   #thumbSize: number;
   readonly #valueLabelElement: Element;
   readonly #thumb: HTMLElement;
-  readonly #thumbHitTest: Element;
   #thumbMovement?: number;
 
   static {
-    Switch.#styleSheet.replaceSync(Switch.#STYLE);
+    Switch.#styleSheet.replaceSync(Presentation.STYLE);
     Switch.#template = null;
   }
 
@@ -251,12 +63,11 @@ class Switch extends Widget {
     const main = this._main;
     if ((Switch.#template && (Switch.#template.ownerDocument === this.ownerDocument)) !== true) {
       Switch.#template = this.ownerDocument.createElement("template");
-      Switch.#template.innerHTML = Switch.#TEMPLATE;
+      Switch.#template.innerHTML = Presentation.TEMPLATE;
     }
     main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
-    this.#valueLabelElement = main.querySelector(`*.${ Switch.CLASS_NAME }-value-label`) as Element;
-    this.#thumb = main.querySelector(`*.${ Switch.CLASS_NAME }-thumb`) as HTMLElement;
-    this.#thumbHitTest = main.querySelector(`*.${ Switch.CLASS_NAME }-thumb-hittest`) as Element;
+    this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
+    this.#thumb = main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 
     this._addAction<PointerEvent>("pointermove", {
       func: (event: PointerEvent) => {
@@ -353,10 +164,6 @@ class Switch extends Widget {
   }
 
   protected override _setPointerCapture(event: PointerEvent) {
-    // const thumbPointed = this._elementIntersectsPoint(this.#thumbHitTest, {
-    //   x: event.clientX,
-    //   y: event.clientY,
-    // });
     super._setPointerCapture(event);
     const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
     this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
