@@ -1,27 +1,10 @@
-import { Aria, type Role } from "../../aria";
+import { Aria, type Role } from "../../../aria";
+import BasePresentation from "./presentation";
 
 type _Point = {
   x: number,
   y: number,
 };
-
-const _EVENT_TARGET_PADDING_INLINE = 12;
-
-const _WidgetSize = {
-  LARGE: "large",
-  MEDIUM: "medium",
-  SMALL: "small",
-  X_LARGE: "x-large",
-  X_SMALL: "x-small",
-} as const;
-
-const _WidgetDimension = {
-  [_WidgetSize.X_SMALL]: 28,
-  [_WidgetSize.SMALL]: 32,
-  [_WidgetSize.MEDIUM]: 36,
-  [_WidgetSize.LARGE]: 40,
-  [_WidgetSize.X_LARGE]: 44,
-} as const;
 
 const _ShadowRootInit: ShadowRootInit = {
   mode: "closed",
@@ -68,162 +51,13 @@ const _WidgetDirection = {
 type _WidgetDirection = typeof _WidgetDirection[keyof typeof _WidgetDirection];
 
 abstract class Widget extends HTMLElement {
-  static readonly CLASS_NAME: string = "widget";
-  static readonly #STYLE = `
-    :host {
-      display: block;
-    }
-    :host(*[${ Aria.HIDDEN }="true"]) {
-      display: none;
-    }
-
-    *.${ Widget.CLASS_NAME }-container {
-      --${ Widget.CLASS_NAME }-accent-color: #136ed2;
-      --${ Widget.CLASS_NAME }-border-width: 1px;
-      --${ Widget.CLASS_NAME }-corner-radius: 5px;
-      --${ Widget.CLASS_NAME }-focusring-color: orange;
-      --${ Widget.CLASS_NAME }-glow-blur-radius: 6px;
-      --${ Widget.CLASS_NAME }-glow-extent: 3px;
-      --${ Widget.CLASS_NAME }-main-bg-color: #fff;
-      --${ Widget.CLASS_NAME }-main-bg-color-06: #fffa;
-      --${ Widget.CLASS_NAME }-main-fg-color: #666;
-      --${ Widget.CLASS_NAME }-ripple-opacity: 0.6;
-      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.MEDIUM] }px;
-      --${ Widget.CLASS_NAME }-shadow: 0 2px 8px #0003, 0 1px 4px #0006;
-      align-items: center;
-      block-size: var(--${ Widget.CLASS_NAME }-size);
-      display: flex;
-      flex-flow: row nowrap;
-      font-size: 16px;
-      inline-size: 100%;
-      justify-content: stretch;
-      min-block-size: var(--${ Widget.CLASS_NAME }-size);
-      min-inline-size: var(--${ Widget.CLASS_NAME }-size);
-      position: relative;
-    }
-    :host(*[data-size="x-small"]) *.${ Widget.CLASS_NAME }-container {
-      --${ Widget.CLASS_NAME }-corner-radius: 3px;
-      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.X_SMALL] }px;
-      font-size: 12px;
-    }
-    :host(*[data-size="small"]) *.${ Widget.CLASS_NAME }-container {
-      --${ Widget.CLASS_NAME }-corner-radius: 4px;
-      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.SMALL] }px;
-      font-size: 14px;
-    }
-    :host(*[data-size="large"]) *.${ Widget.CLASS_NAME }-container {
-      --${ Widget.CLASS_NAME }-corner-radius: 6px;
-      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.LARGE] }px;
-      font-size: 18px;
-    }
-    :host(*[data-size="x-large"]) *.${ Widget.CLASS_NAME }-container {
-      --${ Widget.CLASS_NAME }-corner-radius: 7px;
-      --${ Widget.CLASS_NAME }-size: ${ _WidgetDimension[_WidgetSize.X_LARGE] }px;
-      font-size: 20px;
-    }
-    :host(*[${ Aria.BUSY }="true"]) *.widget-container,
-    :host(*[${ Aria.DISABLED }="true"]) *.widget-container {
-      filter: contrast(0.5) grayscale(1);
-      opacity: 0.6;
-    }
-
-    *.${ Widget.CLASS_NAME }-event-target {
-      cursor: pointer;
-      display: flex;
-      flex-flow: row nowrap;
-      inset: 0;
-      position: absolute;
-      padding-inline: ${ _EVENT_TARGET_PADDING_INLINE }px;
-    }
-    *.${ Widget.CLASS_NAME }-event-target[contenteditable] {
-      /* textareaを使うなら不要
-      cursor: text;
-      white-space: pre;
-      */
-    }
-    *.${ Widget.CLASS_NAME }-event-target:focus {
-      box-shadow: 0 0 0 2px var(--${ Widget.CLASS_NAME }-focusring-color);
-      outline: none;
-    }
-    :host(*[${ Aria.BUSY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[${ Aria.BUSY }="true"][${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
-      cursor: wait;
-    }
-    :host(*[${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target,
-    :host(*[${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
-      cursor: not-allowed;
-    }
-    :host(*[${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-container *.${ Widget.CLASS_NAME }-event-target {
-      cursor: default;
-    }
-
-    *.widget,
-    *.widget * {
-      pointer-events: none;
-    }
-
-    *.${ Widget.CLASS_NAME }-glow {
-      background-color: currentcolor;
-      border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
-      box-shadow: 0 0 0 0 currentcolor;
-      color: var(--${ Widget.CLASS_NAME }-main-bg-color);
-      inset: 0;
-      opacity: 0;
-      position: absolute;
-      transition: box-shadow 200ms, opacity 200ms;
-    }
-    *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow {
-      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-glow-extent) currentcolor;
-      opacity: 1;
-    }
-    :host(*[${ Aria.BUSY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
-    :host(*[${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow,
-    :host(*[${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow {
-      box-shadow: 0 0 0 0 currentcolor !important;
-      opacity: 0 !important;
-    }
-    *.${ Widget.CLASS_NAME }-glow::before {
-      background-color: currentcolor;
-      border-radius: var(--${ Widget.CLASS_NAME }-corner-radius);
-      box-shadow: 0 0 0 0 currentcolor;
-      color: var(--${ Widget.CLASS_NAME }-accent-color);
-      content: "";
-      inset: 0;
-      opacity: 0;
-      position: absolute;
-      transition: box-shadow 200ms, opacity 200ms;
-    }
-    *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before {
-      box-shadow: 0 0 0 var(--${ Widget.CLASS_NAME }-glow-blur-radius) currentcolor;
-      opacity: 0.5;
-    }
-    :host(*[${ Aria.BUSY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
-    :host(*[${ Aria.DISABLED }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before,
-    :host(*[${ Aria.READONLY }="true"]) *.${ Widget.CLASS_NAME }-event-target:hover + *.widget *.${ Widget.CLASS_NAME }-glow::before {
-      box-shadow: 0 0 0 0 currentcolor !important;
-      opacity: 0 !important;
-    }
-
-    *.${ Widget.CLASS_NAME }-effects {
-      inset: 0;
-      position: absolute;
-    }
-
-    *.${ Widget.CLASS_NAME }-ripple {
-      background-color: var(--${ Widget.CLASS_NAME }-accent-color);
-      border-radius: 50%;
-      position: absolute;
-    }
-  `;
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
 
   protected readonly _init: Readonly<Widget.Init>;
 
   readonly #root: ShadowRoot;
   #connected: boolean;
-  #size: Widget.Size;
+  #size: BasePresentation.BaseSize;
   #busy: boolean;
   #disabled: boolean; // Aria仕様では各サブクラスで定義されるが、disabledにならない物は実装予定がないのでここで定義する
   #hidden: boolean;
@@ -253,12 +87,12 @@ abstract class Widget extends HTMLElement {
   };
 
   static {
-    Widget.#styleSheet.replaceSync(Widget.#STYLE);
+    Widget.#styleSheet.replaceSync(BasePresentation.STYLE);
   }
 
   protected _buildEventTarget(): HTMLElement {
     const eventTarget = this.ownerDocument.createElement("div");
-    eventTarget.classList.add(`${ Widget.CLASS_NAME }-event-target`);
+    eventTarget.classList.add(BasePresentation.ClassName.TARGET);
 
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
       if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
@@ -423,7 +257,7 @@ abstract class Widget extends HTMLElement {
     this._init = Object.freeze(globalThis.structuredClone(init));
     this.#root = this.attachShadow(_ShadowRootInit);
     this.#connected = false;
-    this.#size = Widget.Size.MEDIUM;
+    this.#size = BasePresentation.BaseSize.MEDIUM;
     this.#busy = false;
     this.#disabled = false;
     this.#hidden = false;
@@ -449,12 +283,12 @@ abstract class Widget extends HTMLElement {
 
     const container = this.ownerDocument.createElement("div");
     container.setAttribute("draggable", "false");
-    container.classList.add(`${ Widget.CLASS_NAME }-container`);
+    container.classList.add(`internal0-container`);
     container.classList.add(`internal-container`);
 
     const dataList = this.ownerDocument.createElement("datalist");
     dataList.hidden = true;
-    dataList.classList.add(`${ Widget.CLASS_NAME }-datalist`);
+    dataList.classList.add(`internal0-datalist`);
 
     this.#dataListSlot = this.ownerDocument.createElement("slot");
     this.#dataListSlot.name = "datalist";
@@ -463,7 +297,7 @@ abstract class Widget extends HTMLElement {
     this.#eventTarget = this._buildEventTarget();
 
     this.#main = this.ownerDocument.createElement("div");
-    this.#main.classList.add(Widget.CLASS_NAME);
+    this.#main.classList.add("internal0");
     this.#main.classList.add("internal");
 
     container.append(dataList, this.#eventTarget, this.#main);
@@ -483,7 +317,7 @@ abstract class Widget extends HTMLElement {
     this.#connected = value;
   }
 
-  protected get _size(): Widget.Size {
+  protected get _size(): BasePresentation.BaseSize {
     return this.#size;
   }
 
@@ -773,8 +607,8 @@ abstract class Widget extends HTMLElement {
   }
 
   protected _setSize(value: string, reflections: Widget.Reflections): void {
-    const valueIsWidgetSize = Object.values(Widget.Size).includes(value as Widget.Size);
-    const adjustedSize = (valueIsWidgetSize === true) ? (value as Widget.Size) : Widget.Size.MEDIUM;
+    const valueIsWidgetSize = Object.values(BasePresentation.BaseSize).includes(value as BasePresentation.BaseSize);
+    const adjustedSize = (valueIsWidgetSize === true) ? (value as BasePresentation.BaseSize) : BasePresentation.BaseSize.MEDIUM;
     const changed = (this.#size !== adjustedSize);
     if (changed === true) {
       this.#size = adjustedSize;
@@ -862,7 +696,7 @@ abstract class Widget extends HTMLElement {
   }
 
   #reflectToDataSize(): void {
-    this._reflectToAttr(DataAttr.SIZE, ((this.#size !== Widget.Size.MEDIUM) ? this.#size : undefined));
+    this._reflectToAttr(DataAttr.SIZE, ((this.#size !== BasePresentation.BaseSize.MEDIUM) ? this.#size : undefined));
   }
 
   protected _addRipple(): void {
@@ -871,8 +705,8 @@ abstract class Widget extends HTMLElement {
     }
 
     const ripple = this.ownerDocument.createElement("div");
-    ripple.classList.add(`${ Widget.CLASS_NAME }-ripple`);
-    (this._main.querySelector(`*.${ Widget.CLASS_NAME }-effects`) as Element).append(ripple);
+    ripple.classList.add(`${ BasePresentation.ClassName.CONTROL_EFFECT_RIPPLE }`);
+    (this._main.querySelector(`*.${ BasePresentation.ClassName.CONTROL_EFFECTS }`) as Element).append(ripple);
     globalThis.setTimeout(() => {
       ripple.remove();
     }, 1000);
@@ -898,11 +732,6 @@ abstract class Widget extends HTMLElement {
 
 }
 namespace Widget {
-  export const Size = _WidgetSize;
-  export type Size = typeof Size[keyof typeof Size];
-
-  export const EVENT_TARGET_PADDING_INLINE = _EVENT_TARGET_PADDING_INLINE;
-
   export type DataListItem = {
     label: string,
     value: string,
@@ -915,11 +744,8 @@ namespace Widget {
     mergeDefaultItems?: boolean,
   };
 
-  export const Dimension = _WidgetDimension;
-
   export type Init = {
     role: Role,
-    className: string,
     inputable: boolean,
     textEditable: boolean,
   };

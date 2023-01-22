@@ -1,5 +1,6 @@
 import { Aria, Role } from "../../../aria";
-import { Widget } from "../widget";
+import { Widget } from "../widget_base/index";
+import BasePresentation from "../widget_base/presentation";
 import Presentation from "./presentation";
 
 //TODO hover でコントラスト上げ、activeで明るくする
@@ -25,7 +26,6 @@ const DataAttr = {
 } as const;
 
 class Switch extends Widget {
-  static override readonly CLASS_NAME: string = "switch";
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
 
@@ -49,7 +49,6 @@ class Switch extends Widget {
   constructor() {
     super({
       role: Role.SWITCH,
-      className: Switch.CLASS_NAME,
       inputable: true,
       textEditable: false,
     });
@@ -145,10 +144,10 @@ class Switch extends Widget {
 
     let thumbStart = 0;
     if (this._direction === "rtl") {
-      thumbStart = (trackStart - Widget.EVENT_TARGET_PADDING_INLINE) - pointerCoord;
+      thumbStart = (trackStart - BasePresentation.Parameters.Target.PADDING_INLINE) - pointerCoord;
     }
     else {
-      thumbStart = pointerCoord - (trackStart + Widget.EVENT_TARGET_PADDING_INLINE);
+      thumbStart = pointerCoord - (trackStart + BasePresentation.Parameters.Target.PADDING_INLINE);
     }
     thumbStart = thumbStart - (this.#thumbSize / 2);
 
@@ -206,8 +205,8 @@ class Switch extends Widget {
   protected override _setSize(value: string, reflections: Widget.Reflections): void {
     super._setSize(value, reflections);
 
-    this.#trackLength = Widget.Dimension[this._size] * 1.5;
-    this.#thumbSize = Widget.Dimension[this._size] * 0.75;
+    this.#trackLength = BasePresentation.BaseDimension[this._size] * 1.5;
+    this.#thumbSize = BasePresentation.BaseDimension[this._size] * 0.75;
   }
 
   override connectedCallback(): void {

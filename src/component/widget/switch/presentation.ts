@@ -1,6 +1,5 @@
 import { Aria } from "../../../aria";
-
-const TODO = "widget";
+import BasePresentation from "../widget_base/presentation";
 
 //XXX trackをthumbのまわりだけ切り抜きたい → ltr固定ならclip-pathかmaskで抜けるが、rtlや縦書きも対応するのは現行のcssでは無理
 
@@ -14,7 +13,7 @@ namespace Presentation {
     CONTROL_THUMB_SURFACE: "c1-t-surface",
     CONTROL_THUMB_HIGHLIGHT: "c1-t-highlight",
     OUTPUT: "o1",
-  };
+  } as const;
 
   export const Parameters = {
     Control: {
@@ -30,8 +29,8 @@ namespace Presentation {
       </div>
 
       <div class="${ ClassName.CONTROL_THUMB }">
-        <div class="${ TODO }-glow"></div>
-        <div class="${ TODO }-effects"></div>
+        <div class="${ BasePresentation.ClassName.CONTROL_GLOW }"></div>
+        <div class="${ BasePresentation.ClassName.CONTROL_EFFECTS }"></div>
         <div class="${ ClassName.CONTROL_THUMB_SURFACE }"></div>
         <div class="${ ClassName.CONTROL_THUMB_HIGHLIGHT }"></div>
       </div>
@@ -47,7 +46,7 @@ namespace Presentation {
       user-select: none;/* これがないと、なぜかChromeで短時間に連続clickした後、pointerdownして数pixel pointermoveすると勝手にlostpointercaptureが起きる。Firefoxは無くても問題ない。Safariは未確認 */
     }
 
-    *.internal-container *.${ TODO }-event-target {
+    *.internal-container *.${ BasePresentation.ClassName.TARGET } {
       border-radius: 4px;
       margin-inline: -8px;
     }
@@ -55,8 +54,8 @@ namespace Presentation {
     *.internal {
       --internal-space: ${ Parameters.Control.MARGIN_INLINE }px;
       --internal-switching-time: 150ms;
-      --internal-inline-size: calc(var(--${ TODO }-size) * 1.5);
-      --internal-block-size: calc(var(--${ TODO }-size) * 0.75);
+      --internal-inline-size: calc(var(--internal0-size) * 1.5);
+      --internal-block-size: calc(var(--internal0-size) * 0.75);
       align-items: center;
       block-size: 100%;
       column-gap: 0;
@@ -81,7 +80,7 @@ namespace Presentation {
 
     *.${ ClassName.CONTROL_TRACK } {
       block-size: inherit;
-      border-radius: calc(var(--${ TODO }-size) * 0.375);
+      border-radius: calc(var(--internal0-size) * 0.375);
       /*overflow: hidden;*/
       position: relative;
       transition: clip-path var(--internal-switching-time);
@@ -95,25 +94,25 @@ namespace Presentation {
     }
 
     *.${ ClassName.CONTROL_TRACK_SURFACE } {
-      background-color: var(--${ TODO }-main-bg-color);
-      border: var(--${ TODO }-border-width) solid var(--${ TODO }-main-fg-color);
+      background-color: var(--internal0-main-bg-color);
+      border: var(--internal0-border-width) solid var(--internal0-main-fg-color);
       transition: background-color var(--internal-switching-time), border-color var(--internal-switching-time);
     }
 
     :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_TRACK_SURFACE } {
-      background-color: var(--${ TODO }-accent-color);
-      border-color: var(--${ TODO }-accent-color);
+      background-color: var(--internal0-accent-color);
+      border-color: var(--internal0-accent-color);
     }
 
     *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
-      border: var(--${ TODO }-border-width) solid #0000;
+      border: var(--internal0-border-width) solid #0000;
       box-shadow: 0 0 0 0 #0000;
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ TODO }-event-target:hover + *.internal *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
-      border-color: var(--${ TODO }-accent-color);
-      box-shadow: 0 0 0 var(--${ TODO }-border-width) var(--${ TODO }-accent-color);
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
+      border-color: var(--internal0-accent-color);
+      box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }
 
     *.${ ClassName.CONTROL_THUMB } {
@@ -129,8 +128,8 @@ namespace Presentation {
       inset-inline-start: calc(var(--internal-inline-size) - var(--internal-block-size));
     }
 
-    *.${ TODO }-glow,
-    *.${ TODO }-effects,
+    *.${ BasePresentation.ClassName.CONTROL_GLOW },
+    *.${ BasePresentation.ClassName.CONTROL_EFFECTS },
     *.${ ClassName.CONTROL_THUMB_SURFACE },
     *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
       border-radius: 50%;
@@ -138,16 +137,16 @@ namespace Presentation {
       transition: margin 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ TODO }-event-target:hover + *.internal *:is(
-      *.${ TODO }-glow,
-      *.${ TODO }-effects,
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *:is(
+      *.${ BasePresentation.ClassName.CONTROL_GLOW },
+      *.${ BasePresentation.ClassName.CONTROL_EFFECTS },
       *.${ ClassName.CONTROL_THUMB_SURFACE },
       *.${ ClassName.CONTROL_THUMB_HIGHLIGHT }
     ) {
       margin: 0;
     }
 
-    *.${ TODO }-glow::before {
+    *.${ BasePresentation.ClassName.CONTROL_GLOW }::before {
       border-radius: inherit;
     }
 
@@ -158,8 +157,8 @@ namespace Presentation {
     }
 
     *.${ ClassName.CONTROL_THUMB_SURFACE } {
-      background-color: var(--${ TODO }-main-bg-color);
-      border: var(--${ TODO }-border-width) solid var(--${ TODO }-main-fg-color);
+      background-color: var(--internal0-main-bg-color);
+      border: var(--internal0-border-width) solid var(--internal0-main-fg-color);
       transition: border-width var(--internal-switching-time), margin 300ms;
     }
 
@@ -168,19 +167,19 @@ namespace Presentation {
     }
 
     *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
-      border: 0 solid var(--${ TODO }-accent-color);
+      border: 0 solid var(--internal0-accent-color);
       box-shadow: 0 0 0 0 #0000;
       transition: border-width 300ms, box-shadow 300ms, margin 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ TODO }-event-target:hover + *.internal *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
-      border-width: var(--${ TODO }-border-width);
-      box-shadow: 0 0 0 var(--${ TODO }-border-width) var(--${ TODO }-accent-color);
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
+      border-width: var(--internal0-border-width);
+      box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }
 
-    @keyframes internal-ripple {
+    @keyframes ripple--value-change {
       0% {
-        opacity: var(--${ TODO }-ripple-opacity);
+        opacity: var(--internal0-ripple-opacity);
         transform: scale(1);
       }
       100% {
@@ -189,8 +188,8 @@ namespace Presentation {
       }
     }
 
-    *.${ TODO }-ripple {
-      animation: internal-ripple 600ms both;
+    *.${ BasePresentation.ClassName.CONTROL_EFFECT_RIPPLE } {
+      animation: ripple--value-change 600ms both;
       inset: 0;
       mix-blend-mode: color-burn; /*XXX darkのとき変える */
     }

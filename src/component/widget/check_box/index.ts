@@ -1,11 +1,10 @@
 
 import { Ns } from "../../../ns";
 import { Aria, Role } from "../../../aria";
-import { Widget } from "../widget";
+import { Widget } from "../widget_base/index";
 import Presentation from "./presentation";
 
 class CheckBox extends Widget {
-  static override readonly CLASS_NAME: string = "checkbox";
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
   static #template: HTMLTemplateElement | null;
 
@@ -27,7 +26,6 @@ class CheckBox extends Widget {
   constructor() {
     super({
       role: Role.CHECKBOX,
-      className: CheckBox.CLASS_NAME,
       inputable: true,
       textEditable: false,
     });

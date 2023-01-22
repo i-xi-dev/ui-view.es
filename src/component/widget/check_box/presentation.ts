@@ -1,6 +1,5 @@
 import { Aria } from "../../../aria";
-
-const TODO = "widget";
+import BasePresentation from "../widget_base/presentation";
 
 namespace Presentation {
   export const ClassName = {
@@ -24,13 +23,13 @@ namespace Presentation {
   export const TEMPLATE = `
     <div class="${ ClassName.CONTROL }">
       <div class="${ ClassName.CONTROL_BOX }">
-        <div class="${ TODO }-glow"></div>
+        <div class="${ BasePresentation.ClassName.CONTROL_GLOW }"></div>
         <div class="${ ClassName.CONTROL_BOX_SURFACE }"></div>
         <div class="${ ClassName.CONTROL_BOX_HIGHLIGHT }"></div>
       </div>
 
       <div class="${ ClassName.CONTROL_MARK }">
-        <div class="${ TODO }-effects"></div>
+        <div class="${ BasePresentation.ClassName.CONTROL_EFFECTS }"></div>
         <div class="${ ClassName.CONTROL_MARK_CANVAS }"></div>
       </div>
     </div>
@@ -57,7 +56,7 @@ namespace Presentation {
       user-select: none;/* これがないと、なぜかChromeで短時間に連続clickした後、pointerdownして数pixel pointermoveすると勝手にlostpointercaptureが起きる。Firefoxは無くても問題ない。Safariは未確認 */
     }
 
-    *.internal-container *.${ TODO }-event-target {
+    *.internal-container *.${ BasePresentation.ClassName.TARGET } {
       border-radius: 4px;
       margin-inline: -8px;
     }
@@ -65,7 +64,7 @@ namespace Presentation {
     *.internal {
       --internal-space: ${ Parameters.Control.MARGIN_INLINE }px;
       --internal-switching-time: 150ms;
-      --internal-size: calc(calc(var(--${ TODO }-size) * 0.75) - 4px);
+      --internal-size: calc(calc(var(--internal0-size) * 0.75) - 4px);
       align-items: center;
       block-size: 100%;
       column-gap: 0;
@@ -95,35 +94,35 @@ namespace Presentation {
 
     *.${ ClassName.CONTROL_BOX_SURFACE },
     *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
-      border-radius: var(--${ TODO }-corner-radius);
+      border-radius: var(--internal0-corner-radius);
       inset: 0;
       position: absolute;
     }
 
     *.${ ClassName.CONTROL_BOX_SURFACE } {
-      background-color: var(--${ TODO }-main-bg-color);
-      border: var(--${ TODO }-border-width) solid var(--${ TODO }-main-fg-color);
+      background-color: var(--internal0-main-bg-color);
+      border: var(--internal0-border-width) solid var(--internal0-main-fg-color);
       transition: background-color var(--internal-switching-time), border-width var(--internal-switching-time);
     }
 
     :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_BOX_SURFACE },
     :host(*[${ Aria.CHECKED }="mixed"]) *.${ ClassName.CONTROL_BOX_SURFACE } {
-      background-color: var(--${ TODO }-accent-color);
+      background-color: var(--internal0-accent-color);
       border-width: 0;
     }
 
     *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
-      border: var(--${ TODO }-border-width) solid #0000;
+      border: var(--internal0-border-width) solid #0000;
       box-shadow: 0 0 0 0 #0000;
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ TODO }-event-target:hover + *.internal *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
-      border-color: var(--${ TODO }-accent-color);
-      box-shadow: 0 0 0 var(--${ TODO }-border-width) var(--${ TODO }-accent-color);
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
+      border-color: var(--internal0-accent-color);
+      box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }
 
-    *.widget-effects {
+    *.${ BasePresentation.ClassName.CONTROL_EFFECTS } {
       margin: -2px;
     }
 
@@ -137,7 +136,7 @@ namespace Presentation {
       transition: transform 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ TODO }-event-target:hover + *.internal *.${ ClassName.CONTROL_MARK_CANVAS } {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *.${ ClassName.CONTROL_MARK_CANVAS } {
       transform: scale(1.25);
     }
 
@@ -177,7 +176,7 @@ namespace Presentation {
 
     *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE } {
       fill: none;
-      stroke: var(--${ TODO }-main-bg-color);
+      stroke: var(--internal0-main-bg-color);
       stroke-width: 2px;
       /*
       stroke-width: 3px;
@@ -195,7 +194,7 @@ namespace Presentation {
 
     @keyframes ripple--value-change {
       0% {
-        opacity: var(--${ TODO }-ripple-opacity);
+        opacity: var(--internal0-ripple-opacity);
         transform: scale(1);
       }
       100% {
@@ -204,7 +203,7 @@ namespace Presentation {
       }
     }
 
-    *.${ TODO }-ripple {
+    *.${ BasePresentation.ClassName.CONTROL_EFFECT_RIPPLE } {
       animation: ripple--value-change 600ms both;
       inset: 0;
       mix-blend-mode: color-burn; /*XXX darkのとき変える */
