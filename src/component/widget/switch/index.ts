@@ -6,7 +6,6 @@ import Presentation from "./presentation";
 //TODO hover でコントラスト上げ、activeで明るくする
 //TODO inputイベント発火
 //TODO inert firefoxが対応したら
-//TODO attatchInternals safariが対応したら
 //TODO copy 値？値ラベル？両方？ テキスト？JSON？HTML？
 //TODO paste
 //XXX ラベルは廃止する （外付けにする）
@@ -20,6 +19,14 @@ import Presentation from "./presentation";
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
 //TODO slotにassignできるのもcustom elementにする？
+//TODO コンストラクタのadoptStyleSheets以降はconnectedCallBackに移す https://momdo.github.io/html/custom-elements.html
+//TODO roleはthis.#internals.role = ～ にする？
+//TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
+//TODO 以下の属性が必要 グローバル、form、disabled、readonly、name https://momdo.github.io/html/custom-elements.html
+//TODO formAssociatedCallback
+//TODO formDisabledCallback
+//TODO formResetCallback
+//TODO formStateRestoreCallback
 
 const DataAttr = {
   VALUE_LABEL_VISIBLE: "data-value-label-visible",
@@ -27,6 +34,7 @@ const DataAttr = {
 } as const;
 
 class Switch extends Widget {
+  static readonly formAssociated = true;
 
   static readonly #KEY = Symbol();
 
@@ -51,6 +59,7 @@ class Switch extends Widget {
     super({
       componentKey: Switch.#KEY,
       role: Role.SWITCH,
+      formAssociated: Switch.formAssociated,
       inputable: true,
       textEditable: false,
     });

@@ -71,6 +71,7 @@ abstract class Widget extends HTMLElement {
 
   protected readonly _init: Readonly<Widget.Init>;
   readonly #root: ShadowRoot;
+  readonly #internals: ElementInternals;
   readonly #dataListSlot: HTMLSlotElement;
   readonly #eventTarget: HTMLElement;
   readonly #main: Element;
@@ -97,6 +98,8 @@ abstract class Widget extends HTMLElement {
     super();
     this._init = Object.assign({}, init);
     this.#root = this.attachShadow(_ShadowRootInit);
+    this.#internals = this.attachInternals();
+    this.#internals.role = this._init.role;
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
     this.#busy = false;
@@ -191,6 +194,12 @@ abstract class Widget extends HTMLElement {
     const adjustedReadOnly = !!value;//(value === true);
     this._setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
   }
+
+  protected get _internals(): ElementInternals {
+    return this.#internals;
+  }
+  //TODO nameの設定
+  //TODO internals.setFormValue
 
   protected get _capturingPointer(): _CapturingPointer | null {
     return this.#capturingPointer;
@@ -452,7 +461,6 @@ abstract class Widget extends HTMLElement {
       return;
     }
 
-    this.#reflectToRole();
     this.#loadDataListSlot();
 
     this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
@@ -631,10 +639,6 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  #reflectToRole(): void {
-    this.setAttribute("role", this._init.role);
-  }
-
   protected _reflectToAttr(name: string, value?: string): void {
     this.#reflectingInProgress = name;
     if (value) {
@@ -764,6 +768,7 @@ namespace Widget {
   export type Init = {
     componentKey: symbol,
     role: Role,
+    formAssociated: boolean,
     inputable: boolean,
     textEditable: boolean,
   };

@@ -5,6 +5,7 @@ import { Widget } from "../widget_base/index";
 import Presentation from "./presentation";
 
 class CheckBox extends Widget {
+  static readonly formAssociated = true;
 
   static readonly #KEY = Symbol();
 
@@ -27,6 +28,7 @@ class CheckBox extends Widget {
     super({
       componentKey: CheckBox.#KEY,
       role: Role.CHECKBOX,
+      formAssociated: CheckBox.formAssociated,
       inputable: true,
       textEditable: false,
     });
