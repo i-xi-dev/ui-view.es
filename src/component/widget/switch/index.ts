@@ -42,7 +42,7 @@ class Switch extends Widget {
   #thumbMovement?: number;
 
   static {
-    Widget._addTemplate(Switch.#KEY, "main", Presentation.TEMPLATE);
+    Widget._addTemplate(Switch.#KEY, Presentation.TEMPLATE);
     Widget._addStyleSheet(Switch.#KEY, Presentation.STYLE);
   }
 
@@ -58,10 +58,8 @@ class Switch extends Widget {
     this.#trackLength = 0;
     this.#thumbSize = 0;
 
-    const main = this._main;
-    this._useTemplate("main", main);
-    this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
-    this.#thumb = main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
+    this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
+    this.#thumb = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 
     this._addAction<PointerEvent>("pointermove", {
       func: (event: PointerEvent) => {

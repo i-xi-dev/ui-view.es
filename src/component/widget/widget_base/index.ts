@@ -66,7 +66,7 @@ abstract class Widget extends HTMLElement {
   };
   static readonly #KEY = Symbol();
   static readonly #bgDocument: Document = new Document();
-  static readonly #componentTemplateMap: Map<symbol, Map<string, HTMLTemplateElement>> = new Map();
+  static readonly #componentTemplateMap: Map<symbol, HTMLTemplateElement> = new Map();
   static readonly #componentStyleSheetMap: Map<symbol, CSSStyleSheet> = new Map();
 
   protected readonly _init: Readonly<Widget.Init>;
@@ -121,28 +121,13 @@ abstract class Widget extends HTMLElement {
 
     this.#adoptStyleSheets();
 
-    const container = this.ownerDocument.createElement("div");
-    container.setAttribute("draggable", "false");
-    container.classList.add(`internal0-container`);
-    container.classList.add(`internal-container`);
-
-    const dataList = this.ownerDocument.createElement("datalist");
-    dataList.hidden = true;
-    dataList.classList.add(`internal0-datalist`);
-
-    this.#dataListSlot = this.ownerDocument.createElement("slot");
-    this.#dataListSlot.name = "datalist";
-    dataList.append(this.#dataListSlot);
-
+    const rootElement = this.#useTemplate();
+    this.#dataListSlot = rootElement.querySelector('slot[name="datalist"]') as HTMLSlotElement;
     this.#eventTarget = this._buildEventTarget();
+    rootElement.querySelector("*.placeholder-t0")?.replaceWith(this.#eventTarget);
+    this.#main = rootElement.querySelector("*.internal0.internal") as Element;
 
-    this.#main = this.ownerDocument.createElement("div");
-    this.#main.classList.add("internal0");
-    this.#main.classList.add("internal");
-
-    container.append(dataList, this.#eventTarget, this.#main);
-
-    this.#root.append(container);
+    this.#root.append(rootElement);
   }
 
 
@@ -156,28 +141,18 @@ abstract class Widget extends HTMLElement {
     Widget.#componentStyleSheetMap.set(componentKey, styleSheet);
   }
 
-  protected static _addTemplate(componentKey: symbol, templateKey: string, templateContentHtml: string): void {
-    if (Widget.#componentTemplateMap.has(componentKey) !== true) {
-      Widget.#componentTemplateMap.set(componentKey, new Map());
-    }
-    const templateMap = Widget.#componentTemplateMap.get(componentKey) as Map<string, HTMLTemplateElement>;
-
+  protected static _addTemplate(componentKey: symbol, templateContentHtml: string): void {
     const template = Widget.#bgDocument.createElementNS(Ns.HTML, "template") as HTMLTemplateElement;
-    template.innerHTML = templateContentHtml;
-    templateMap.set(templateKey, template);
+    template.innerHTML = BasePresentation.createTemplateHtml(templateContentHtml);
+    Widget.#componentTemplateMap.set(componentKey, template);
   }
 
-  protected _useTemplate(templateKey: string, element: Element): void {
-    const templateMap = Widget.#componentTemplateMap.get(this._init.componentKey);
-    if (!templateMap) {
-      throw new Error("TODO");
-    }
-
-    const template = templateMap.get(templateKey);
+  #useTemplate(): DocumentFragment {
+    const template = Widget.#componentTemplateMap.get(this._init.componentKey);
     if (!template) {
       throw new Error("TODO");
     }
-    element.append(template.content.cloneNode(true));
+    return template.content.cloneNode(true) as DocumentFragment;
   }
   #adoptStyleSheets(): void {
     const baseStyleSheet = Widget.#componentStyleSheetMap.get(Widget.#KEY) as CSSStyleSheet;

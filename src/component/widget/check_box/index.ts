@@ -19,7 +19,7 @@ class CheckBox extends Widget {
   #indeterminate: boolean;
 
   static {
-    Widget._addTemplate(CheckBox.#KEY, "main", Presentation.TEMPLATE);
+    Widget._addTemplate(CheckBox.#KEY, Presentation.TEMPLATE);
     Widget._addStyleSheet(CheckBox.#KEY, Presentation.STYLE);
   }
 
@@ -34,9 +34,7 @@ class CheckBox extends Widget {
     this.#checked = false;
     this.#indeterminate = false;
 
-    const main = this._main;
-    this._useTemplate("main", main);
-    this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
+    this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
 
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {

@@ -46,7 +46,7 @@ namespace Presentation {
       user-select: none;/* これがないと、なぜかChromeで短時間に連続clickした後、pointerdownして数pixel pointermoveすると勝手にlostpointercaptureが起きる。Firefoxは無くても問題ない。Safariは未確認 */
     }
 
-    *.internal-container *.${ BasePresentation.ClassName.TARGET } {
+    *.${ BasePresentation.ClassName.TARGET } {
       border-radius: 4px;
       margin-inline: -8px;
     }

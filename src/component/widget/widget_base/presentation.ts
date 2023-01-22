@@ -18,6 +18,7 @@ const _BaseDimension = {
 
 namespace BasePresentation {
   export const ClassName = {
+    ROOT: "s-root", // ShadowRoot直下の要素。当モジュールではShadowRoot直下の要素数は必ず1つとする
     TARGET: "t0", // ui event target
     CONTROL_EFFECTS: "c0-effects",
     CONTROL_EFFECT_RIPPLE: "c0-effect--ripple",
@@ -35,6 +36,18 @@ namespace BasePresentation {
     },
   } as const;
 
+  export function createTemplateHtml(mainViewHtml: string) {
+    return `
+      <div class="${ ClassName.ROOT }">
+        <datalist>
+          <slot name="datalist"></slot>
+        </datalist>
+        <div class="placeholder-t0 todo"></div>
+        <div class="internal internal0 todo">${ mainViewHtml }</div>
+      </div>
+    `;
+  }
+
   export const STYLE = `
     :host {
       display: block;
@@ -44,7 +57,7 @@ namespace BasePresentation {
       display: none;
     }
 
-    *.internal0-container {
+    *.${ ClassName.ROOT } {
       --internal0-accent-color: #136ed2;
       --internal0-border-width: 1px;
       --internal0-corner-radius: 5px;
@@ -68,32 +81,32 @@ namespace BasePresentation {
       position: relative;
     }
 
-    :host(*[data-size="x-small"]) *.internal0-container {
+    :host(*[data-size="x-small"]) *.${ ClassName.ROOT } {
       --internal0-corner-radius: 3px;
       --internal0-size: ${ _BaseDimension[_BaseSize.X_SMALL] }px;
       font-size: 12px;
     }
 
-    :host(*[data-size="small"]) *.internal0-container {
+    :host(*[data-size="small"]) *.${ ClassName.ROOT } {
       --internal0-corner-radius: 4px;
       --internal0-size: ${ _BaseDimension[_BaseSize.SMALL] }px;
       font-size: 14px;
     }
 
-    :host(*[data-size="large"]) *.internal0-container {
+    :host(*[data-size="large"]) *.${ ClassName.ROOT } {
       --internal0-corner-radius: 6px;
       --internal0-size: ${ _BaseDimension[_BaseSize.LARGE] }px;
       font-size: 18px;
     }
 
-    :host(*[data-size="x-large"]) *.internal0-container {
+    :host(*[data-size="x-large"]) *.${ ClassName.ROOT } {
       --internal0-corner-radius: 7px;
       --internal0-size: ${ _BaseDimension[_BaseSize.X_LARGE] }px;
       font-size: 20px;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.internal0-container,
-    :host(*[${ Aria.DISABLED }="true"]) *.internal0-container {
+    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.ROOT },
+    :host(*[${ Aria.DISABLED }="true"]) *.${ ClassName.ROOT } {
       filter: contrast(0.5) grayscale(1);
       opacity: 0.6;
     }
@@ -119,19 +132,19 @@ namespace BasePresentation {
       outline: none;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.internal0-container *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"]) *.internal0-container *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][${ Aria.READONLY }="true"]) *.internal0-container *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.internal0-container *.${ ClassName.TARGET } {
+    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[${ Aria.BUSY }="true"][${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[${ Aria.BUSY }="true"][${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: wait;
     }
 
-    :host(*[${ Aria.DISABLED }="true"]) *.internal0-container *.${ ClassName.TARGET },
-    :host(*[${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.internal0-container *.${ ClassName.TARGET } {
+    :host(*[${ Aria.DISABLED }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[${ Aria.DISABLED }="true"][${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: not-allowed;
     }
 
-    :host(*[${ Aria.READONLY }="true"]) *.internal0-container *.${ ClassName.TARGET } {
+    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: default;
     }
 
