@@ -110,7 +110,7 @@ namespace Presentation {
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[disabled]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
       border-color: var(--internal0-accent-color);
       box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }
@@ -137,7 +137,7 @@ namespace Presentation {
       transition: margin 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *:is(
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[disabled]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *:is(
       *.${ BasePresentation.ClassName.CONTROL_GLOW },
       *.${ BasePresentation.ClassName.CONTROL_EFFECTS },
       *.${ ClassName.CONTROL_THUMB_SURFACE },
@@ -172,7 +172,7 @@ namespace Presentation {
       transition: border-width 300ms, box-shadow 300ms, margin 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[disabled]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
       border-width: var(--internal0-border-width);
       box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }

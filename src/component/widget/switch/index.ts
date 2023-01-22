@@ -17,12 +17,11 @@ import Presentation from "./presentation";
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
 //TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
-//TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
 //TODO slotにassignできるのもcustom elementにする？
 //TODO コンストラクタのadoptStyleSheets以降はconnectedCallBackに移す https://momdo.github.io/html/custom-elements.html
 //TODO roleはthis.#internals.role = ～ にする？
 //TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
-//TODO 以下の属性が必要 グローバル、form、disabled、readonly、name https://momdo.github.io/html/custom-elements.html
+//TODO 以下の属性が必要 グローバル、form、、readonly、name https://momdo.github.io/html/custom-elements.html
 //TODO formAssociatedCallback
 //TODO formDisabledCallback
 //TODO formResetCallback

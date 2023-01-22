@@ -80,7 +80,6 @@ abstract class Widget extends HTMLElement {
   #connected: boolean;
   #size: BasePresentation.BaseSize;
   #busy: boolean;
-  #disabled: boolean; // Aria仕様では各サブクラスで定義されるが、disabledにならない物は実装予定がないのでここで定義する
   #hidden: boolean;
   #label: string;
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
@@ -103,7 +102,6 @@ abstract class Widget extends HTMLElement {
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
     this.#busy = false;
-    this.#disabled = false;
     this.#hidden = false;
     this.#label = "";
     this.#readOnly = false;
@@ -144,7 +142,7 @@ abstract class Widget extends HTMLElement {
       Aria.LABEL, // 外部labelを使用する場合は使用しない
       Aria.READONLY,
       Aria.BUSY,
-      Aria.DISABLED,
+      "disabled",
       Aria.HIDDEN,
       DataAttr.SIZE,
     ];
@@ -160,12 +158,11 @@ abstract class Widget extends HTMLElement {
   }
 
   get disabled(): boolean {
-    return this.#disabled;
+    return this.hasAttribute("disabled");
   }
 
   set disabled(value: boolean) {
-    const adjustedDisabled = !!value;//(value === true);
-    this.#setDisabled(adjustedDisabled, Widget._ReflectionsOnPropChanged);
+    this.toggleAttribute("disabled", !!value);
   }
 
   override get hidden(): boolean {
@@ -274,7 +271,7 @@ abstract class Widget extends HTMLElement {
     const eventTarget = this.#eventTarget;
 
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
         return;
       }
 
@@ -289,7 +286,7 @@ abstract class Widget extends HTMLElement {
 
     // pointerupやpointercancelでは自動的にreleaseされる
     eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
-      // if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+      // if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
       //   return;
       // }
 
@@ -301,7 +298,7 @@ abstract class Widget extends HTMLElement {
     }, { passive: true });
 
     eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
         return;
       }
 
@@ -315,7 +312,7 @@ abstract class Widget extends HTMLElement {
     // pointercancelの場合は#capturingPointerは使わない
 
     eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
         return;
       }
 
@@ -387,7 +384,7 @@ abstract class Widget extends HTMLElement {
   //     全部stopして発火しなおす？
   #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
     target.addEventListener(eventType, ((event: T) => {
-      if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
         return;
       }
       if (event instanceof PointerEvent) {
@@ -464,7 +461,7 @@ abstract class Widget extends HTMLElement {
     this.#loadDataListSlot();
 
     this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
-    this.#setDisabledFromString(this.getAttribute(Aria.DISABLED) ?? "", Widget._ReflectionsOnConnected);
+    //TODO-1 this.#setDisabledFromString(this.getAttribute("disabled") ?? "", Widget._ReflectionsOnConnected);
     this.#setHiddenFromString(this.getAttribute(Aria.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
     this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
     if (this._init.inputable === true) {
@@ -527,8 +524,10 @@ abstract class Widget extends HTMLElement {
         this.#setBusyFromString(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.DISABLED:
-        this.#setDisabledFromString(newValue, Widget._ReflectionsOnAttrChanged);
+      case "disabled":
+        this.#internals.ariaDisabled = (this.disabled === true) ? "true" : null;
+        this.#resetFocusable();
+        this.#resetEditable();
         break;
 
       case Aria.HIDDEN:
@@ -558,23 +557,6 @@ abstract class Widget extends HTMLElement {
     }
     if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaBusy();
-    }
-  }
-
-  #setDisabledFromString(value: string, reflections: Widget.Reflections): void {
-    this.#setDisabled((value === "true"), reflections);
-  }
-
-  #setDisabled(value: boolean, reflections: Widget.Reflections): void {
-    const changed = (this.#disabled !== value);
-    if (changed === true) {
-      this.#disabled = value;
-    }
-    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-      this._reflectDisabledToContent();
-    }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToAriaDisabled();
     }
   }
 
@@ -652,7 +634,7 @@ abstract class Widget extends HTMLElement {
 
   #resetFocusable(): void {
     if (this.#eventTarget) {
-      if ((this.#busy === true) || (this.#disabled === true)) {
+      if ((this.#busy === true) || (this.disabled === true)) {
         this.#eventTarget.removeAttribute("tabindex");
       }
       else {
@@ -677,21 +659,12 @@ abstract class Widget extends HTMLElement {
     this.#resetEditable();
   }
 
-  protected _reflectDisabledToContent(): void {
-    this.#resetFocusable();
-    this.#resetEditable();
-  }
-
   #reflectReadOnlyToContent(): void {
     this.#resetEditable();
   }
 
   #reflectToAriaBusy(): void {
     this._reflectToAttr(Aria.BUSY, ((this.#busy === true) ? "true" : undefined));
-  }
-
-  #reflectToAriaDisabled(): void {
-    this._reflectToAttr(Aria.DISABLED, ((this.#disabled === true) ? "true" : undefined));
   }
 
   #reflectToAriaHidden(): void {

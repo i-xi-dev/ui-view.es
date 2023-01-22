@@ -8,6 +8,10 @@ function setAttr(name, value) {
   document.getElementById(TEST_ID).setAttribute(name, value);
 }
 
+function toggleAttr(name, value) {
+  document.getElementById(TEST_ID).toggleAttribute(name, value);
+}
+
 function setProp(name, value) {
   document.getElementById(TEST_ID)[name] = value;
 }
