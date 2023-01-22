@@ -5,8 +5,8 @@ import { Widget } from "../widget_base/index";
 import Presentation from "./presentation";
 
 class CheckBox extends Widget {
+  static KEY = Symbol();
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
-  static #template: HTMLTemplateElement | null;
 
   static readonly #defaultDataList: [Widget.DataListItem, Widget.DataListItem, Widget.DataListItem] = [
     { value: "0", label: "" },
@@ -19,8 +19,8 @@ class CheckBox extends Widget {
   #valueLabelElement: Element;
 
   static {
+    Widget._addTemplate(CheckBox.KEY, "main", Presentation.TEMPLATE);
     CheckBox.#styleSheet.replaceSync(Presentation.STYLE);
-    CheckBox.#template = null;
   }
 
   constructor() {
@@ -36,11 +36,7 @@ class CheckBox extends Widget {
     this._appendStyleSheet(CheckBox.#styleSheet);
 
     const main = this._main;
-    if ((CheckBox.#template && (CheckBox.#template.ownerDocument === this.ownerDocument)) !== true) {
-      CheckBox.#template = this.ownerDocument.createElement("template");
-      CheckBox.#template.innerHTML = Presentation.TEMPLATE;
-    }
-    main.append((CheckBox.#template as HTMLTemplateElement).content.cloneNode(true));
+    this._useTemplate(CheckBox.KEY, "main", main);
     this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
 
     this._addAction<PointerEvent>("pointerup", {

@@ -1,3 +1,4 @@
+import { Ns } from "../../../ns";
 import { Aria, type Role } from "../../../aria";
 import BasePresentation from "./presentation";
 
@@ -73,6 +74,33 @@ abstract class Widget extends HTMLElement {
   #direction: _WidgetDirection;
   #blockProgression: string;
 
+  static #bgDocument: Document;
+  static #templateMap: Map<symbol, Map<string, HTMLTemplateElement>>;
+
+  protected static _addTemplate(componentKey: symbol, templateKey: string, templateContentHtml: string): void {
+    if (Widget.#templateMap.has(componentKey) !== true) {
+      Widget.#templateMap.set(componentKey, new Map());
+    }
+    const componentTemplateMap = Widget.#templateMap.get(componentKey) as Map<string, HTMLTemplateElement>;
+
+    const template = Widget.#bgDocument.createElementNS(Ns.HTML, "template") as HTMLTemplateElement;
+    template.innerHTML = templateContentHtml;
+    componentTemplateMap.set(templateKey, template);
+  }
+
+  protected _useTemplate(componentKey: symbol, templateKey: string, element: Element): void {
+    const componentTemplateMap = Widget.#templateMap.get(componentKey);
+    if (!componentTemplateMap) {
+      throw new Error("TODO");
+    }
+
+    const template = componentTemplateMap.get(templateKey);
+    if (!template) {
+      throw new Error("TODO");
+    }
+    element.append(template.content.cloneNode(true));
+  }
+
   protected static _ReflectionsOnConnected: Widget.Reflections = {
     content: "always",
     attr: "never",
@@ -88,6 +116,8 @@ abstract class Widget extends HTMLElement {
 
   static {
     Widget.#styleSheet.replaceSync(BasePresentation.STYLE);
+    Widget.#bgDocument = new Document();
+    Widget.#templateMap = new Map();
   }
 
   protected _buildEventTarget(): HTMLElement {

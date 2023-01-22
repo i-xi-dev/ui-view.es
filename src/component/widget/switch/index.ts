@@ -26,8 +26,8 @@ const DataAttr = {
 } as const;
 
 class Switch extends Widget {
+  static KEY = Symbol();
   static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
-  static #template: HTMLTemplateElement | null;
 
   static readonly #defaultDataList: [Widget.DataListItem, Widget.DataListItem] = [
     { value: "0", label: "" },
@@ -42,8 +42,8 @@ class Switch extends Widget {
   #thumbMovement?: number;
 
   static {
+    Widget._addTemplate(Switch.KEY, "main", Presentation.TEMPLATE);
     Switch.#styleSheet.replaceSync(Presentation.STYLE);
-    Switch.#template = null;
   }
 
   constructor() {
@@ -60,11 +60,7 @@ class Switch extends Widget {
     this._appendStyleSheet(Switch.#styleSheet);
 
     const main = this._main;
-    if ((Switch.#template && (Switch.#template.ownerDocument === this.ownerDocument)) !== true) {
-      Switch.#template = this.ownerDocument.createElement("template");
-      Switch.#template.innerHTML = Presentation.TEMPLATE;
-    }
-    main.append((Switch.#template as HTMLTemplateElement).content.cloneNode(true));
+    this._useTemplate(Switch.KEY, "main", main);
     this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
     this.#thumb = main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 
