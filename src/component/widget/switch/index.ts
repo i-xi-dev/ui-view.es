@@ -124,6 +124,82 @@ class Switch extends Widget {
     });
   }
 
+  static override get observedAttributes(): Array<string> {
+    return [
+      Widget.observedAttributes,
+      [
+        Aria.CHECKED,
+        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
+        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
+      ],
+    ].flat();
+  }
+
+  get checked(): boolean {
+    return this.#checked;
+  }
+
+  set checked(value: boolean) {
+    const adjustedChecked = !!value;//(value === true);
+    this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
+  }
+
+  get #value(): Widget.DataListItem {
+    const dataListItems = this._getDataListItems({
+      defaultItems: Switch.#defaultDataList,
+      mergeDefaultItems: true,
+    }) as [Widget.DataListItem, Widget.DataListItem];
+    if (this.#checked === true) {
+      return dataListItems[Switch.OptionIndex.ON];
+    }
+    else {
+      return dataListItems[Switch.OptionIndex.OFF];
+    }
+    //XXX busyのときエラーにするか待たせるか
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+
+    if (this.isConnected !== true) {
+      return;
+    }
+
+    this.#setCheckedFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
+
+    this._connected = true;
+  }
+
+  override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
+    super.attributeChangedCallback(name, oldValue, newValue);
+
+    if (this._reflectingInProgress === name) {
+      return;
+    }
+
+    switch (name) {
+      case Aria.CHECKED:
+        this.#setCheckedFromString(newValue, Widget._ReflectionsOnAttrChanged);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  protected override _setPointerCapture(event: PointerEvent) {
+    super._setPointerCapture(event);
+    const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
+    this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
+  }
+
+  protected override _setSize(value: string, reflections: Widget.Reflections): void {
+    super._setSize(value, reflections);
+
+    this.#trackLength = BasePresentation.BaseDimension[this._size] * 1.5;
+    this.#thumbSize = BasePresentation.BaseDimension[this._size] * 0.75;
+  }
+
   //XXX sliderでも使う
   #setThumbPosition(viewportX: number, viewportY: number, rect: Widget.BoundingBox) {
     let trackStart: number;
@@ -157,82 +233,6 @@ class Switch extends Widget {
     this.#thumbMovement = thumbStart / range;
   }
 
-  protected override _setPointerCapture(event: PointerEvent) {
-    super._setPointerCapture(event);
-    const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
-    this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
-  }
-
-  get checked(): boolean {
-    return this.#checked;
-  }
-
-  set checked(value: boolean) {
-    const adjustedChecked = !!value;//(value === true);
-    this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
-  }
-
-  get #value(): Widget.DataListItem {
-    const dataListItems = this._getDataListItems({
-      defaultItems: Switch.#defaultDataList,
-      mergeDefaultItems: true,
-    }) as [Widget.DataListItem, Widget.DataListItem];
-    if (this.#checked === true) {
-      return dataListItems[Switch.OptionIndex.ON];
-    }
-    else {
-      return dataListItems[Switch.OptionIndex.OFF];
-    }
-    //XXX busyのときエラーにするか待たせるか
-  }
-
-  static override get observedAttributes(): Array<string> {
-    return [
-      Widget.observedAttributes,
-      [
-        Aria.CHECKED,
-        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
-        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
-      ],
-    ].flat();
-  }
-
-  protected override _setSize(value: string, reflections: Widget.Reflections): void {
-    super._setSize(value, reflections);
-
-    this.#trackLength = BasePresentation.BaseDimension[this._size] * 1.5;
-    this.#thumbSize = BasePresentation.BaseDimension[this._size] * 0.75;
-  }
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-
-    if (this.isConnected !== true) {
-      return;
-    }
-
-    this.#setCheckedFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
-
-    this._connected = true;
-  }
-
-  override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
-    super.attributeChangedCallback(name, oldValue, newValue);
-
-    if (this._reflectingInProgress === name) {
-      return;
-    }
-
-    switch (name) {
-      case Aria.CHECKED:
-        this.#setCheckedFromString(newValue, Widget._ReflectionsOnAttrChanged);
-        break;
-
-      default:
-        break;
-    }
-  }
-
   #setCheckedFromString(value: string, reflections: Widget.Reflections): void {
     this.#setChecked((value === "true"), reflections);
   }
@@ -259,12 +259,14 @@ class Switch extends Widget {
     this.#valueLabelElement.textContent = this.#value.label;
   }
 }
+
 namespace Switch {
   export const OptionIndex = {
     OFF: 0,
     ON: 1,
   } as const;
 }
+
 Object.freeze(Switch);
 
 export { Switch };

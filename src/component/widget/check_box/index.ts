@@ -65,6 +65,17 @@ class CheckBox extends Widget {
     });
   }
 
+  static override get observedAttributes(): Array<string> {
+    return [
+      Widget.observedAttributes,
+      [
+        Aria.CHECKED,
+        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
+        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
+      ],
+    ].flat();
+  }
+
   get checked(): boolean {
     return this.#checked;
   }
@@ -98,17 +109,6 @@ class CheckBox extends Widget {
       return dataListItems[CheckBox.OptionIndex.OFF];
     }
     //XXX busyのときエラーにするか待たせるか
-  }
-
-  static override get observedAttributes(): Array<string> {
-    return [
-      Widget.observedAttributes,
-      [
-        Aria.CHECKED,
-        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
-        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
-      ],
-    ].flat();
   }
 
   override connectedCallback(): void {

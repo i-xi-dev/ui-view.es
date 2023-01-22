@@ -52,10 +52,29 @@ const _WidgetDirection = {
 type _WidgetDirection = typeof _WidgetDirection[keyof typeof _WidgetDirection];
 
 abstract class Widget extends HTMLElement {
+  protected static _ReflectionsOnConnected: Widget.Reflections = {
+    content: "always",
+    attr: "never",
+  };
+  protected static _ReflectionsOnAttrChanged: Widget.Reflections = {
+    content: "if-needed",
+    attr: "never",
+  };
+  protected static _ReflectionsOnPropChanged: Widget.Reflections = {
+    content: "if-needed",
+    attr: "if-needed",
+  };
   static readonly #KEY = Symbol();
-  protected readonly _init: Readonly<Widget.Init>;
+  static readonly #bgDocument: Document = new Document();
+  static readonly #componentTemplateMap: Map<symbol, Map<string, HTMLTemplateElement>> = new Map();
+  static readonly #componentStyleSheetMap: Map<symbol, CSSStyleSheet> = new Map();
 
+  protected readonly _init: Readonly<Widget.Init>;
   readonly #root: ShadowRoot;
+  readonly #dataListSlot: HTMLSlotElement;
+  readonly #eventTarget: HTMLElement;
+  readonly #main: Element;
+  readonly #actions: Map<string, Set<Widget.Action>>;
   #connected: boolean;
   #size: BasePresentation.BaseSize;
   #busy: boolean;
@@ -65,17 +84,71 @@ abstract class Widget extends HTMLElement {
   #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
-  readonly #actions: Map<string, Set<Widget.Action>>;
   #reflectingInProgress: string;
-  readonly #main: Element;
-  readonly #eventTarget: HTMLElement;
-  readonly #dataListSlot: HTMLSlotElement;
   #direction: _WidgetDirection;
   #blockProgression: string;
 
-  static readonly #bgDocument: Document = new Document();
-  static readonly #componentTemplateMap: Map<symbol, Map<string, HTMLTemplateElement>> = new Map();
-  static readonly #componentStyleSheetMap: Map<symbol, CSSStyleSheet> = new Map();
+  static {
+    Widget._addStyleSheet(Widget.#KEY, BasePresentation.STYLE);
+  }
+
+  constructor(init: Widget.Init) {
+    super();
+    this._init = Object.assign({}, init);
+    this.#root = this.attachShadow(_ShadowRootInit);
+    this.#connected = false;
+    this.#size = BasePresentation.BaseSize.MEDIUM;
+    this.#busy = false;
+    this.#disabled = false;
+    this.#hidden = false;
+    this.#label = "";
+    this.#readOnly = false;
+    this.#capturingPointer = null;
+    this.#textCompositing = false;
+    this.#actions = new Map([
+      ["click", new Set()],
+      //["focus", new Set()],
+      ["input", new Set()],
+      ["keydown", new Set()],
+      ["pointercancel", new Set()],
+      ["pointerdown", new Set()],
+      ["pointermove", new Set()],
+      ["pointerup", new Set()],
+    ]);
+    this.#reflectingInProgress = "";
+    this.#direction = _WidgetDirection.LTR;
+    this.#blockProgression = "";
+
+    this.#adoptStyleSheets();
+
+    const container = this.ownerDocument.createElement("div");
+    container.setAttribute("draggable", "false");
+    container.classList.add(`internal0-container`);
+    container.classList.add(`internal-container`);
+
+    const dataList = this.ownerDocument.createElement("datalist");
+    dataList.hidden = true;
+    dataList.classList.add(`internal0-datalist`);
+
+    this.#dataListSlot = this.ownerDocument.createElement("slot");
+    this.#dataListSlot.name = "datalist";
+    dataList.append(this.#dataListSlot);
+
+    this.#eventTarget = this._buildEventTarget();
+
+    this.#main = this.ownerDocument.createElement("div");
+    this.#main.classList.add("internal0");
+    this.#main.classList.add("internal");
+
+    container.append(dataList, this.#eventTarget, this.#main);
+
+    this.#root.append(container);
+  }
+
+
+
+
+
 
   protected static _addStyleSheet(componentKey: symbol, cssText: string): void {
     const styleSheet = new CSSStyleSheet();
@@ -113,22 +186,6 @@ abstract class Widget extends HTMLElement {
     this.#root.adoptedStyleSheets.push(componentStyleSheet);
   }
 
-  protected static _ReflectionsOnConnected: Widget.Reflections = {
-    content: "always",
-    attr: "never",
-  };
-  protected static _ReflectionsOnAttrChanged: Widget.Reflections = {
-    content: "if-needed",
-    attr: "never",
-  };
-  protected static _ReflectionsOnPropChanged: Widget.Reflections = {
-    content: "if-needed",
-    attr: "if-needed",
-  };
-
-  static {
-    Widget._addStyleSheet(Widget.#KEY, BasePresentation.STYLE);
-  }
 
   protected _buildEventTarget(): HTMLElement {
     const eventTarget = this.ownerDocument.createElement("div");
@@ -290,59 +347,6 @@ abstract class Widget extends HTMLElement {
 
   _elementIntersectsPoint(element: Element, { x, y }: _Point): boolean {
     return this.#root.elementsFromPoint(x, y).includes(element);
-  }
-
-  constructor(init: Widget.Init) {
-    super();
-    this._init = Object.assign({}, init);
-    this.#root = this.attachShadow(_ShadowRootInit);
-    this.#connected = false;
-    this.#size = BasePresentation.BaseSize.MEDIUM;
-    this.#busy = false;
-    this.#disabled = false;
-    this.#hidden = false;
-    this.#label = "";
-    this.#readOnly = false;
-    this.#capturingPointer = null;
-    this.#textCompositing = false;
-    this.#actions = new Map([
-      ["click", new Set()],
-      //["focus", new Set()],
-      ["input", new Set()],
-      ["keydown", new Set()],
-      ["pointercancel", new Set()],
-      ["pointerdown", new Set()],
-      ["pointermove", new Set()],
-      ["pointerup", new Set()],
-    ]);
-    this.#reflectingInProgress = "";
-    this.#direction = _WidgetDirection.LTR;
-    this.#blockProgression = "";
-
-    this.#adoptStyleSheets();
-
-    const container = this.ownerDocument.createElement("div");
-    container.setAttribute("draggable", "false");
-    container.classList.add(`internal0-container`);
-    container.classList.add(`internal-container`);
-
-    const dataList = this.ownerDocument.createElement("datalist");
-    dataList.hidden = true;
-    dataList.classList.add(`internal0-datalist`);
-
-    this.#dataListSlot = this.ownerDocument.createElement("slot");
-    this.#dataListSlot.name = "datalist";
-    dataList.append(this.#dataListSlot);
-
-    this.#eventTarget = this._buildEventTarget();
-
-    this.#main = this.ownerDocument.createElement("div");
-    this.#main.classList.add("internal0");
-    this.#main.classList.add("internal");
-
-    container.append(dataList, this.#eventTarget, this.#main);
-
-    this.#root.append(container);
   }
 
   protected get _root(): ShadowRoot {
