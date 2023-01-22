@@ -130,6 +130,107 @@ abstract class Widget extends HTMLElement {
     this.#root.append(rootElement);
   }
 
+  static get observedAttributes(): Array<string> {
+    return [
+      Aria.LABEL, // 外部labelを使用する場合は使用しない
+      Aria.READONLY,
+      Aria.BUSY,
+      Aria.DISABLED,
+      Aria.HIDDEN,
+      DataAttr.SIZE,
+    ];
+  }
+
+  get busy(): boolean {
+    return this.#busy;
+  }
+
+  set busy(value: boolean) {
+    const adjustedBusy = !!value;//(value === true);
+    this.#setBusy(adjustedBusy, Widget._ReflectionsOnPropChanged);
+  }
+
+  get disabled(): boolean {
+    return this.#disabled;
+  }
+
+  set disabled(value: boolean) {
+    const adjustedDisabled = !!value;//(value === true);
+    this.#setDisabled(adjustedDisabled, Widget._ReflectionsOnPropChanged);
+  }
+
+  override get hidden(): boolean {
+    return this.#hidden;
+  }
+
+  override set hidden(value: boolean) {
+    const adjustedHidden = !!value;//(value === true);
+    this.#setHidden(adjustedHidden, Widget._ReflectionsOnPropChanged);
+  }
+
+  get label(): string {
+    return this.#label;
+  }
+
+  set label(value: string) {
+    const adjustedLabel = (typeof value === "string") ? value : "";
+    this.#setLabel(adjustedLabel, Widget._ReflectionsOnPropChanged);
+  }
+
+  get readOnly(): boolean {
+    return this.#readOnly;
+  }
+
+  set readOnly(value: boolean) {
+    const adjustedReadOnly = !!value;//(value === true);
+    this._setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
+  }
+
+  protected get _capturingPointer(): _CapturingPointer | null {
+    return this.#capturingPointer;
+  }
+
+  protected get _connected(): boolean {
+    return this.#connected;
+  }
+
+  protected set _connected(value: boolean) {
+    this.#connected = value;
+  }
+
+  protected get _size(): BasePresentation.BaseSize {
+    return this.#size;
+  }
+
+  protected get _reflectingInProgress(): string {
+    return this.#reflectingInProgress;
+  }
+
+  protected get _main(): Element {
+    return this.#main;
+  }
+
+  protected get _textCompositing(): boolean {
+    return this.#textCompositing;
+  }
+
+  protected get _direction(): _WidgetDirection {
+    return this.#direction;//XXX connectedの後に変更された場合の検知が困難
+  }
+
+  protected get _blockProgression(): string {
+    return this.#blockProgression;//XXX connectedの後に変更された場合の検知が困難
+  }
+
+  get #assignedOptionElements(): Array<HTMLOptionElement> {
+    //TODO slotchangeがおきるまで要素への参照キャッシュする
+    const assignedElements = this.#dataListSlot.assignedElements();
+    return assignedElements.filter((element) => {
+      return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
+    }) as Array<HTMLOptionElement>;
+    //XXX 値重複は警告する？
+  }
+
 
 
 
@@ -259,10 +360,6 @@ abstract class Widget extends HTMLElement {
     return false;
   }
 
-  protected get _capturingPointer(): _CapturingPointer | null {
-    return this.#capturingPointer;
-  }
-
   protected _setPointerCapture(event: PointerEvent): void {
     this.#eventTarget.setPointerCapture(event.pointerId);
     const viewportX = event.clientX;
@@ -321,88 +418,6 @@ abstract class Widget extends HTMLElement {
     return this.#root.elementsFromPoint(x, y).includes(element);
   }
 
-  protected get _root(): ShadowRoot {
-    return this.#root;
-  }
-
-  protected get _connected(): boolean {
-    return this.#connected;
-  }
-
-  protected set _connected(value: boolean) {
-    this.#connected = value;
-  }
-
-  protected get _size(): BasePresentation.BaseSize {
-    return this.#size;
-  }
-
-  get busy(): boolean {
-    return this.#busy;
-  }
-
-  set busy(value: boolean) {
-    const adjustedBusy = !!value;//(value === true);
-    this.#setBusy(adjustedBusy, Widget._ReflectionsOnPropChanged);
-  }
-
-  get disabled(): boolean {
-    return this.#disabled;
-  }
-
-  set disabled(value: boolean) {
-    const adjustedDisabled = !!value;//(value === true);
-    this.#setDisabled(adjustedDisabled, Widget._ReflectionsOnPropChanged);
-  }
-
-  override get hidden(): boolean {
-    return this.#hidden;
-  }
-
-  override set hidden(value: boolean) {
-    const adjustedHidden = !!value;//(value === true);
-    this.#setHidden(adjustedHidden, Widget._ReflectionsOnPropChanged);
-  }
-
-  get label(): string {
-    return this.#label;
-  }
-
-  set label(value: string) {
-    const adjustedLabel = (typeof value === "string") ? value : "";
-    this.#setLabel(adjustedLabel, Widget._ReflectionsOnPropChanged);
-  }
-
-  get readOnly(): boolean {
-    return this.#readOnly;
-  }
-
-  set readOnly(value: boolean) {
-    const adjustedReadOnly = !!value;//(value === true);
-    this._setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
-  }
-
-  protected get _reflectingInProgress(): string {
-    return this.#reflectingInProgress;
-  }
-
-  protected get _main(): Element {
-    return this.#main;
-  }
-
-  get #assignedOptionElements(): Array<HTMLOptionElement> {
-    //TODO slotchangeがおきるまで要素への参照キャッシュする
-    const assignedElements = this.#dataListSlot.assignedElements();
-    return assignedElements.filter((element) => {
-      return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
-    }) as Array<HTMLOptionElement>;
-    //XXX 値重複は警告する？
-  }
-
-  protected get _textCompositing(): boolean {
-    return this.#textCompositing;
-  }
-
   // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
   protected _getDataListItems(options?: Widget.DataListItemMergeOptions): Array<Widget.DataListItem> {
     const items: Array<Widget.DataListItem> = this.#assignedOptionElements.map((element) => {
@@ -432,17 +447,6 @@ abstract class Widget extends HTMLElement {
       }
     }
     actionSet.add(action);
-  }
-
-  static get observedAttributes(): Array<string> {
-    return [
-      Aria.LABEL, // 外部labelを使用する場合は使用しない
-      Aria.READONLY,
-      Aria.BUSY,
-      Aria.DISABLED,
-      Aria.HIDDEN,
-      DataAttr.SIZE,
-    ];
   }
 
   connectedCallback(): void {
@@ -488,14 +492,6 @@ abstract class Widget extends HTMLElement {
     }
 
     //this.#connected = true;
-  }
-
-  protected get _direction(): _WidgetDirection {
-    return this.#direction;//XXX connectedの後に変更された場合の検知が困難
-  }
-
-  protected get _blockProgression(): string {
-    return this.#blockProgression;//XXX connectedの後に変更された場合の検知が困難
   }
 
   disconnectedCallback(): void {
