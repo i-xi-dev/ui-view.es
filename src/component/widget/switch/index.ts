@@ -19,6 +19,7 @@ import Presentation from "./presentation";
 //TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO vueで使いやすいのはbool型属性か・・・data-value-label-visible
+//TODO slotにassignできるのもcustom elementにする？
 
 const DataAttr = {
   VALUE_LABEL_VISIBLE: "data-value-label-visible",
@@ -87,7 +88,7 @@ class Switch extends Widget {
           const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
           if ((capturingPointer.startViewportX === event.clientX) && (capturingPointer.startViewportY === event.clientY)) {
             // pointerupとpointerdownの座標が同じ場合はcheckedを変更する
-            //TODO pointerdownしてpointermoveして元の位置に戻ってpointerupした場合も？
+            //XXX pointerdownしてpointermoveして元の位置に戻ってpointerupした場合も？
           }
           else {
             console.log(this.#thumbMovement);

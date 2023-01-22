@@ -75,6 +75,7 @@ abstract class Widget extends HTMLElement {
   readonly #eventTarget: HTMLElement;
   readonly #main: Element;
   readonly #actions: Map<string, Set<Widget.Action>>;
+  readonly #assignedOptionElements: Array<HTMLOptionElement>;
   #connected: boolean;
   #size: BasePresentation.BaseSize;
   #busy: boolean;
@@ -115,6 +116,7 @@ abstract class Widget extends HTMLElement {
       ["pointermove", new Set()],
       ["pointerup", new Set()],
     ]);
+    this.#assignedOptionElements = [];
     this.#reflectingInProgress = "";
     this.#direction = _WidgetDirection.LTR;
     this.#blockProgression = "";
@@ -126,6 +128,10 @@ abstract class Widget extends HTMLElement {
     this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
     this._buildEventTarget();
     this.#main = rootElement.querySelector(`*.${ BasePresentation.ClassName.MAIN }`) as Element;
+
+    this.#dataListSlot.addEventListener("slotchange", () => {
+      this.#loadDataListSlot();
+    }, { passive: true });
 
     this.#root.append(rootElement);
   }
@@ -222,14 +228,6 @@ abstract class Widget extends HTMLElement {
     return this.#blockProgression;//XXX connectedの後に変更された場合の検知が困難
   }
 
-  get #assignedOptionElements(): Array<HTMLOptionElement> {
-    //TODO slotchangeがおきるまで要素への参照キャッシュする
-    const assignedElements = this.#dataListSlot.assignedElements();
-    return assignedElements.filter((element) => {
-      return (element.localName === "option");//XXX これだけだとoptionだとの確証がないが実用上は問題ないか
-    }) as Array<HTMLOptionElement>;
-    //XXX 値重複は警告する？
-  }
 
 
 
@@ -455,6 +453,7 @@ abstract class Widget extends HTMLElement {
     }
 
     this.#reflectToRole();
+    this.#loadDataListSlot();
 
     this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
     this.#setDisabledFromString(this.getAttribute(Aria.DISABLED) ?? "", Widget._ReflectionsOnConnected);
@@ -736,6 +735,16 @@ abstract class Widget extends HTMLElement {
     this.dispatchEvent(new Event("change", {
       bubbles: true,
     }));
+  }
+
+  #loadDataListSlot() {
+    this.#assignedOptionElements.splice(0);
+    for (const element of this.#dataListSlot.assignedElements()) {
+      if (element instanceof HTMLOptionElement) {
+        this.#assignedOptionElements.push(element);
+      }
+    }
+    //XXX 値重複は警告する？
   }
 
 }
