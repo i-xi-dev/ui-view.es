@@ -72,9 +72,9 @@ abstract class Widget extends HTMLElement {
   protected readonly _init: Readonly<Widget.Init>;
   readonly #root: ShadowRoot;
   readonly #internals: ElementInternals;
-  readonly #dataListSlot: HTMLSlotElement;
-  readonly #eventTarget: HTMLElement;
-  readonly #main: Element;
+  #dataListSlot: HTMLSlotElement | null;
+  #eventTarget: HTMLElement | null;
+  #main: Element | null;
   readonly #actions: Map<string, Set<Widget.Action>>;
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
   #connected: boolean;
@@ -99,6 +99,9 @@ abstract class Widget extends HTMLElement {
     this.#root = this.attachShadow(_ShadowRootInit);
     this.#internals = this.attachInternals();
     this.#internals.role = this._init.role;
+    this.#dataListSlot = null;
+    this.#eventTarget = null;
+    this.#main = null;
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
     this.#busy = false;
@@ -121,20 +124,6 @@ abstract class Widget extends HTMLElement {
     this.#reflectingInProgress = "";
     this.#direction = _WidgetDirection.LTR;
     this.#blockProgression = "";
-
-    this.#adoptStyleSheets();
-
-    const rootElement = this.#useTemplate();
-    this.#dataListSlot = rootElement.querySelector('slot[name="datalist"]') as HTMLSlotElement;
-    this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
-    this._buildEventTarget();
-    this.#main = rootElement.querySelector(`*.${ BasePresentation.ClassName.MAIN }`) as Element;
-
-    this.#dataListSlot.addEventListener("slotchange", () => {
-      this.#loadDataListSlot();
-    }, { passive: true });
-
-    this.#root.append(rootElement);
   }
 
   static get observedAttributes(): Array<string> {
@@ -218,7 +207,7 @@ abstract class Widget extends HTMLElement {
     return this.#reflectingInProgress;
   }
 
-  protected get _main(): Element {
+  protected get _main(): Element | null {
     return this.#main;
   }
 
@@ -267,9 +256,7 @@ abstract class Widget extends HTMLElement {
   }
 
 
-  protected _buildEventTarget(): void {
-    const eventTarget = this.#eventTarget;
-
+  protected _buildEventTarget(eventTarget: HTMLElement): void {
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
       if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
         return;
@@ -347,13 +334,21 @@ abstract class Widget extends HTMLElement {
     this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
   }
 
-  #getEventTargetBoundingBox(): _BoundingBox {
-    const { left, right, top, bottom } = this.#eventTarget.getBoundingClientRect();
+  #getEventTargetBoundingBox(): Readonly<_BoundingBox> {
+    if (!!this.#eventTarget) {
+      const { left, right, top, bottom } = this.#eventTarget.getBoundingClientRect();
+      return Object.freeze({
+        left,
+        right,
+        top,
+        bottom,
+      });
+    }
     return Object.freeze({
-      left,
-      right,
-      top,
-      bottom,
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
     });
   }
 
@@ -365,19 +360,20 @@ abstract class Widget extends HTMLElement {
   }
 
   protected _setPointerCapture(event: PointerEvent): void {
-    this.#eventTarget.setPointerCapture(event.pointerId);
-    const viewportX = event.clientX;
-    const viewportY = event.clientY;
-    this.#capturingPointer = {
-      type: event.pointerType,
-      id: event.pointerId,
-      startViewportX: viewportX,
-      startViewportY: viewportY,
-      startTimestamp: event.timeStamp,
-      targetBoundingBox: this.#getEventTargetBoundingBox(),
-      leaved: false,
-    };
-    //console.log(`x:${event.offsetX}, y:${event.offsetY}, targetW:${this.#eventTarget.offsetWidth}, targetH:${this.#eventTarget.offsetHeight}`)
+    if (!!this.#eventTarget) {
+      this.#eventTarget.setPointerCapture(event.pointerId);
+      const viewportX = event.clientX;
+      const viewportY = event.clientY;
+      this.#capturingPointer = {
+        type: event.pointerType,
+        id: event.pointerId,
+        startViewportX: viewportX,
+        startViewportY: viewportY,
+        startTimestamp: event.timeStamp,
+        targetBoundingBox: this.#getEventTargetBoundingBox(),
+        leaved: false,
+      };
+    }
   }
 
   //TODO stopPropagation ・・・すくなくともclickは。他？
@@ -453,10 +449,28 @@ abstract class Widget extends HTMLElement {
     actionSet.add(action);
   }
 
+  #render(): void {
+    this.#adoptStyleSheets();
+
+    const rootElement = this.#useTemplate();
+    this.#dataListSlot = rootElement.querySelector('slot[name="datalist"]') as HTMLSlotElement;
+    this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
+    this._buildEventTarget(this.#eventTarget);
+    this.#main = rootElement.querySelector(`*.${ BasePresentation.ClassName.MAIN }`) as Element;
+
+    this.#dataListSlot.addEventListener("slotchange", () => {
+      this.#loadDataListSlot();
+    }, { passive: true });
+
+    this.#root.append(rootElement);
+  }
+
   connectedCallback(): void {
     if (this.isConnected !== true) {
       return;
     }
+
+    this.#render();
 
     this.#loadDataListSlot();
 
@@ -525,7 +539,7 @@ abstract class Widget extends HTMLElement {
         break;
 
       case "disabled":
-        this.#internals.ariaDisabled = (this.disabled === true) ? "true" : null;
+        this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
         this.#resetFocusable();
         this.#resetEditable();
         break;
@@ -633,7 +647,7 @@ abstract class Widget extends HTMLElement {
   }
 
   #resetFocusable(): void {
-    if (this.#eventTarget) {
+    if (!!this.#eventTarget) {
       if ((this.#busy === true) || (this.disabled === true)) {
         this.#eventTarget.removeAttribute("tabindex");
       }
@@ -644,7 +658,7 @@ abstract class Widget extends HTMLElement {
   }
 
   #resetEditable(): void {
-    if (this.#eventTarget && (this._init.textEditable === true)) {
+    if (!!this.#eventTarget && (this._init.textEditable === true)) {
       if ((this.busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
         this.#eventTarget.removeAttribute("contenteditable");
       }
@@ -684,16 +698,18 @@ abstract class Widget extends HTMLElement {
   }
 
   protected _addRipple(): void {
-    if ((this._connected !== true) || (this.hidden === true)) {//XXX this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
-      return;
+    if (!!this.#main) {
+      if ((this._connected !== true) || (this.hidden === true)) {//XXX this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
+        return;
+      }
+  
+      const ripple = this.ownerDocument.createElement("div");
+      ripple.classList.add(`${ BasePresentation.ClassName.CONTROL_EFFECT_RIPPLE }`);
+      (this.#main.querySelector(`*.${ BasePresentation.ClassName.CONTROL_EFFECTS }`) as Element).append(ripple);
+      globalThis.setTimeout(() => {
+        ripple.remove();
+      }, 1000);
     }
-
-    const ripple = this.ownerDocument.createElement("div");
-    ripple.classList.add(`${ BasePresentation.ClassName.CONTROL_EFFECT_RIPPLE }`);
-    (this._main.querySelector(`*.${ BasePresentation.ClassName.CONTROL_EFFECTS }`) as Element).append(ripple);
-    globalThis.setTimeout(() => {
-      ripple.remove();
-    }, 1000);
   }
 
   protected _dispatchCompatMouseEvent(type: string): void {
@@ -715,13 +731,15 @@ abstract class Widget extends HTMLElement {
   }
 
   #loadDataListSlot() {
-    this.#assignedOptionElements.splice(0);
-    for (const element of this.#dataListSlot.assignedElements()) {
-      if (element instanceof HTMLOptionElement) {
-        this.#assignedOptionElements.push(element);
+    if (!!this.#dataListSlot) {
+      this.#assignedOptionElements.splice(0);
+      for (const element of this.#dataListSlot.assignedElements()) {
+        if (element instanceof HTMLOptionElement) {
+          this.#assignedOptionElements.push(element);
+        }
       }
+      //XXX 値重複は警告する？
     }
-    //XXX 値重複は警告する？
   }
 
 }

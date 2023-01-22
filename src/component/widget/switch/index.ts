@@ -26,6 +26,7 @@ import Presentation from "./presentation";
 //TODO formDisabledCallback
 //TODO formResetCallback
 //TODO formStateRestoreCallback
+//TODO 再connect,再adoptに非対応（disconnectの後とか、ownerDocumentが変わったとか、・・・）
 
 const DataAttr = {
   VALUE_LABEL_VISIBLE: "data-value-label-visible",
@@ -42,12 +43,12 @@ class Switch extends Widget {
     { value: "1", label: "" },
   ];
 
-  readonly #valueLabelElement: Element;
-  readonly #thumb: HTMLElement;
   #checked: boolean;
   #trackLength: number;
   #thumbSize: number;
   #thumbMovement?: number;
+  #valueLabelElement: Element | null;
+  #thumb: HTMLElement | null;
 
   static {
     Widget._addTemplate(Switch.#KEY, Presentation.TEMPLATE);
@@ -66,6 +67,14 @@ class Switch extends Widget {
     this.#checked = false;
     this.#trackLength = 0;
     this.#thumbSize = 0;
+    this.#valueLabelElement = null;
+    this.#thumb = null;
+  }
+
+  #render2(): void {
+    if (!this._main) {
+      throw new Error("TODO");
+    }
 
     this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
     this.#thumb = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
@@ -81,7 +90,7 @@ class Switch extends Widget {
 
     this._addAction<PointerEvent>("pointercancel", {
       func: (event: PointerEvent) => {
-        if (this._isCapturingPointer(event) === true) {
+        if (!!this.#thumb && (this._isCapturingPointer(event) === true)) {
           this.#thumb.style.removeProperty("inset-inline-start");
           this.#thumbMovement = undefined;
         }
@@ -90,7 +99,7 @@ class Switch extends Widget {
 
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {
-        if (this._isCapturingPointer(event) === true) {
+        if (!!this.#thumb && (this._isCapturingPointer(event) === true)) {
           this.#thumb.style.removeProperty("inset-inline-start");
 
           const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
@@ -171,6 +180,7 @@ class Switch extends Widget {
     if (this.isConnected !== true) {
       return;
     }
+    this.#render2();
 
     this.#setCheckedFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
 
@@ -209,35 +219,37 @@ class Switch extends Widget {
 
   //XXX sliderでも使う
   #setThumbPosition(viewportX: number, viewportY: number, rect: Widget.BoundingBox) {
-    let trackStart: number;
-    let pointerCoord: number;
-    if (this._blockProgression === "tb") {
-      trackStart = (this._direction === "rtl") ? rect.right : rect.left;
-      pointerCoord = viewportX;
+    if (!!this.#thumb) {
+      let trackStart: number;
+      let pointerCoord: number;
+      if (this._blockProgression === "tb") {
+        trackStart = (this._direction === "rtl") ? rect.right : rect.left;
+        pointerCoord = viewportX;
+      }
+      else {
+        trackStart = (this._direction === "rtl") ? rect.bottom : rect.top;
+        pointerCoord = viewportY;
+      }
+  
+      let thumbStart = 0;
+      if (this._direction === "rtl") {
+        thumbStart = (trackStart - BasePresentation.Parameters.Target.PADDING_INLINE) - pointerCoord;
+      }
+      else {
+        thumbStart = pointerCoord - (trackStart + BasePresentation.Parameters.Target.PADDING_INLINE);
+      }
+      thumbStart = thumbStart - (this.#thumbSize / 2);
+  
+      const range = this.#trackLength - this.#thumbSize;
+      if (thumbStart <= 0) {
+        thumbStart = 0;
+      }
+      else if (thumbStart >= range) {
+        thumbStart = range;
+      }
+      this.#thumb.style.setProperty("inset-inline-start", `${ thumbStart }px`);
+      this.#thumbMovement = thumbStart / range;
     }
-    else {
-      trackStart = (this._direction === "rtl") ? rect.bottom : rect.top;
-      pointerCoord = viewportY;
-    }
-
-    let thumbStart = 0;
-    if (this._direction === "rtl") {
-      thumbStart = (trackStart - BasePresentation.Parameters.Target.PADDING_INLINE) - pointerCoord;
-    }
-    else {
-      thumbStart = pointerCoord - (trackStart + BasePresentation.Parameters.Target.PADDING_INLINE);
-    }
-    thumbStart = thumbStart - (this.#thumbSize / 2);
-
-    const range = this.#trackLength - this.#thumbSize;
-    if (thumbStart <= 0) {
-      thumbStart = 0;
-    }
-    else if (thumbStart >= range) {
-      thumbStart = range;
-    }
-    this.#thumb.style.setProperty("inset-inline-start", `${ thumbStart }px`);
-    this.#thumbMovement = thumbStart / range;
   }
 
   #setCheckedFromString(value: string, reflections: Widget.Reflections): void {
@@ -262,8 +274,10 @@ class Switch extends Widget {
   }
 
   #reflectCheckedToContent(): void {
-    this._addRipple();
-    this.#valueLabelElement.textContent = this.#value.label;
+    if (!!this.#valueLabelElement) {
+      this._addRipple();
+      this.#valueLabelElement.textContent = this.#value.label;
+    }
   }
 }
 

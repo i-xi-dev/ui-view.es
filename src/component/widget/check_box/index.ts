@@ -15,9 +15,9 @@ class CheckBox extends Widget {
     { value: "", label: "" },
   ];
 
-  readonly #valueLabelElement: Element;
   #checked: boolean;
   #indeterminate: boolean;
+  #valueLabelElement: Element | null;
 
   static {
     Widget._addTemplate(CheckBox.#KEY, Presentation.TEMPLATE);
@@ -35,6 +35,13 @@ class CheckBox extends Widget {
 
     this.#checked = false;
     this.#indeterminate = false;
+    this.#valueLabelElement = null;
+  }
+
+  #render2(): void {
+    if (!this._main) {
+      throw new Error("TODO");
+    }
 
     this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
 
@@ -117,6 +124,7 @@ class CheckBox extends Widget {
     if (this.isConnected !== true) {
       return;
     }
+    this.#render2();
 
     this.#setCheckedAndIndeterminateFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
 
@@ -164,38 +172,42 @@ class CheckBox extends Widget {
   }
 
   #reflectCheckedToContent(): void {
-    this.#drawMark();
-    this._addRipple();
-    this.#valueLabelElement.textContent = this.#value.label;
+    if (!!this.#valueLabelElement) {
+      this.#drawMark();
+      this._addRipple();
+      this.#valueLabelElement.textContent = this.#value.label;
+    }
   }
 
   // animationを変えているのでsvgごと入れ替えている
   #drawMark(): void {
-    const markCanvas = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS }`) as SVGElement;
-    const prevImage = markCanvas.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE }`);
-    if (prevImage) {
-      prevImage.remove();
+    if (!!this._main) {
+      const markCanvas = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS }`) as SVGElement;
+      const prevImage = markCanvas.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE }`);
+      if (prevImage) {
+        prevImage.remove();
+      }
+  
+      const image = this.ownerDocument.createElementNS(Ns.SVG, "svg");
+      image.setAttribute("viewBox", "0 0 12 12");
+      image.classList.add(Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE);
+  
+      let d: string = "";
+      if (this.#indeterminate === true) {
+        d = "M 2 6 L 10 6";
+      }
+      else if (this.#checked === true) {
+        d = "M 2 7 L 4 9 L 10 3";
+      }
+      else {
+        return;
+      }
+      const line = this.ownerDocument.createElementNS(Ns.SVG, "path");
+      line.setAttribute("d", d);
+      line.classList.add(Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE);
+      image.append(line);
+      markCanvas.append(image);
     }
-
-    const image = this.ownerDocument.createElementNS(Ns.SVG, "svg");
-    image.setAttribute("viewBox", "0 0 12 12");
-    image.classList.add(Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE);
-
-    let d: string = "";
-    if (this.#indeterminate === true) {
-      d = "M 2 6 L 10 6";
-    }
-    else if (this.#checked === true) {
-      d = "M 2 7 L 4 9 L 10 3";
-    }
-    else {
-      return;
-    }
-    const line = this.ownerDocument.createElementNS(Ns.SVG, "path");
-    line.setAttribute("d", d);
-    line.classList.add(Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE);
-    image.append(line);
-    markCanvas.append(image);
   }
 }
 
