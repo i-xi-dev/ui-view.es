@@ -42,7 +42,7 @@ namespace BasePresentation {
         <datalist>
           <slot name="datalist"></slot>
         </datalist>
-        <div class="placeholder-t0 todo"></div>
+        <div class="${ ClassName.TARGET }"></div>
         <div class="internal internal0 todo">${ mainViewHtml }</div>
       </div>
     `;

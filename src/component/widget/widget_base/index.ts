@@ -123,8 +123,8 @@ abstract class Widget extends HTMLElement {
 
     const rootElement = this.#useTemplate();
     this.#dataListSlot = rootElement.querySelector('slot[name="datalist"]') as HTMLSlotElement;
-    this.#eventTarget = this._buildEventTarget();
-    rootElement.querySelector("*.placeholder-t0")?.replaceWith(this.#eventTarget);
+    this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
+    this._buildEventTarget();
     this.#main = rootElement.querySelector("*.internal0.internal") as Element;
 
     this.#root.append(rootElement);
@@ -162,9 +162,8 @@ abstract class Widget extends HTMLElement {
   }
 
 
-  protected _buildEventTarget(): HTMLElement {
-    const eventTarget = this.ownerDocument.createElement("div");
-    eventTarget.classList.add(BasePresentation.ClassName.TARGET);
+  protected _buildEventTarget(): void {
+    const eventTarget = this.#eventTarget;
 
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
       if ((this.#busy === true) || (this.#disabled === true) || (this.#readOnly === true)) {
@@ -241,8 +240,6 @@ abstract class Widget extends HTMLElement {
     this.#setEventListener<PointerEvent>("pointerdown", eventTarget, true);
     this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
     this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
-
-    return eventTarget;
   }
 
   #getEventTargetBoundingBox(): _BoundingBox {
