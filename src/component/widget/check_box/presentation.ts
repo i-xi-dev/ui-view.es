@@ -61,7 +61,7 @@ namespace Presentation {
       margin-inline: -8px;
     }
 
-    *.internal {
+    *.${ BasePresentation.ClassName.MAIN } {
       --internal-space: ${ Parameters.Control.MARGIN_INLINE }px;
       --internal-switching-time: 150ms;
       --internal-size: calc(calc(var(--internal0-size) * 0.75) - 4px);
@@ -72,11 +72,11 @@ namespace Presentation {
       flex-flow: row nowrap;
     }
 
-    :host(*[data-value-label-visible="true"]) *.internal {
+    :host(*[data-value-label-visible="true"]) *.${ BasePresentation.ClassName.MAIN } {
       column-gap: 4px;
     }
 
-    :host(*[data-value-label-position="before"]) *.internal {
+    :host(*[data-value-label-position="before"]) *.${ BasePresentation.ClassName.MAIN } {
       flex-flow: row-reverse nowrap;
     }
 
@@ -117,7 +117,7 @@ namespace Presentation {
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
       border-color: var(--internal0-accent-color);
       box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }
@@ -136,7 +136,7 @@ namespace Presentation {
       transition: transform 300ms;
     }
 
-    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.internal *.${ ClassName.CONTROL_MARK_CANVAS } {
+    :host(*:not(*[${ Aria.BUSY }="true"]):not(*[${ Aria.DISABLED }="true"]):not(*[${ Aria.READONLY }="true"])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_MARK_CANVAS } {
       transform: scale(1.25);
     }
 

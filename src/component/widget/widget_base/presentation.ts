@@ -20,6 +20,7 @@ namespace BasePresentation {
   export const ClassName = {
     ROOT: "s-root", // ShadowRoot直下の要素。当モジュールではShadowRoot直下の要素数は必ず1つとする
     TARGET: "t0", // ui event target
+    MAIN: "main",
     CONTROL_EFFECTS: "c0-effects",
     CONTROL_EFFECT_RIPPLE: "c0-effect--ripple",
     CONTROL_GLOW: "c0-glow",
@@ -43,7 +44,7 @@ namespace BasePresentation {
           <slot name="datalist"></slot>
         </datalist>
         <div class="${ ClassName.TARGET }"></div>
-        <div class="internal internal0 todo">${ mainViewHtml }</div>
+        <div class="${ ClassName.MAIN }">${ mainViewHtml }</div>
       </div>
     `;
   }
@@ -148,8 +149,8 @@ namespace BasePresentation {
       cursor: default;
     }
 
-    *.internal0,
-    *.internal0 * {
+    *.${ ClassName.MAIN },
+    *.${ ClassName.MAIN } * {
       pointer-events: none;
     }
 
@@ -164,14 +165,14 @@ namespace BasePresentation {
       transition: box-shadow 200ms, opacity 200ms;
     }
 
-    *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW } {
+    *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
       box-shadow: 0 0 0 var(--internal0-glow-extent) currentcolor;
       opacity: 1;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW },
-    :host(*[${ Aria.DISABLED }="true"]) *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW },
-    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW } {
+    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
+    :host(*[${ Aria.DISABLED }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
+    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }
@@ -188,14 +189,14 @@ namespace BasePresentation {
       transition: box-shadow 200ms, opacity 200ms;
     }
 
-    *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW }::before {
+    *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
       box-shadow: 0 0 0 var(--internal0-glow-blur-radius) currentcolor;
       opacity: 0.5;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW }::before,
-    :host(*[${ Aria.DISABLED }="true"]) *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW }::before,
-    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.TARGET }:hover + *.internal0 *.${ ClassName.CONTROL_GLOW }::before {
+    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
+    :host(*[${ Aria.DISABLED }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
+    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }

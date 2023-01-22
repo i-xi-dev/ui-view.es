@@ -125,7 +125,7 @@ abstract class Widget extends HTMLElement {
     this.#dataListSlot = rootElement.querySelector('slot[name="datalist"]') as HTMLSlotElement;
     this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
     this._buildEventTarget();
-    this.#main = rootElement.querySelector("*.internal0.internal") as Element;
+    this.#main = rootElement.querySelector(`*.${ BasePresentation.ClassName.MAIN }`) as Element;
 
     this.#root.append(rootElement);
   }
