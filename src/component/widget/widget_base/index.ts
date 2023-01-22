@@ -82,7 +82,6 @@ abstract class Widget extends HTMLElement {
   #busy: boolean;
   #hidden: boolean;
   #label: string;
-  #readOnly: boolean; // Aria仕様では各サブクラスで定義されるが、readOnlyにならない物は実装予定がないのでここで定義する
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   #reflectingInProgress: string;
@@ -107,7 +106,6 @@ abstract class Widget extends HTMLElement {
     this.#busy = false;
     this.#hidden = false;
     this.#label = "";
-    this.#readOnly = false;
     this.#capturingPointer = null;
     this.#textCompositing = false;
     this.#actions = new Map([
@@ -129,7 +127,7 @@ abstract class Widget extends HTMLElement {
   static get observedAttributes(): Array<string> {
     return [
       Aria.LABEL, // 外部labelを使用する場合は使用しない
-      Aria.READONLY,
+      "readonly",
       Aria.BUSY,
       "disabled",
       Aria.HIDDEN,
@@ -173,12 +171,11 @@ abstract class Widget extends HTMLElement {
   }
 
   get readOnly(): boolean {
-    return this.#readOnly;
+    return this.hasAttribute("readonly");
   }
 
   set readOnly(value: boolean) {
-    const adjustedReadOnly = !!value;//(value === true);
-    this._setReadOnly(adjustedReadOnly, Widget._ReflectionsOnPropChanged);
+    this.toggleAttribute("readonly", !!value);
   }
 
   protected get _internals(): ElementInternals {
@@ -258,7 +255,7 @@ abstract class Widget extends HTMLElement {
 
   protected _buildEventTarget(eventTarget: HTMLElement): void {
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
 
@@ -273,7 +270,7 @@ abstract class Widget extends HTMLElement {
 
     // pointerupやpointercancelでは自動的にreleaseされる
     eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
-      // if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+      // if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
       //   return;
       // }
 
@@ -285,7 +282,7 @@ abstract class Widget extends HTMLElement {
     }, { passive: true });
 
     eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
 
@@ -299,7 +296,7 @@ abstract class Widget extends HTMLElement {
     // pointercancelの場合は#capturingPointerは使わない
 
     eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
 
@@ -380,7 +377,7 @@ abstract class Widget extends HTMLElement {
   //     全部stopして発火しなおす？
   #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
     target.addEventListener(eventType, ((event: T) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
       if (event instanceof PointerEvent) {
@@ -475,11 +472,11 @@ abstract class Widget extends HTMLElement {
     this.#loadDataListSlot();
 
     this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
-    //TODO-1 this.#setDisabledFromString(this.getAttribute("disabled") ?? "", Widget._ReflectionsOnConnected);
+    //TODO-1 disabled変更時の処理は不要か
     this.#setHiddenFromString(this.getAttribute(Aria.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
     this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
     if (this._init.inputable === true) {
-      this.#setReadOnlyFromString(this.getAttribute(Aria.READONLY) ?? "", Widget._ReflectionsOnConnected);
+      //TODO-1 readonly変更時の処理は不要か
     }
     this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
@@ -530,8 +527,9 @@ abstract class Widget extends HTMLElement {
         this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case Aria.READONLY:
-        this.#setReadOnlyFromString(newValue, Widget._ReflectionsOnAttrChanged);
+      case "readonly":
+        this.#internals.ariaReadOnly = (this.readOnly === true) ? "true" : "false";
+        this.#resetEditable();
         break;
 
       case Aria.BUSY:
@@ -602,25 +600,6 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  #setReadOnlyFromString(value: string, reflections: Widget.Reflections): void {
-    this._setReadOnly((value === "true"), reflections);
-  }
-
-  protected _setReadOnly(value: boolean, reflections: Widget.Reflections): void {
-    if (this._init.inputable === true) {
-      const changed = (this.#readOnly !== value);
-      if (changed === true) {
-        this.#readOnly = value;
-      }
-      if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-        this.#reflectReadOnlyToContent();
-      }
-      if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-        this.#reflectToAriaReadonly();
-      }
-    }
-  }
-
   protected _setSize(value: string, reflections: Widget.Reflections): void {
     const valueIsWidgetSize = Object.values(BasePresentation.BaseSize).includes(value as BasePresentation.BaseSize);
     const adjustedSize = (valueIsWidgetSize === true) ? (value as BasePresentation.BaseSize) : BasePresentation.BaseSize.MEDIUM;
@@ -659,7 +638,7 @@ abstract class Widget extends HTMLElement {
 
   #resetEditable(): void {
     if (!!this.#eventTarget && (this._init.textEditable === true)) {
-      if ((this.busy === true) || (this.disabled === true) || (this.#readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         this.#eventTarget.removeAttribute("contenteditable");
       }
       else {
@@ -673,10 +652,6 @@ abstract class Widget extends HTMLElement {
     this.#resetEditable();
   }
 
-  #reflectReadOnlyToContent(): void {
-    this.#resetEditable();
-  }
-
   #reflectToAriaBusy(): void {
     this._reflectToAttr(Aria.BUSY, ((this.#busy === true) ? "true" : undefined));
   }
@@ -687,10 +662,6 @@ abstract class Widget extends HTMLElement {
 
   #reflectToAriaLabel(): void {
     this._reflectToAttr(Aria.LABEL, (this.#label) ? this.#label : undefined);
-  }
-
-  #reflectToAriaReadonly(): void {
-    this._reflectToAttr(Aria.READONLY, ((this.#readOnly === true) ? "true" : undefined));
   }
 
   #reflectToDataSize(): void {

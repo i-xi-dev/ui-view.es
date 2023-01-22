@@ -21,7 +21,7 @@ import Presentation from "./presentation";
 //TODO コンストラクタのadoptStyleSheets以降はconnectedCallBackに移す https://momdo.github.io/html/custom-elements.html
 //TODO roleはthis.#internals.role = ～ にする？
 //TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
-//TODO 以下の属性が必要 グローバル、form、、readonly、name https://momdo.github.io/html/custom-elements.html
+//TODO 以下の属性が必要 グローバル、form、、、name https://momdo.github.io/html/custom-elements.html
 //TODO formAssociatedCallback
 //TODO formDisabledCallback
 //TODO formResetCallback

@@ -71,13 +71,12 @@ customElements.define("wc-switch", Switch);
           <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
         </fieldset>
         <fieldset>
-          <legend>aria-readonly attr</legend>
-          <button onclick="removeAttr('aria-readonly')">remove attr</button>
+          <legend>readonly attr</legend>
+          <button onclick="removeAttr('readonly')">remove attr</button>
           <select>
             <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select><button onclick="setAttr('aria-readonly', this.previousElementSibling.value)">set attr</button>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('readonly', Boolean(this.previousElementSibling.value))">set attr</button>
         </fieldset>
         <fieldset>
           <legend>readOnly prop</legend>
@@ -197,10 +196,10 @@ customElements.define("wc-switch", Switch);
         <wc-switch aria-label="Label"></wc-switch>
       </div>
       <div>
-        <div>aria-readonly</div>
-        <wc-switch aria-readonly="true"></wc-switch>
-        <wc-switch aria-readonly="false"></wc-switch>
-        <wc-switch aria-readonly="true" aria-checked="true" aria-label="ReadOnly"></wc-switch>
+        <div>readonly</div>
+        <wc-switch readonly></wc-switch>
+        <wc-switch></wc-switch>
+        <wc-switch readonly aria-checked="true" aria-label="ReadOnly"></wc-switch>
       </div>
       <div>
         <div>data-size</div>

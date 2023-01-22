@@ -4,7 +4,6 @@ const Aria = {
   HIDDEN: "aria-hidden",
   LABEL: "aria-label",
   MULTILINE: "aria-multiline",
-  READONLY: "aria-readonly",
 } as const;
 type Aria = typeof Aria[keyof typeof Aria];
 

@@ -76,13 +76,12 @@ customElements.define("wc-checkbox", CheckBox);
           <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
         </fieldset>
         <fieldset>
-          <legend>aria-readonly attr</legend>
-          <button onclick="removeAttr('aria-readonly')">remove attr</button>
+          <legend>readonly attr</legend>
+          <button onclick="removeAttr('readonly')">remove attr</button>
           <select>
             <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select><button onclick="setAttr('aria-readonly', this.previousElementSibling.value)">set attr</button>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('readonly', Boolean(this.previousElementSibling.value))">set attr</button>
         </fieldset>
         <fieldset>
           <legend>readOnly prop</legend>
@@ -208,10 +207,10 @@ customElements.define("wc-checkbox", CheckBox);
         <wc-checkbox aria-label="Label"></wc-checkbox>
       </div>
       <div>
-        <div>aria-readonly</div>
-        <wc-checkbox aria-readonly="true"></wc-checkbox>
-        <wc-checkbox aria-readonly="false"></wc-checkbox>
-        <wc-checkbox aria-readonly="true" aria-checked="true" aria-label="ReadOnly"></wc-checkbox>
+        <div>readonly</div>
+        <wc-checkbox readonly></wc-checkbox>
+        <wc-checkbox></wc-checkbox>
+        <wc-checkbox readonly aria-checked="true" aria-label="ReadOnly"></wc-checkbox>
       </div>
       <div>
         <div>data-size</div>

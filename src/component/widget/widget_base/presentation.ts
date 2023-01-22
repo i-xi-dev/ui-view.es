@@ -135,17 +135,17 @@ namespace BasePresentation {
 
     :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
     :host(*[${ Aria.BUSY }="true"][disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][disabled][${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+    :host(*[${ Aria.BUSY }="true"][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[${ Aria.BUSY }="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: wait;
     }
 
     :host(*[disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[disabled][${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+    :host(*[disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: not-allowed;
     }
 
-    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+    :host(*[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: default;
     }
 
@@ -172,7 +172,7 @@ namespace BasePresentation {
 
     :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
-    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
+    :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }
@@ -196,7 +196,7 @@ namespace BasePresentation {
 
     :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
-    :host(*[${ Aria.READONLY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
+    :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }
