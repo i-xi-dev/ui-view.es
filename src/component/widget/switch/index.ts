@@ -26,28 +26,29 @@ const DataAttr = {
 } as const;
 
 class Switch extends Widget {
-  static KEY = Symbol();
-  static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
+
+  static readonly #KEY = Symbol();
 
   static readonly #defaultDataList: [Widget.DataListItem, Widget.DataListItem] = [
     { value: "0", label: "" },
     { value: "1", label: "" },
   ];
 
+  readonly #valueLabelElement: Element;
+  readonly #thumb: HTMLElement;
   #checked: boolean;
   #trackLength: number;
   #thumbSize: number;
-  readonly #valueLabelElement: Element;
-  readonly #thumb: HTMLElement;
   #thumbMovement?: number;
 
   static {
-    Widget._addTemplate(Switch.KEY, "main", Presentation.TEMPLATE);
-    Switch.#styleSheet.replaceSync(Presentation.STYLE);
+    Widget._addTemplate(Switch.#KEY, "main", Presentation.TEMPLATE);
+    Widget._addStyleSheet(Switch.#KEY, Presentation.STYLE);
   }
 
   constructor() {
     super({
+      componentKey: Switch.#KEY,
       role: Role.SWITCH,
       inputable: true,
       textEditable: false,
@@ -57,10 +58,8 @@ class Switch extends Widget {
     this.#trackLength = 0;
     this.#thumbSize = 0;
 
-    this._appendStyleSheet(Switch.#styleSheet);
-
     const main = this._main;
-    this._useTemplate(Switch.KEY, "main", main);
+    this._useTemplate("main", main);
     this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
     this.#thumb = main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 

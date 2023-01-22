@@ -52,8 +52,7 @@ const _WidgetDirection = {
 type _WidgetDirection = typeof _WidgetDirection[keyof typeof _WidgetDirection];
 
 abstract class Widget extends HTMLElement {
-  static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
-
+  static readonly #KEY = Symbol();
   protected readonly _init: Readonly<Widget.Init>;
 
   readonly #root: ShadowRoot;
@@ -74,31 +73,44 @@ abstract class Widget extends HTMLElement {
   #direction: _WidgetDirection;
   #blockProgression: string;
 
-  static #bgDocument: Document;
-  static #templateMap: Map<symbol, Map<string, HTMLTemplateElement>>;
+  static readonly #bgDocument: Document = new Document();
+  static readonly #componentTemplateMap: Map<symbol, Map<string, HTMLTemplateElement>> = new Map();
+  static readonly #componentStyleSheetMap: Map<symbol, CSSStyleSheet> = new Map();
+
+  protected static _addStyleSheet(componentKey: symbol, cssText: string): void {
+    const styleSheet = new CSSStyleSheet();
+    styleSheet.replaceSync(cssText);
+    Widget.#componentStyleSheetMap.set(componentKey, styleSheet);
+  }
 
   protected static _addTemplate(componentKey: symbol, templateKey: string, templateContentHtml: string): void {
-    if (Widget.#templateMap.has(componentKey) !== true) {
-      Widget.#templateMap.set(componentKey, new Map());
+    if (Widget.#componentTemplateMap.has(componentKey) !== true) {
+      Widget.#componentTemplateMap.set(componentKey, new Map());
     }
-    const componentTemplateMap = Widget.#templateMap.get(componentKey) as Map<string, HTMLTemplateElement>;
+    const templateMap = Widget.#componentTemplateMap.get(componentKey) as Map<string, HTMLTemplateElement>;
 
     const template = Widget.#bgDocument.createElementNS(Ns.HTML, "template") as HTMLTemplateElement;
     template.innerHTML = templateContentHtml;
-    componentTemplateMap.set(templateKey, template);
+    templateMap.set(templateKey, template);
   }
 
-  protected _useTemplate(componentKey: symbol, templateKey: string, element: Element): void {
-    const componentTemplateMap = Widget.#templateMap.get(componentKey);
-    if (!componentTemplateMap) {
+  protected _useTemplate(templateKey: string, element: Element): void {
+    const templateMap = Widget.#componentTemplateMap.get(this._init.componentKey);
+    if (!templateMap) {
       throw new Error("TODO");
     }
 
-    const template = componentTemplateMap.get(templateKey);
+    const template = templateMap.get(templateKey);
     if (!template) {
       throw new Error("TODO");
     }
     element.append(template.content.cloneNode(true));
+  }
+  #adoptStyleSheets(): void {
+    const baseStyleSheet = Widget.#componentStyleSheetMap.get(Widget.#KEY) as CSSStyleSheet;
+    this.#root.adoptedStyleSheets.push(baseStyleSheet);
+    const componentStyleSheet = Widget.#componentStyleSheetMap.get(this._init.componentKey) as CSSStyleSheet;
+    this.#root.adoptedStyleSheets.push(componentStyleSheet);
   }
 
   protected static _ReflectionsOnConnected: Widget.Reflections = {
@@ -115,9 +127,7 @@ abstract class Widget extends HTMLElement {
   };
 
   static {
-    Widget.#styleSheet.replaceSync(BasePresentation.STYLE);
-    Widget.#bgDocument = new Document();
-    Widget.#templateMap = new Map();
+    Widget._addStyleSheet(Widget.#KEY, BasePresentation.STYLE);
   }
 
   protected _buildEventTarget(): HTMLElement {
@@ -284,7 +294,7 @@ abstract class Widget extends HTMLElement {
 
   constructor(init: Widget.Init) {
     super();
-    this._init = Object.freeze(globalThis.structuredClone(init));
+    this._init = Object.assign({}, init);
     this.#root = this.attachShadow(_ShadowRootInit);
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
@@ -309,7 +319,7 @@ abstract class Widget extends HTMLElement {
     this.#direction = _WidgetDirection.LTR;
     this.#blockProgression = "";
 
-    this._appendStyleSheet(Widget.#styleSheet);
+    this.#adoptStyleSheets();
 
     const container = this.ownerDocument.createElement("div");
     container.setAttribute("draggable", "false");
@@ -650,10 +660,6 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  protected _appendStyleSheet(sheet: CSSStyleSheet): void {
-    this.#root.adoptedStyleSheets.push(sheet);
-  }
-
   #reflectToRole(): void {
     this.setAttribute("role", this._init.role);
   }
@@ -775,6 +781,7 @@ namespace Widget {
   };
 
   export type Init = {
+    componentKey: symbol,
     role: Role,
     inputable: boolean,
     textEditable: boolean,

@@ -5,8 +5,8 @@ import { Widget } from "../widget_base/index";
 import Presentation from "./presentation";
 
 class CheckBox extends Widget {
-  static KEY = Symbol();
-  static readonly #styleSheet: CSSStyleSheet = new CSSStyleSheet();
+
+  static readonly #KEY = Symbol();
 
   static readonly #defaultDataList: [Widget.DataListItem, Widget.DataListItem, Widget.DataListItem] = [
     { value: "0", label: "" },
@@ -14,17 +14,18 @@ class CheckBox extends Widget {
     { value: "", label: "" },
   ];
 
+  readonly #valueLabelElement: Element;
   #checked: boolean;
   #indeterminate: boolean;
-  #valueLabelElement: Element;
 
   static {
-    Widget._addTemplate(CheckBox.KEY, "main", Presentation.TEMPLATE);
-    CheckBox.#styleSheet.replaceSync(Presentation.STYLE);
+    Widget._addTemplate(CheckBox.#KEY, "main", Presentation.TEMPLATE);
+    Widget._addStyleSheet(CheckBox.#KEY, Presentation.STYLE);
   }
 
   constructor() {
     super({
+      componentKey: CheckBox.#KEY,
       role: Role.CHECKBOX,
       inputable: true,
       textEditable: false,
@@ -33,10 +34,8 @@ class CheckBox extends Widget {
     this.#checked = false;
     this.#indeterminate = false;
 
-    this._appendStyleSheet(CheckBox.#styleSheet);
-
     const main = this._main;
-    this._useTemplate(CheckBox.KEY, "main", main);
+    this._useTemplate("main", main);
     this.#valueLabelElement = main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
 
     this._addAction<PointerEvent>("pointerup", {
