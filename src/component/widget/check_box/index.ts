@@ -167,12 +167,12 @@ class CheckBox extends Widget {
     this.#valueLabelElement.textContent = this.#value.label;
   }
 
-  //TODO canvasとimageは1つにできる
+  // animationを変えているのでsvgごと入れ替えている
   #drawMark(): void {
     const markCanvas = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS }`) as SVGElement;
-    const prevShape = markCanvas.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE }`);
-    if (prevShape) {
-      prevShape.remove();
+    const prevImage = markCanvas.querySelector(`*.${ Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE }`);
+    if (prevImage) {
+      prevImage.remove();
     }
 
     const image = this.ownerDocument.createElementNS(Ns.SVG, "svg");
