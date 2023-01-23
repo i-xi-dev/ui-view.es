@@ -80,7 +80,6 @@ abstract class Widget extends HTMLElement {
   #connected: boolean;
   #size: BasePresentation.BaseSize;
   #busy: boolean;
-  #hidden: boolean;
   #label: string;
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
@@ -104,7 +103,6 @@ abstract class Widget extends HTMLElement {
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
     this.#busy = false;
-    this.#hidden = false;
     this.#label = "";
     this.#capturingPointer = null;
     this.#textCompositing = false;
@@ -130,7 +128,7 @@ abstract class Widget extends HTMLElement {
       "readonly",
       Aria.BUSY,
       "disabled",
-      Aria.HIDDEN,
+      "hidden",
       DataAttr.SIZE,
     ];
   }
@@ -150,15 +148,6 @@ abstract class Widget extends HTMLElement {
 
   set disabled(value: boolean) {
     this.toggleAttribute("disabled", !!value);
-  }
-
-  override get hidden(): boolean {
-    return this.#hidden;
-  }
-
-  override set hidden(value: boolean) {
-    const adjustedHidden = !!value;//(value === true);
-    this.#setHidden(adjustedHidden, Widget._ReflectionsOnPropChanged);
   }
 
   get label(): string {
@@ -473,7 +462,7 @@ abstract class Widget extends HTMLElement {
 
     this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
     //TODO-1 disabled変更時の処理は不要か
-    this.#setHiddenFromString(this.getAttribute(Aria.HIDDEN) ?? "", Widget._ReflectionsOnConnected);
+    //TODO-1 hidden変更時の処理は不要か
     this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
     if (this._init.inputable === true) {
       //TODO-1 readonly変更時の処理は不要か
@@ -542,8 +531,8 @@ abstract class Widget extends HTMLElement {
         this.#resetEditable();
         break;
 
-      case Aria.HIDDEN:
-        this.#setHiddenFromString(newValue, Widget._ReflectionsOnAttrChanged);
+      case "hidden":
+        this.#internals.ariaHidden = (super.hidden === true) ? "true" : "false";
         break;
 
       case DataAttr.SIZE:
@@ -569,22 +558,6 @@ abstract class Widget extends HTMLElement {
     }
     if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
       this.#reflectToAriaBusy();
-    }
-  }
-
-  #setHiddenFromString(value: string, reflections: Widget.Reflections): void {
-    this.#setHidden((value === "true"), reflections);
-  }
-
-  #setHidden(value: boolean, reflections: Widget.Reflections): void {
-    const changed = (this.#hidden !== value);
-    if (changed === true) {
-      this.#hidden = value;
-    }
-    // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-    // }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToAriaHidden();
     }
   }
 
@@ -654,10 +627,6 @@ abstract class Widget extends HTMLElement {
 
   #reflectToAriaBusy(): void {
     this._reflectToAttr(Aria.BUSY, ((this.#busy === true) ? "true" : undefined));
-  }
-
-  #reflectToAriaHidden(): void {
-    this._reflectToAttr(Aria.HIDDEN, ((this.#hidden === true) ? "true" : undefined));
   }
 
   #reflectToAriaLabel(): void {

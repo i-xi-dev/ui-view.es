@@ -54,13 +54,12 @@ customElements.define("wc-checkbox", CheckBox);
           <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
         </fieldset>
         <fieldset>
-          <legend>aria-hidden attr</legend>
-          <button onclick="removeAttr('aria-hidden')">remove attr</button>
+          <legend>hidden attr</legend>
+          <button onclick="removeAttr('hidden')">remove attr</button>
           <select>
             <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select><button onclick="setAttr('aria-hidden', this.previousElementSibling.value)">set attr</button>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('hidden', Boolean(this.previousElementSibling.value))">set attr</button>
         </fieldset>
         <fieldset>
           <legend>hidden prop</legend>
@@ -197,9 +196,9 @@ customElements.define("wc-checkbox", CheckBox);
         <wc-checkbox disabled aria-checked="true" aria-label="Disabled"></wc-checkbox>
       </div>
       <div>
-        <div>aria-hidden</div>
-        <wc-checkbox aria-hidden="true" aria-label="Hidden"></wc-checkbox>
-        <wc-checkbox aria-hidden="false" aria-label="Not-Hidden"></wc-checkbox>
+        <div>hidden</div>
+        <wc-checkbox hidden aria-label="Hidden"></wc-checkbox>
+        <wc-checkbox aria-label="Not-Hidden"></wc-checkbox>
       </div>
       <div>
         <div>aria-label</div>

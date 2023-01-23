@@ -1,7 +1,6 @@
 const Aria = {
   BUSY: "aria-busy",
   CHECKED: "aria-checked",
-  HIDDEN: "aria-hidden",
   LABEL: "aria-label",
   MULTILINE: "aria-multiline",
 } as const;

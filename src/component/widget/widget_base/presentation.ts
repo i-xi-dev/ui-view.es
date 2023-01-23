@@ -54,7 +54,7 @@ namespace BasePresentation {
       display: block;
     }
 
-    :host(*[${ Aria.HIDDEN }="true"]) {
+    :host(*[hidden]) {
       display: none;
     }
 

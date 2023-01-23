@@ -49,13 +49,12 @@ customElements.define("wc-switch", Switch);
           <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
         </fieldset>
         <fieldset>
-          <legend>aria-hidden attr</legend>
-          <button onclick="removeAttr('aria-hidden')">remove attr</button>
+          <legend>hidden attr</legend>
+          <button onclick="removeAttr('hidden')">remove attr</button>
           <select>
             <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select><button onclick="setAttr('aria-hidden', this.previousElementSibling.value)">set attr</button>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('hidden', Boolean(this.previousElementSibling.value))">set attr</button>
         </fieldset>
         <fieldset>
           <legend>hidden prop</legend>
@@ -186,9 +185,9 @@ customElements.define("wc-switch", Switch);
         <wc-switch disabled aria-checked="true" aria-label="Disabled"></wc-switch>
       </div>
       <div>
-        <div>aria-hidden</div>
-        <wc-switch aria-hidden="true" aria-label="Hidden"></wc-switch>
-        <wc-switch aria-hidden="false" aria-label="Not-Hidden"></wc-switch>
+        <div>hidden</div>
+        <wc-switch hidden aria-label="Hidden"></wc-switch>
+        <wc-switch aria-label="Not-Hidden"></wc-switch>
       </div>
       <div>
         <div>aria-label</div>
