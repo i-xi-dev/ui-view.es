@@ -1,6 +1,6 @@
 
 import { Ns } from "../../../ns";
-import { Aria, Role } from "../../../aria";
+import { Aria } from "../../../aria";
 import { Widget } from "../widget_base/index";
 import Presentation from "./presentation";
 
@@ -27,7 +27,7 @@ class CheckBox extends Widget {
   constructor() {
     super({
       componentKey: CheckBox.#KEY,
-      role: Role.CHECKBOX,
+      role: "checkbox",
       formAssociated: CheckBox.formAssociated,
       inputable: true,
       textEditable: false,

@@ -1,4 +1,4 @@
-import { Aria, Role } from "../../../aria";
+import { Aria } from "../../../aria";
 import { Widget } from "../widget_base/index";
 import BasePresentation from "../widget_base/presentation";
 import Presentation from "./presentation";
@@ -19,7 +19,6 @@ import Presentation from "./presentation";
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO slotにassignできるのもcustom elementにする？
 //TODO コンストラクタのadoptStyleSheets以降はconnectedCallBackに移す https://momdo.github.io/html/custom-elements.html
-//TODO roleはthis.#internals.role = ～ にする？
 //TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
 //TODO 以下の属性が必要 グローバル、form、、、name https://momdo.github.io/html/custom-elements.html
 //TODO formAssociatedCallback
@@ -58,7 +57,7 @@ class Switch extends Widget {
   constructor() {
     super({
       componentKey: Switch.#KEY,
-      role: Role.SWITCH,
+      role: "switch",
       formAssociated: Switch.formAssociated,
       inputable: true,
       textEditable: false,

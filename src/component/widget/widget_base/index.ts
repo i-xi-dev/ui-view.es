@@ -1,5 +1,5 @@
 import { Ns } from "../../../ns";
-import { Aria, type Role } from "../../../aria";
+import { Aria } from "../../../aria";
 import BasePresentation from "./presentation";
 
 type _Point = {
@@ -698,7 +698,7 @@ namespace Widget {
 
   export type Init = {
     componentKey: symbol,
-    role: Role,
+    role: string,
     formAssociated: boolean,
     inputable: boolean,
     textEditable: boolean,
