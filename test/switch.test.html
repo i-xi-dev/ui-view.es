@@ -23,14 +23,12 @@ customElements.define("wc-switch", Switch);
           <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
         </fieldset>
         <fieldset>
-          <legend>aria-checked attr</legend>
-          <button onclick="removeAttr('aria-checked')">remove attr</button>
+          <legend>checked attr</legend>
+          <button onclick="removeAttr('checked')">remove attr</button>
           <select>
             <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-            <option value="mixed">mixed</option>
-          </select><button onclick="setAttr('aria-checked', this.previousElementSibling.value)">set attr</button>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('checked', Boolean(this.previousElementSibling.value))">set attr</button>
         </fieldset>
         <fieldset>
           <legend>checked prop</legend>
@@ -170,19 +168,18 @@ customElements.define("wc-switch", Switch);
         <div>aria-busy</div>
         <wc-switch aria-busy="true"></wc-switch>
         <wc-switch aria-busy="false"></wc-switch>
-        <wc-switch aria-busy="true" aria-checked="true"></wc-switch>
+        <wc-switch aria-busy="true" checked></wc-switch>
       </div>
       <div>
-        <div>aria-checked</div>
-        <wc-switch aria-checked="true"></wc-switch>
-        <wc-switch aria-checked="false"></wc-switch>
-        <wc-switch aria-checked="mixed"></wc-switch>
+        <div>checked</div>
+        <wc-switch checked></wc-switch>
+        <wc-switch></wc-switch>
       </div>
       <div>
         <div>disabled</div>
         <wc-switch disabled></wc-switch>
         <wc-switch></wc-switch>
-        <wc-switch disabled aria-checked="true" aria-label="Disabled"></wc-switch>
+        <wc-switch disabled checked aria-label="Disabled"></wc-switch>
       </div>
       <div>
         <div>hidden</div>
@@ -198,7 +195,7 @@ customElements.define("wc-switch", Switch);
         <div>readonly</div>
         <wc-switch readonly></wc-switch>
         <wc-switch></wc-switch>
-        <wc-switch readonly aria-checked="true" aria-label="ReadOnly"></wc-switch>
+        <wc-switch readonly checked aria-label="ReadOnly"></wc-switch>
       </div>
       <div>
         <div>data-size</div>

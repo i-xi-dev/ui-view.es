@@ -124,11 +124,11 @@ abstract class Widget extends HTMLElement {
 
   static get observedAttributes(): Array<string> {
     return [
-      Aria.LABEL, // 外部labelを使用する場合は使用しない
-      "readonly",
-      Aria.BUSY,
       "disabled",
       "hidden",
+      "readonly",
+      Aria.LABEL, // 外部labelを使用する場合は使用しない
+      Aria.BUSY,
       DataAttr.SIZE,
     ];
   }
@@ -460,13 +460,11 @@ abstract class Widget extends HTMLElement {
 
     this.#loadDataListSlot();
 
+    this.#resetFocusable();
+    this.#resetEditable();
+
     this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
-    //TODO-1 disabled変更時の処理は不要か
-    //TODO-1 hidden変更時の処理は不要か
     this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
-    if (this._init.inputable === true) {
-      //TODO-1 readonly変更時の処理は不要か
-    }
     this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
     const style = this.ownerDocument.defaultView?.getComputedStyle(this);

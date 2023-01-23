@@ -1,4 +1,3 @@
-import { Aria } from "../../../aria";
 import { Widget } from "../widget_base/index";
 import BasePresentation from "../widget_base/presentation";
 import Presentation from "./presentation";
@@ -18,7 +17,6 @@ import Presentation from "./presentation";
 //TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO slotにassignできるのもcustom elementにする？
-//TODO コンストラクタのadoptStyleSheets以降はconnectedCallBackに移す https://momdo.github.io/html/custom-elements.html
 //TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
 //TODO 以下の属性が必要 グローバル、form、、、name https://momdo.github.io/html/custom-elements.html
 //TODO formAssociatedCallback
@@ -42,7 +40,6 @@ class Switch extends Widget {
     { value: "1", label: "" },
   ];
 
-  #checked: boolean;
   #trackLength: number;
   #thumbSize: number;
   #thumbMovement?: number;
@@ -63,7 +60,6 @@ class Switch extends Widget {
       textEditable: false,
     });
 
-    this.#checked = false;
     this.#trackLength = 0;
     this.#thumbSize = 0;
     this.#valueLabelElement = null;
@@ -120,8 +116,8 @@ class Switch extends Widget {
           }
           this.#thumbMovement = undefined;
 
-          console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
-          this.checked = !(this.#checked);
+          console.log(`------------------------------------- ${this.checked} -> ${!(this.checked)}`);
+          this.checked = !(this.checked);
           //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
           this._dispatchChangeEvent();
         }
@@ -131,7 +127,7 @@ class Switch extends Widget {
     this._addAction<KeyboardEvent>("keydown", {
       keys: [" "],
       func: () => {
-        this.checked = !(this.#checked);
+        this.checked = !(this.checked);
         this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
       },
@@ -143,7 +139,7 @@ class Switch extends Widget {
     return [
       Widget.observedAttributes,
       [
-        Aria.CHECKED,
+        "checked",
         //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
         //DataAttr.VALUE_LABEL_POSITION, CSSのみ
       ],
@@ -151,12 +147,11 @@ class Switch extends Widget {
   }
 
   get checked(): boolean {
-    return this.#checked;
+    return this.hasAttribute("checked");
   }
 
   set checked(value: boolean) {
-    const adjustedChecked = !!value;//(value === true);
-    this.#setChecked(adjustedChecked, Widget._ReflectionsOnPropChanged);
+    this.toggleAttribute("checked", !!value);
   }
 
   get #value(): Widget.DataListItem {
@@ -164,7 +159,7 @@ class Switch extends Widget {
       defaultItems: Switch.#defaultDataList,
       mergeDefaultItems: true,
     }) as [Widget.DataListItem, Widget.DataListItem];
-    if (this.#checked === true) {
+    if (this.checked === true) {
       return dataListItems[Switch.OptionIndex.ON];
     }
     else {
@@ -181,7 +176,7 @@ class Switch extends Widget {
     }
     this.#render2();
 
-    this.#setCheckedFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
+    this.#resetValueLabel();
 
     this._connected = true;
   }
@@ -194,8 +189,9 @@ class Switch extends Widget {
     }
 
     switch (name) {
-      case Aria.CHECKED:
-        this.#setCheckedFromString(newValue, Widget._ReflectionsOnAttrChanged);
+      case "checked":
+        this._addRipple();
+        this.#resetValueLabel();
         break;
 
       default:
@@ -251,30 +247,9 @@ class Switch extends Widget {
     }
   }
 
-  #setCheckedFromString(value: string, reflections: Widget.Reflections): void {
-    this.#setChecked((value === "true"), reflections);
-  }
-
-  #setChecked(value: boolean, reflections: Widget.Reflections): void {
-    const changed = (this.#checked !== value);
-    if (changed === true) {
-      this.#checked = value;
-    }
-    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-      this.#reflectCheckedToContent();
-    }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToAriaChecked();
-    }
-  }
-
-  #reflectToAriaChecked(): void {
-    this._reflectToAttr(Aria.CHECKED, ((this.#checked === true) ? "true" : "false"));
-  }
-
-  #reflectCheckedToContent(): void {
+  //TODO Widgetのprotectedメソッドで良い
+  #resetValueLabel(): void {
     if (!!this.#valueLabelElement) {
-      this._addRipple();
       this.#valueLabelElement.textContent = this.#value.label;
     }
   }

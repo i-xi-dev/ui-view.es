@@ -24,22 +24,16 @@ customElements.define("wc-checkbox", CheckBox);
           <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
         </fieldset>
         <fieldset>
-          <legend>aria-checked attr</legend>
-          <button onclick="removeAttr('aria-checked')">remove attr</button>
+          <legend>checked attr</legend>
+          <button onclick="removeAttr('checked')">remove attr</button>
           <select>
             <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-            <option value="mixed">mixed</option>
-          </select><button onclick="setAttr('aria-checked', this.previousElementSibling.value)">set attr</button>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('checked', Boolean(this.previousElementSibling.value))">set attr</button>
         </fieldset>
         <fieldset>
           <legend>checked prop</legend>
           <input type="checkbox"/><button onclick="setProp('checked', this.previousElementSibling.checked)">set prop</button>
-        </fieldset>
-        <fieldset>
-          <legend>indeterminate prop</legend>
-          <input type="checkbox"/><button onclick="setProp('indeterminate', this.previousElementSibling.checked)">set prop</button>
         </fieldset>
         <fieldset>
           <legend>disabled attr</legend>
@@ -64,6 +58,18 @@ customElements.define("wc-checkbox", CheckBox);
         <fieldset>
           <legend>hidden prop</legend>
           <input type="checkbox"/><button onclick="setProp('hidden', this.previousElementSibling.checked)">set prop</button>
+        </fieldset>
+        <fieldset>
+          <legend>indeterminate attr</legend>
+          <button onclick="removeAttr('indeterminate')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="true">TRUE</option>
+          </select><button onclick="toggleAttr('indeterminate', Boolean(this.previousElementSibling.value))">set attr</button>
+        </fieldset>
+        <fieldset>
+          <legend>indeterminate prop</legend>
+          <input type="checkbox"/><button onclick="setProp('indeterminate', this.previousElementSibling.checked)">set prop</button>
         </fieldset>
         <fieldset>
           <legend>aria-label attr</legend>
@@ -181,24 +187,30 @@ customElements.define("wc-checkbox", CheckBox);
         <div>aria-busy</div>
         <wc-checkbox aria-busy="true"></wc-checkbox>
         <wc-checkbox aria-busy="false"></wc-checkbox>
-        <wc-checkbox aria-busy="true" aria-checked="true"></wc-checkbox>
+        <wc-checkbox aria-busy="true" checked></wc-checkbox>
       </div>
       <div>
-        <div>aria-checked</div>
-        <wc-checkbox aria-checked="true"></wc-checkbox>
-        <wc-checkbox aria-checked="false"></wc-checkbox>
-        <wc-checkbox aria-checked="mixed"></wc-checkbox>
+        <div>checked</div>
+        <wc-checkbox checked></wc-checkbox>
+        <wc-checkbox></wc-checkbox>
       </div>
       <div>
         <div>disabled</div>
         <wc-checkbox disabled></wc-checkbox>
         <wc-checkbox></wc-checkbox>
-        <wc-checkbox disabled aria-checked="true" aria-label="Disabled"></wc-checkbox>
+        <wc-checkbox disabled checked aria-label="Disabled"></wc-checkbox>
       </div>
       <div>
         <div>hidden</div>
         <wc-checkbox hidden aria-label="Hidden"></wc-checkbox>
         <wc-checkbox aria-label="Not-Hidden"></wc-checkbox>
+      </div>
+      <div>
+        <div>indeterminate</div>
+        <wc-checkbox checked indeterminate></wc-checkbox>
+        <wc-checkbox indeterminate></wc-checkbox>
+        <wc-checkbox checked></wc-checkbox>
+        <wc-checkbox></wc-checkbox>
       </div>
       <div>
         <div>aria-label</div>
@@ -209,7 +221,7 @@ customElements.define("wc-checkbox", CheckBox);
         <div>readonly</div>
         <wc-checkbox readonly></wc-checkbox>
         <wc-checkbox></wc-checkbox>
-        <wc-checkbox readonly aria-checked="true" aria-label="ReadOnly"></wc-checkbox>
+        <wc-checkbox readonly checked aria-label="ReadOnly"></wc-checkbox>
       </div>
       <div>
         <div>data-size</div>

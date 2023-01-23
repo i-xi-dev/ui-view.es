@@ -99,7 +99,7 @@ namespace Presentation {
       transition: background-color var(--internal-switching-time), border-color var(--internal-switching-time);
     }
 
-    :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_TRACK_SURFACE } {
+    :host(*[checked]) *.${ ClassName.CONTROL_TRACK_SURFACE } {
       background-color: var(--internal0-accent-color);
       border-color: var(--internal0-accent-color);
     }
@@ -124,7 +124,7 @@ namespace Presentation {
       transition: inset-inline-start var(--internal-switching-time);
     }
 
-    :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_THUMB } {
+    :host(*[checked]) *.${ ClassName.CONTROL_THUMB } {
       inset-inline-start: calc(var(--internal-inline-size) - var(--internal-block-size));
     }
 
@@ -162,7 +162,7 @@ namespace Presentation {
       transition: border-width var(--internal-switching-time), margin 300ms;
     }
 
-    :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_THUMB_SURFACE } {
+    :host(*[checked]) *.${ ClassName.CONTROL_THUMB_SURFACE } {
       border-width: 0;
     }
 

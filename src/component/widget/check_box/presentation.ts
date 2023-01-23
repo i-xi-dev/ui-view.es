@@ -105,8 +105,8 @@ namespace Presentation {
       transition: background-color var(--internal-switching-time), border-width var(--internal-switching-time);
     }
 
-    :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_BOX_SURFACE },
-    :host(*[${ Aria.CHECKED }="mixed"]) *.${ ClassName.CONTROL_BOX_SURFACE } {
+    :host(*[checked]) *.${ ClassName.CONTROL_BOX_SURFACE },
+    :host(*[indeterminate]) *.${ ClassName.CONTROL_BOX_SURFACE } {
       background-color: var(--internal0-accent-color);
       border-width: 0;
     }
@@ -166,11 +166,11 @@ namespace Presentation {
       position: absolute;
     }
 
-    :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE } {
+    :host(*[checked]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE } {
       animation: mark--checked 300ms both;
     }
 
-    :host(*[${ Aria.CHECKED }="mixed"]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE } {
+    :host(*[indeterminate]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE } {
       animation: mark--indeterminate 300ms both;
     }
 
@@ -184,11 +184,11 @@ namespace Presentation {
       */
     }
 
-    :host(*[${ Aria.CHECKED }="true"]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE } {
+    :host(*[checked]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE } {
       stroke-linecap: square;
     }
 
-    :host(*[${ Aria.CHECKED }="mixed"]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE } {
+    :host(*[indeterminate]) *.${ ClassName.CONTROL_MARK_CANVAS_IMAGE_LINE } {
       stroke-linecap: round;
     }
 

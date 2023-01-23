@@ -1,6 +1,5 @@
 
 import { Ns } from "../../../ns";
-import { Aria } from "../../../aria";
 import { Widget } from "../widget_base/index";
 import Presentation from "./presentation";
 
@@ -15,8 +14,6 @@ class CheckBox extends Widget {
     { value: "", label: "" },
   ];
 
-  #checked: boolean;
-  #indeterminate: boolean;
   #valueLabelElement: Element | null;
 
   static {
@@ -33,8 +30,6 @@ class CheckBox extends Widget {
       textEditable: false,
     });
 
-    this.#checked = false;
-    this.#indeterminate = false;
     this.#valueLabelElement = null;
   }
 
@@ -53,8 +48,11 @@ class CheckBox extends Widget {
             return;
           }
 
-          console.log(`------------------------------------- ${this.checked} -> ${!(this.#checked)}`);
-          this.checked = !(this.#checked);
+          console.log(`------------------------------------- ${this.checked} -> ${!(this.checked)}`);
+          if (this.indeterminate === true) {
+            this.indeterminate = false;
+          }
+          this.checked = !(this.checked);
           //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
           this._dispatchChangeEvent();
         }
@@ -64,7 +62,10 @@ class CheckBox extends Widget {
     this._addAction<KeyboardEvent>("keydown", {
       keys: [" "],
       func: () => {
-        this.checked = !(this.#checked);
+        if (this.indeterminate === true) {
+          this.indeterminate = false;
+        }
+        this.checked = !(this.checked);
         this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
       },
@@ -76,7 +77,8 @@ class CheckBox extends Widget {
     return [
       Widget.observedAttributes,
       [
-        Aria.CHECKED,
+        "checked",
+        "indeterminate",
         //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
         //DataAttr.VALUE_LABEL_POSITION, CSSのみ
       ],
@@ -84,21 +86,19 @@ class CheckBox extends Widget {
   }
 
   get checked(): boolean {
-    return this.#checked;
+    return this.hasAttribute("checked");
   }
 
   set checked(value: boolean) {
-    const adjustedChecked = !!value;//(value === true);
-    this.#setCheckedAndIndeterminate(adjustedChecked, false, Widget._ReflectionsOnPropChanged);
+    this.toggleAttribute("checked", !!value);
   }
 
   get indeterminate(): boolean {
-    return this.#indeterminate;
+    return this.hasAttribute("indeterminate");
   }
 
   set indeterminate(value: boolean) {
-    const adjustedIndeterminate = !!value;//(value === true);
-    this.#setCheckedAndIndeterminate(this.#checked, adjustedIndeterminate, Widget._ReflectionsOnPropChanged);
+    this.toggleAttribute("indeterminate", !!value);
   }
 
   get #value(): Widget.DataListItem {
@@ -106,10 +106,10 @@ class CheckBox extends Widget {
       defaultItems: CheckBox.#defaultDataList,
       mergeDefaultItems: true,
     }) as [Widget.DataListItem, Widget.DataListItem, Widget.DataListItem];
-    if (this.#indeterminate === true) {
+    if (this.indeterminate === true) {
       return dataListItems[CheckBox.OptionIndex.INDETERMINATE];
     }
-    else if (this.#checked === true) {
+    else if (this.checked === true) {
       return dataListItems[CheckBox.OptionIndex.ON];
     }
     else {
@@ -124,9 +124,10 @@ class CheckBox extends Widget {
     if (this.isConnected !== true) {
       return;
     }
-    this.#render2();
+    this.#render2();//TODO abstract protectedにしてWidget側で呼ばせる
 
-    this.#setCheckedAndIndeterminateFromString(this.getAttribute(Aria.CHECKED) ?? "", Widget._ReflectionsOnConnected);
+    this.#drawMark();
+    this.#resetValueLabel();
 
     this._connected = true;
   }
@@ -139,8 +140,11 @@ class CheckBox extends Widget {
     }
 
     switch (name) {
-      case Aria.CHECKED:
-        this.#setCheckedAndIndeterminateFromString(newValue, Widget._ReflectionsOnAttrChanged);
+      case "checked":
+      case "indeterminate":
+        this.#drawMark();
+        this._addRipple();
+        this.#resetValueLabel();
         break;
 
       default:
@@ -148,33 +152,9 @@ class CheckBox extends Widget {
     }
   }
 
-  #setCheckedAndIndeterminateFromString(value: string, reflections: Widget.Reflections): void {
-    this.#setCheckedAndIndeterminate((value === "true"), (value === "mixed"), reflections);
-  }
-
-  #setCheckedAndIndeterminate(checked: boolean, indeterminate: boolean, reflections: Widget.Reflections): void {
-    const changed = (this.#checked !== checked) || (this.#indeterminate !== indeterminate);
-    if (changed === true) {
-      this.#checked = checked;
-      this.#indeterminate = indeterminate;
-    }
-    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-      this.#reflectCheckedToContent();
-    }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToAriaChecked();
-    }
-  }
-
-  #reflectToAriaChecked(): void {
-    const value = (this.#indeterminate === true) ? "mixed" : ((this.#checked === true) ? "true" : "false");
-    this._reflectToAttr(Aria.CHECKED, value);
-  }
-
-  #reflectCheckedToContent(): void {
+  //TODO Widgetのprotectedメソッドで良い
+  #resetValueLabel(): void {
     if (!!this.#valueLabelElement) {
-      this.#drawMark();
-      this._addRipple();
       this.#valueLabelElement.textContent = this.#value.label;
     }
   }
@@ -193,10 +173,10 @@ class CheckBox extends Widget {
       image.classList.add(Presentation.ClassName.CONTROL_MARK_CANVAS_IMAGE);
   
       let d: string = "";
-      if (this.#indeterminate === true) {
+      if (this.indeterminate === true) {
         d = "M 2 6 L 10 6";
       }
-      else if (this.#checked === true) {
+      else if (this.checked === true) {
         d = "M 2 7 L 4 9 L 10 3";
       }
       else {
