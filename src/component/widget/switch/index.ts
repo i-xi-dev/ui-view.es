@@ -25,11 +25,6 @@ import Presentation from "./presentation";
 //TODO formStateRestoreCallback
 //TODO 再connect,再adoptに非対応（disconnectの後とか、ownerDocumentが変わったとか、・・・）
 
-const DataAttr = {
-  VALUE_LABEL_VISIBLE: "data-value-label-visible",
-  VALUE_LABEL_POSITION: "data-value-label-position",
-} as const;//TODO "data-value-label": hidden | inline-start | inline-end
-
 class Switch extends Widget {
   static readonly formAssociated = true;
 
@@ -140,8 +135,7 @@ class Switch extends Widget {
       Widget.observedAttributes,
       [
         "checked",
-        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
-        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
+        "data-value-label",
       ],
     ].flat();
   }
@@ -190,6 +184,9 @@ class Switch extends Widget {
         this.#resetValueLabel();
         break;
 
+      case "data-value-label":
+        break;
+
       default:
         break;
     }
@@ -236,6 +233,7 @@ class Switch extends Widget {
       else if (thumbStart >= range) {
         thumbStart = range;
       }
+      //TODO ラベルがinline-start側にある場合、その分の幅追加 //TODO ラベルの幅はやはり長いほうに合わせる必要がある
       this.#thumb.style.setProperty("inset-inline-start", `${ thumbStart }px`);
       this.#thumbMovement = thumbStart / range;
     }

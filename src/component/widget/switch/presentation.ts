@@ -62,11 +62,12 @@ namespace Presentation {
       flex-flow: row nowrap;
     }
 
-    :host(*[data-value-label-visible="true"]) *.${ BasePresentation.ClassName.MAIN } {
+    :host(*[data-value-label="start"]) *.${ BasePresentation.ClassName.MAIN },
+    :host(*[data-value-label="end"]) *.${ BasePresentation.ClassName.MAIN } {
       column-gap: 6px;
     }
 
-    :host(*[data-value-label-position="before"]) *.${ BasePresentation.ClassName.MAIN } {
+    :host(*[data-value-label="start"]) *.${ BasePresentation.ClassName.MAIN } {
       flex-flow: row-reverse nowrap;
     }
 
@@ -199,7 +200,8 @@ namespace Presentation {
       white-space: pre;
     }
 
-    :host(*[data-value-label-visible="true"]) *.${ ClassName.OUTPUT } {
+    :host(*[data-value-label="start"]) *.${ ClassName.OUTPUT },
+    :host(*[data-value-label="end"]) *.${ ClassName.OUTPUT } {
       display: block;
     }
 
@@ -207,7 +209,7 @@ namespace Presentation {
       text-align: start;
     }
 
-    :host(*[data-value-label-position="before"]) *.${ ClassName.OUTPUT }:not(*:empty) {
+    :host(*[data-value-label="start"]) *.${ ClassName.OUTPUT }:not(*:empty) {
       text-align: end;
     }
   `;

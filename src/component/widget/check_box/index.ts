@@ -79,8 +79,7 @@ class CheckBox extends Widget {
       [
         "checked",
         "indeterminate",
-        //DataAttr.VALUE_LABEL_VISIBLE, CSSのみ
-        //DataAttr.VALUE_LABEL_POSITION, CSSのみ
+        "data-value-label",
       ],
     ].flat();
   }
@@ -141,6 +140,9 @@ class CheckBox extends Widget {
         this.#drawMark();
         this._addRipple();
         this.#resetValueLabel();
+        break;
+
+      case "data-value-label":
         break;
 
       default:
