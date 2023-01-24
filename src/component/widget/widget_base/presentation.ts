@@ -1,5 +1,3 @@
-import { Aria } from "../../../aria";
-
 const _BaseSize = {
   LARGE: "large",
   MEDIUM: "medium",

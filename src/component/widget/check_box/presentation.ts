@@ -1,4 +1,3 @@
-import { Aria } from "../../../aria";
 import BasePresentation from "../widget_base/presentation";
 
 namespace Presentation {

@@ -1,5 +1,4 @@
 import { Ns } from "../../../ns";
-import { Aria } from "../../../aria";
 import BasePresentation from "./presentation";
 
 type _Point = {
@@ -79,7 +78,6 @@ abstract class Widget extends HTMLElement {
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
   #connected: boolean;
   #size: BasePresentation.BaseSize;
-  #label: string;
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   #reflectingInProgress: string;
@@ -101,7 +99,6 @@ abstract class Widget extends HTMLElement {
     this.#main = null;
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
-    this.#label = "";
     this.#capturingPointer = null;
     this.#textCompositing = false;
     this.#actions = new Map([
@@ -125,8 +122,8 @@ abstract class Widget extends HTMLElement {
       "disabled",
       "hidden",
       "readonly",
-      Aria.LABEL, // 外部labelを使用する場合は使用しない
       "aria-busy",
+      "aria-label",
       DataAttr.SIZE,
     ];
   }
@@ -159,12 +156,17 @@ abstract class Widget extends HTMLElement {
   }
 
   get label(): string {
-    return this.#label;
+    return (this.getAttribute("aria-label") ?? "");
   }
 
   set label(value: string) {
-    const adjustedLabel = (typeof value === "string") ? value : "";
-    this.#setLabel(adjustedLabel, Widget._ReflectionsOnPropChanged);
+    const labelString = (typeof value === "string") ? value : String(value);
+    if (labelString.length > 0) {
+      this.setAttribute("aria-label", labelString);
+    }
+    else {
+      this.removeAttribute("aria-label");
+    }
   }
 
   get readOnly(): boolean {
@@ -471,7 +473,6 @@ abstract class Widget extends HTMLElement {
     this.#resetFocusable();
     this.#resetEditable();
 
-    this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
     this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
     const style = this.ownerDocument.defaultView?.getComputedStyle(this);
@@ -517,10 +518,6 @@ abstract class Widget extends HTMLElement {
     }
 
     switch (name) {
-      case Aria.LABEL:
-        this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
-        break;
-
       case "disabled":
         this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
         this.#resetFocusable();
@@ -541,24 +538,16 @@ abstract class Widget extends HTMLElement {
         this.#resetEditable();
         break;
 
+      case "aria-label":
+        //XXX this._resetLabel();
+        break;
+
       case DataAttr.SIZE:
         this._setSize(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       default:
         break;
-    }
-  }
-
-  #setLabel(value: string, reflections: Widget.Reflections): void {
-    const changed = (this.#label !== value);
-    if (changed === true) {
-      this.#label = value;
-    }
-    // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-    // }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToAriaLabel();
     }
   }
 
@@ -607,10 +596,6 @@ abstract class Widget extends HTMLElement {
         this.#eventTarget.setAttribute("contenteditable", "true");
       }
     }
-  }
-
-  #reflectToAriaLabel(): void {
-    this._reflectToAttr(Aria.LABEL, (this.#label) ? this.#label : undefined);
   }
 
   #reflectToDataSize(): void {

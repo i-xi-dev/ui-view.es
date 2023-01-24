@@ -1,4 +1,3 @@
-import { Aria } from "../../../aria";
 import BasePresentation from "../widget_base/presentation";
 
 //XXX trackをthumbのまわりだけ切り抜きたい → ltr固定ならclip-pathかmaskで抜けるが、rtlや縦書きも対応するのは現行のcssでは無理
