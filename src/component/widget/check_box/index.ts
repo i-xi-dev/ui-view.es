@@ -135,10 +135,6 @@ class CheckBox extends Widget {
   override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(name, oldValue, newValue);
 
-    if (this._reflectingInProgress === name) {
-      return;
-    }
-
     switch (name) {
       case "checked":
       case "indeterminate":

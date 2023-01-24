@@ -23,7 +23,6 @@ type AttrReflection = "always" | "if-needed" | "never";
 
 const DataAttr = {
   COLOR_SCHEME: "data-color-scheme",
-  SIZE: "data-size",
 } as const;
 
 type _CapturingPointer = {
@@ -77,10 +76,8 @@ abstract class Widget extends HTMLElement {
   readonly #actions: Map<string, Set<Widget.Action>>;
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
   #connected: boolean;
-  #size: BasePresentation.BaseSize;
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
-  #reflectingInProgress: string;
   #direction: _WidgetDirection;
   #blockProgression: string;
 
@@ -98,7 +95,6 @@ abstract class Widget extends HTMLElement {
     this.#eventTarget = null;
     this.#main = null;
     this.#connected = false;
-    this.#size = BasePresentation.BaseSize.MEDIUM;
     this.#capturingPointer = null;
     this.#textCompositing = false;
     this.#actions = new Map([
@@ -112,7 +108,6 @@ abstract class Widget extends HTMLElement {
       ["pointerup", new Set()],
     ]);
     this.#assignedOptionElements = [];
-    this.#reflectingInProgress = "";
     this.#direction = _WidgetDirection.LTR;
     this.#blockProgression = "";
   }
@@ -124,7 +119,7 @@ abstract class Widget extends HTMLElement {
       "readonly",
       "aria-busy",
       "aria-label",
-      DataAttr.SIZE,
+      "data-size",
     ];
   }
 
@@ -195,12 +190,22 @@ abstract class Widget extends HTMLElement {
     this.#connected = value;
   }
 
-  protected get _size(): BasePresentation.BaseSize {
-    return this.#size;
+  get size(): BasePresentation.BaseSize {
+    const size = this.getAttribute("data-size");
+    if (Object.values(BasePresentation.BaseSize).includes(size as BasePresentation.BaseSize) === true) {
+      return size as BasePresentation.BaseSize;
+    }
+    return BasePresentation.BaseSize.MEDIUM;
   }
 
-  protected get _reflectingInProgress(): string {
-    return this.#reflectingInProgress;
+  set size(value: BasePresentation.BaseSize) {
+    if (Object.values(BasePresentation.BaseSize).includes(value as BasePresentation.BaseSize) === true) {
+      if (value !== BasePresentation.BaseSize.MEDIUM) {
+        this.setAttribute("data-size", value);
+        return;
+      }
+    }
+    this.removeAttribute("data-size");
   }
 
   protected get _main(): Element | null {
@@ -472,8 +477,8 @@ abstract class Widget extends HTMLElement {
 
     this.#resetFocusable();
     this.#resetEditable();
-
-    this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
+    this._resetLabel();
+    this._resetSize();
 
     const style = this.ownerDocument.defaultView?.getComputedStyle(this);
     if (style) {
@@ -513,10 +518,6 @@ abstract class Widget extends HTMLElement {
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
-    if (this.#reflectingInProgress === name) {
-      return;
-    }
-
     switch (name) {
       case "disabled":
         this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
@@ -539,11 +540,11 @@ abstract class Widget extends HTMLElement {
         break;
 
       case "aria-label":
-        //XXX this._resetLabel();
+        this._resetLabel();
         break;
 
-      case DataAttr.SIZE:
-        this._setSize(newValue, Widget._ReflectionsOnAttrChanged);
+      case "data-size":
+        this._resetSize();
         break;
 
       default:
@@ -551,29 +552,10 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  protected _setSize(value: string, reflections: Widget.Reflections): void {
-    const valueIsWidgetSize = Object.values(BasePresentation.BaseSize).includes(value as BasePresentation.BaseSize);
-    const adjustedSize = (valueIsWidgetSize === true) ? (value as BasePresentation.BaseSize) : BasePresentation.BaseSize.MEDIUM;
-    const changed = (this.#size !== adjustedSize);
-    if (changed === true) {
-      this.#size = adjustedSize;
-    }
-    // if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-    // }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToDataSize();
-    }
+  protected _resetLabel(): void {
   }
 
-  protected _reflectToAttr(name: string, value?: string): void {
-    this.#reflectingInProgress = name;
-    if (value) {
-      this.setAttribute(name, value);
-    }
-    else {
-      this.removeAttribute(name);
-    }
-    this.#reflectingInProgress = "";
+  protected _resetSize(): void {
   }
 
   #resetFocusable(): void {
@@ -596,10 +578,6 @@ abstract class Widget extends HTMLElement {
         this.#eventTarget.setAttribute("contenteditable", "true");
       }
     }
-  }
-
-  #reflectToDataSize(): void {
-    this._reflectToAttr(DataAttr.SIZE, ((this.#size !== BasePresentation.BaseSize.MEDIUM) ? this.#size : undefined));
   }
 
   protected _addRipple(): void {

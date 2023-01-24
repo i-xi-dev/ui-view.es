@@ -28,7 +28,7 @@ import Presentation from "./presentation";
 const DataAttr = {
   VALUE_LABEL_VISIBLE: "data-value-label-visible",
   VALUE_LABEL_POSITION: "data-value-label-position",
-} as const;
+} as const;//TODO "data-value-label": hidden | inline-start | inline-end
 
 class Switch extends Widget {
   static readonly formAssociated = true;
@@ -184,10 +184,6 @@ class Switch extends Widget {
   override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(name, oldValue, newValue);
 
-    if (this._reflectingInProgress === name) {
-      return;
-    }
-
     switch (name) {
       case "checked":
         this._addRipple();
@@ -205,11 +201,9 @@ class Switch extends Widget {
     this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
   }
 
-  protected override _setSize(value: string, reflections: Widget.Reflections): void {
-    super._setSize(value, reflections);
-
-    this.#trackLength = BasePresentation.BaseDimension[this._size] * 1.5;
-    this.#thumbSize = BasePresentation.BaseDimension[this._size] * 0.75;
+  protected override _resetSize(): void {
+    this.#trackLength = BasePresentation.BaseDimension[this.size] * 1.5;
+    this.#thumbSize = BasePresentation.BaseDimension[this.size] * 0.75;
   }
 
   //XXX sliderでも使う
