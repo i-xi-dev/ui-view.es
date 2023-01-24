@@ -20,6 +20,15 @@ customElements.define("wc-checkbox", CheckBox);
       </div>
       <div class="test-dynamic-editor">
         <fieldset>
+          <legend>aria-busy attr</legend>
+          <button onclick="removeAttr('aria-busy')">remove attr</button>
+          <select>
+            <option value=""></option>
+            <option value="true">true</option>
+            <option value="false">false</option>
+          </select><button onclick="setAttr('aria-busy', this.previousElementSibling.value)">set attr</button>
+        </fieldset>
+        <fieldset>
           <legend>busy prop</legend>
           <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
         </fieldset>

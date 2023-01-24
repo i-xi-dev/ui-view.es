@@ -106,7 +106,7 @@ namespace BasePresentation {
       font-size: 20px;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.ROOT },
+    :host(*[aria-busy="true"]) *.${ ClassName.ROOT },
     :host(*[disabled]) *.${ ClassName.ROOT } {
       filter: contrast(0.5) grayscale(1);
       opacity: 0.6;
@@ -133,10 +133,10 @@ namespace BasePresentation {
       outline: none;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[${ Aria.BUSY }="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+    :host(*[aria-busy="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: wait;
     }
 
@@ -170,7 +170,7 @@ namespace BasePresentation {
       opacity: 1;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
+    :host(*[aria-busy="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
       box-shadow: 0 0 0 0 currentcolor !important;
@@ -194,7 +194,7 @@ namespace BasePresentation {
       opacity: 0.5;
     }
 
-    :host(*[${ Aria.BUSY }="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
+    :host(*[aria-busy="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
       box-shadow: 0 0 0 0 currentcolor !important;

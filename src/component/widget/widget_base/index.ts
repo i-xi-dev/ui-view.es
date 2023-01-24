@@ -79,7 +79,6 @@ abstract class Widget extends HTMLElement {
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
   #connected: boolean;
   #size: BasePresentation.BaseSize;
-  #busy: boolean;
   #label: string;
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
@@ -102,7 +101,6 @@ abstract class Widget extends HTMLElement {
     this.#main = null;
     this.#connected = false;
     this.#size = BasePresentation.BaseSize.MEDIUM;
-    this.#busy = false;
     this.#label = "";
     this.#capturingPointer = null;
     this.#textCompositing = false;
@@ -128,18 +126,28 @@ abstract class Widget extends HTMLElement {
       "hidden",
       "readonly",
       Aria.LABEL, // 外部labelを使用する場合は使用しない
-      Aria.BUSY,
+      "aria-busy",
       DataAttr.SIZE,
     ];
   }
 
   get busy(): boolean {
-    return this.#busy;
+    if (this.hasAttribute("aria-busy") === true) {
+      if (this.getAttribute("aria-busy") === "false") {
+        return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   set busy(value: boolean) {
-    const adjustedBusy = !!value;//(value === true);
-    this.#setBusy(adjustedBusy, Widget._ReflectionsOnPropChanged);
+    if (!!value) {
+      this.setAttribute("aria-busy", "true");
+    }
+    else {
+      this.removeAttribute("aria-busy");
+    }
   }
 
   get disabled(): boolean {
@@ -244,7 +252,7 @@ abstract class Widget extends HTMLElement {
 
   protected _buildEventTarget(eventTarget: HTMLElement): void {
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
 
@@ -259,7 +267,7 @@ abstract class Widget extends HTMLElement {
 
     // pointerupやpointercancelでは自動的にreleaseされる
     eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
-      // if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      // if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
       //   return;
       // }
 
@@ -271,7 +279,7 @@ abstract class Widget extends HTMLElement {
     }, { passive: true });
 
     eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
 
@@ -285,7 +293,7 @@ abstract class Widget extends HTMLElement {
     // pointercancelの場合は#capturingPointerは使わない
 
     eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
 
@@ -366,7 +374,7 @@ abstract class Widget extends HTMLElement {
   //     全部stopして発火しなおす？
   #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
     target.addEventListener(eventType, ((event: T) => {
-      if ((this.#busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
         return;
       }
       if (event instanceof PointerEvent) {
@@ -463,7 +471,6 @@ abstract class Widget extends HTMLElement {
     this.#resetFocusable();
     this.#resetEditable();
 
-    this.#setBusyFromString(this.getAttribute(Aria.BUSY) ?? "", Widget._ReflectionsOnConnected);
     this.#setLabel(this.getAttribute(Aria.LABEL) ?? "", Widget._ReflectionsOnConnected);
     this._setSize(this.getAttribute(DataAttr.SIZE) ?? "", Widget._ReflectionsOnConnected);
 
@@ -514,15 +521,6 @@ abstract class Widget extends HTMLElement {
         this.#setLabel(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
-      case "readonly":
-        this.#internals.ariaReadOnly = (this.readOnly === true) ? "true" : "false";
-        this.#resetEditable();
-        break;
-
-      case Aria.BUSY:
-        this.#setBusyFromString(newValue, Widget._ReflectionsOnAttrChanged);
-        break;
-
       case "disabled":
         this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
         this.#resetFocusable();
@@ -533,29 +531,22 @@ abstract class Widget extends HTMLElement {
         this.#internals.ariaHidden = (super.hidden === true) ? "true" : "false";
         break;
 
+      case "readonly":
+        this.#internals.ariaReadOnly = (this.readOnly === true) ? "true" : "false";
+        this.#resetEditable();
+        break;
+
+      case "aria-busy":
+        this.#resetFocusable();
+        this.#resetEditable();
+        break;
+
       case DataAttr.SIZE:
         this._setSize(newValue, Widget._ReflectionsOnAttrChanged);
         break;
 
       default:
         break;
-    }
-  }
-
-  #setBusyFromString(value: string, reflections: Widget.Reflections): void {
-    this.#setBusy((value === "true"), reflections);
-  }
-
-  #setBusy(value: boolean, reflections: Widget.Reflections): void {
-    const changed = (this.#busy !== value);
-    if (changed === true) {
-      this.#busy = value;
-    }
-    if ((reflections.content === "always") || (reflections.content === "if-needed" && changed === true)) {
-      this._reflectBusyToContent();
-    }
-    if ((reflections.attr === "always") || (reflections.attr === "if-needed" && changed === true)) {
-      this.#reflectToAriaBusy();
     }
   }
 
@@ -598,7 +589,7 @@ abstract class Widget extends HTMLElement {
 
   #resetFocusable(): void {
     if (!!this.#eventTarget) {
-      if ((this.#busy === true) || (this.disabled === true)) {
+      if ((this.busy === true) || (this.disabled === true)) {
         this.#eventTarget.removeAttribute("tabindex");
       }
       else {
@@ -616,15 +607,6 @@ abstract class Widget extends HTMLElement {
         this.#eventTarget.setAttribute("contenteditable", "true");
       }
     }
-  }
-
-  protected _reflectBusyToContent(): void {
-    this.#resetFocusable();
-    this.#resetEditable();
-  }
-
-  #reflectToAriaBusy(): void {
-    this._reflectToAttr(Aria.BUSY, ((this.#busy === true) ? "true" : undefined));
   }
 
   #reflectToAriaLabel(): void {
