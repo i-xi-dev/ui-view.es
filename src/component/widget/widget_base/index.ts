@@ -461,6 +461,7 @@ abstract class Widget extends HTMLElement {
 
     this.#dataListSlot.addEventListener("slotchange", () => {
       this.#loadDataListSlot();
+      this._resetCandidates();
     }, { passive: true });
 
     this.#root.append(rootElement);
@@ -474,6 +475,7 @@ abstract class Widget extends HTMLElement {
     this.#render();
 
     this.#loadDataListSlot();
+    this._resetCandidates();
 
     this.#resetFocusable();
     this.#resetEditable();
@@ -613,7 +615,7 @@ abstract class Widget extends HTMLElement {
     }));
   }
 
-  #loadDataListSlot() {
+  #loadDataListSlot(): void {
     if (!!this.#dataListSlot) {
       this.#assignedOptionElements.splice(0);
       for (const element of this.#dataListSlot.assignedElements()) {
@@ -625,6 +627,8 @@ abstract class Widget extends HTMLElement {
     }
   }
 
+  protected _resetCandidates(): void {
+  }
 }
 namespace Widget {
   export type DataListItem = {

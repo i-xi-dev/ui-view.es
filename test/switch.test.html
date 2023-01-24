@@ -126,6 +126,14 @@ customElements.define("wc-switch", Switch);
             <option value="hidden">hidden</option>
           </select><button onclick="setAttr('data-value-label', this.previousElementSibling.value)">set attr</button>
         </fieldset>
+        <fieldset>
+          <legend>datalist slot</legend>
+          <button onclick="clearSlot('datalist')">clear slot</button>
+          <form>
+            value:<input type="text" name="val"/>
+            label:<input type="text" name="lbl"/>
+          </form><button onclick="addToDataListSlot(new FormData(this.previousElementSibling))">assign slot</button>
+        </fieldset>
       </div>
     </div>
 
@@ -133,7 +141,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <div>horizontal-tb, ltr</div>
         <div style="writing-mode: horizontal-tb; direction: ltr;">
-          <wc-switch data-value-label="start">
+          <wc-switch data-value-label="end">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>
           </wc-switch>
@@ -142,7 +150,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <div>horizontal-tb, rtl</div>
         <div style="writing-mode: horizontal-tb; direction: rtl;">
-          <wc-switch data-value-label="start">
+          <wc-switch data-value-label="end">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>
           </wc-switch>
@@ -151,7 +159,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <div>vertical-rl, ltr</div>
         <div style="writing-mode: vertical-rl; direction: ltr;">
-          <wc-switch data-value-label="start">
+          <wc-switch data-value-label="end">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>
           </wc-switch>
@@ -160,7 +168,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <div>vertical-rl, rtl</div>
         <div style="writing-mode: vertical-rl; direction: rtl;">
-          <wc-switch data-value-label="start">
+          <wc-switch data-value-label="end">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>
           </wc-switch>
@@ -169,7 +177,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <div>vertical-lr, ltr</div>
         <div style="writing-mode: vertical-lr; direction: ltr;">
-          <wc-switch data-value-label="start">
+          <wc-switch data-value-label="end">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>
           </wc-switch>
@@ -178,7 +186,7 @@ customElements.define("wc-switch", Switch);
       <div>
         <div>vertical-lr, rtl</div>
         <div style="writing-mode: vertical-lr; direction: rtl;">
-          <wc-switch data-value-label="start">
+          <wc-switch data-value-label="end">
             <option slot="datalist" value="0">OFF</option>
             <option slot="datalist" value="1">ON</option>
           </wc-switch>

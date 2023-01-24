@@ -9,8 +9,6 @@ import Presentation from "./presentation";
 //TODO paste
 //XXX ラベルは廃止する （外付けにする）
 //XXX slot名は無くしたいが、他では名前使うかも。そうなると名前は統一したいのでとりあえず名前ありにしておく
-//TODO 値ラベルの幅は長いほうに合わせて固定にしたい（幅算出してwidth指定するか、不可視にして同じ位置に重ねて表示を切り替えるか。いちいちリフローがかかるので後者が良い？リフローなしでOffscreenCanvasで文字幅だけなら取れるがdataに子要素があったり装飾されてたりしたら正確に取れない。重ねる方法だと:emptyで空かどうか判別できなくなるので空状態かどうかを保持するプロパティが余計に必要）
-//TODO 値ラベルを可視に設定しても値ラベルが両方空の場合は、column-gapを0にしたい
 //XXX shadowなしで、白枠常時表示てもいいかも
 //XXX itemのdisabledは無視する
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
@@ -148,6 +146,7 @@ class Switch extends Widget {
     this.toggleAttribute("checked", !!value);
   }
 
+  //TODO 不要 かわりにinternalsにvalueをセットする処理がいる
   get #value(): Widget.DataListItem {
     const dataListItems = this._getDataListItems({
       defaultItems: Switch.#defaultDataList,
@@ -233,17 +232,25 @@ class Switch extends Widget {
       else if (thumbStart >= range) {
         thumbStart = range;
       }
-      //TODO ラベルがinline-start側にある場合、その分の幅追加 //TODO ラベルの幅はやはり長いほうに合わせる必要がある
+      //TODO ラベルがinline-start側にある場合、その分の幅追加
       this.#thumb.style.setProperty("inset-inline-start", `${ thumbStart }px`);
       this.#thumbMovement = thumbStart / range;
     }
   }
 
-  //TODO Widgetのprotectedメソッドで良い
-  #resetValueLabel(): void {
+  protected override _resetCandidates(): void {
     if (!!this.#valueLabelElement) {
-      this.#valueLabelElement.textContent = this.#value.label;
+      const dataListItems = this._getDataListItems({
+        defaultItems: Switch.#defaultDataList,
+        mergeDefaultItems: true,
+      }) as [Widget.DataListItem, Widget.DataListItem];
+
+      (this.#valueLabelElement.children[Switch.OptionIndex.OFF] as Element).textContent = dataListItems[Switch.OptionIndex.OFF].label;
+      (this.#valueLabelElement.children[Switch.OptionIndex.ON] as Element).textContent = dataListItems[Switch.OptionIndex.ON].label;
     }
+  }
+
+  #resetValueLabel(): void {
   }
 }
 

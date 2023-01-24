@@ -12,6 +12,7 @@ namespace Presentation {
     CONTROL_THUMB_SURFACE: "c1-t-surface",
     CONTROL_THUMB_HIGHLIGHT: "c1-t-highlight",
     OUTPUT: "o1",
+    OUTPUT_TEXT: "o1-text",
   } as const;
 
   export const Parameters = {
@@ -35,7 +36,10 @@ namespace Presentation {
       </div>
     </div>
 
-    <div class="${ ClassName.OUTPUT }"></div>
+    <ol class="${ ClassName.OUTPUT }">
+      <li class="${ ClassName.OUTPUT_TEXT }"></li>
+      <li class="${ ClassName.OUTPUT_TEXT }"></li>
+    </ol>
   `;
 
   export const STYLE = `
@@ -195,23 +199,41 @@ namespace Presentation {
     }
 
     *.${ ClassName.OUTPUT } {
+      align-items: center;
       display: none;
-      user-select: none;
-      white-space: pre;
+      grid-template-columns: auto;
+      grid-template-rows: auto;
+      justify-content: start;
+      margin: 0;
+      padding: 0;
     }
 
     :host(*[data-value-label="start"]) *.${ ClassName.OUTPUT },
     :host(*[data-value-label="end"]) *.${ ClassName.OUTPUT } {
+      display: grid;
+    }
+
+    *.${ ClassName.OUTPUT_TEXT } {
       display: block;
-    }
-
-    *.${ ClassName.OUTPUT }:not(*:empty) {
+      grid-column: 1;
+      grid-row: 1;
       text-align: start;
+      visibility: hidden;
+      white-space: pre;
     }
 
-    :host(*[data-value-label="start"]) *.${ ClassName.OUTPUT }:not(*:empty) {
+    :host(*[data-value-label="start"]) *.${ ClassName.OUTPUT_TEXT } {
       text-align: end;
     }
+
+    :host(*:not(*[checked])) *.${ ClassName.OUTPUT_TEXT }:first-child {
+      visibility: visible;
+    }
+
+    :host(*[checked]) *.${ ClassName.OUTPUT_TEXT }:nth-child(2) {
+      visibility: visible;
+    }
+
   `;
 }
 

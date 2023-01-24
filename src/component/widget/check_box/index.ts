@@ -100,6 +100,7 @@ class CheckBox extends Widget {
     this.toggleAttribute("indeterminate", !!value);
   }
 
+  //TODO 不要 かわりにinternalsにvalueをセットする処理がいる
   get #value(): Widget.DataListItem {
     const dataListItems = this._getDataListItems({
       defaultItems: CheckBox.#defaultDataList,
@@ -150,11 +151,20 @@ class CheckBox extends Widget {
     }
   }
 
-  //TODO Widgetのprotectedメソッドで良い
-  #resetValueLabel(): void {
+  protected override _resetCandidates(): void {
     if (!!this.#valueLabelElement) {
-      this.#valueLabelElement.textContent = this.#value.label;
+      const dataListItems = this._getDataListItems({
+        defaultItems: CheckBox.#defaultDataList,
+        mergeDefaultItems: true,
+      }) as [Widget.DataListItem, Widget.DataListItem, Widget.DataListItem];
+
+      (this.#valueLabelElement.children[CheckBox.OptionIndex.OFF] as Element).textContent = dataListItems[CheckBox.OptionIndex.OFF].label;
+      (this.#valueLabelElement.children[CheckBox.OptionIndex.ON] as Element).textContent = dataListItems[CheckBox.OptionIndex.ON].label;
+      (this.#valueLabelElement.children[CheckBox.OptionIndex.INDETERMINATE] as Element).textContent = dataListItems[CheckBox.OptionIndex.INDETERMINATE].label;
     }
+  }
+
+  #resetValueLabel(): void {
   }
 
   // animationを変えているのでsvgごと入れ替えている
