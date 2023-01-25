@@ -18,9 +18,6 @@ const WidgetColorScheme = {
 } as const;
 type WidgetColorScheme = typeof WidgetColorScheme[keyof typeof WidgetColorScheme];
 
-type ContentReflection = "always" | "if-needed";
-type AttrReflection = "always" | "if-needed" | "never";
-
 const DataAttr = {
   COLOR_SCHEME: "data-color-scheme",
 } as const;
@@ -50,20 +47,8 @@ const _WidgetDirection = {
 type _WidgetDirection = typeof _WidgetDirection[keyof typeof _WidgetDirection];
 
 abstract class Widget extends HTMLElement {
-  protected static _ReflectionsOnConnected: Widget.Reflections = {
-    content: "always",
-    attr: "never",
-  };
-  protected static _ReflectionsOnAttrChanged: Widget.Reflections = {
-    content: "if-needed",
-    attr: "never",
-  };
-  protected static _ReflectionsOnPropChanged: Widget.Reflections = {
-    content: "if-needed",
-    attr: "if-needed",
-  };
   static readonly #KEY = Symbol();
-  static readonly #bgDocument: Document = new Document();
+  static readonly #backgroundDocument: Document = new Document();
   static readonly #componentTemplateMap: Map<symbol, HTMLTemplateElement> = new Map();
   static readonly #componentStyleSheetMap: Map<symbol, CSSStyleSheet> = new Map();
 
@@ -237,7 +222,7 @@ abstract class Widget extends HTMLElement {
   }
 
   protected static _addTemplate(componentKey: symbol, templateContentHtml: string): void {
-    const template = Widget.#bgDocument.createElementNS(Ns.HTML, "template") as HTMLTemplateElement;
+    const template = Widget.#backgroundDocument.createElementNS(Ns.HTML, "template") as HTMLTemplateElement;
     template.innerHTML = BasePresentation.createTemplateHtml(templateContentHtml);
     Widget.#componentTemplateMap.set(componentKey, template);
   }
@@ -649,11 +634,6 @@ namespace Widget {
     formAssociated: boolean,
     inputable: boolean,
     textEditable: boolean,
-  };
-
-  export type Reflections = {
-    content: ContentReflection,
-    attr: AttrReflection,
   };
 
   export type Action<T extends Event = Event> = {
