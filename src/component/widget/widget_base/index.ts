@@ -1,6 +1,21 @@
 import { Ns } from "../../../ns";
 import BasePresentation from "./presentation";
 
+const _Attr = {
+  ARIA_BUSY: "aria-busy",
+  DISABLED: "disabled",
+  HIDDEN: "hidden",
+} as const;
+
+
+
+
+
+
+
+
+
+
 type _Point = {
   x: number,
   y: number,
@@ -60,7 +75,6 @@ abstract class Widget extends HTMLElement {
   #main: Element | null;
   readonly #actions: Map<string, Set<Widget.Action>>;
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
-  #connected: boolean;
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   #direction: _WidgetDirection;
@@ -79,7 +93,6 @@ abstract class Widget extends HTMLElement {
     this.#dataListSlot = null;
     this.#eventTarget = null;
     this.#main = null;
-    this.#connected = false;
     this.#capturingPointer = null;
     this.#textCompositing = false;
     this.#actions = new Map([
@@ -99,18 +112,17 @@ abstract class Widget extends HTMLElement {
 
   static get observedAttributes(): Array<string> {
     return [
-      "disabled",
-      "hidden",
-      "readonly",
-      "aria-busy",
+      _Attr.ARIA_BUSY,
+      _Attr.DISABLED,
+      _Attr.HIDDEN,
       "aria-label",
       "data-size",
     ];
   }
 
   get busy(): boolean {
-    if (this.hasAttribute("aria-busy") === true) {
-      if (this.getAttribute("aria-busy") === "false") {
+    if (this.hasAttribute(_Attr.ARIA_BUSY) === true) {
+      if (this.getAttribute(_Attr.ARIA_BUSY) === "false") {
         return false;
       }
       return true;
@@ -120,19 +132,19 @@ abstract class Widget extends HTMLElement {
 
   set busy(value: boolean) {
     if (!!value) {
-      this.setAttribute("aria-busy", "true");
+      this.setAttribute(_Attr.ARIA_BUSY, "true");
     }
     else {
-      this.removeAttribute("aria-busy");
+      this.removeAttribute(_Attr.ARIA_BUSY);
     }
   }
 
   get disabled(): boolean {
-    return this.hasAttribute("disabled");
+    return this.hasAttribute(_Attr.DISABLED);
   }
 
   set disabled(value: boolean) {
-    this.toggleAttribute("disabled", !!value);
+    this.toggleAttribute(_Attr.DISABLED, !!value);
   }
 
   get label(): string {
@@ -149,30 +161,18 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  get readOnly(): boolean {
-    return this.hasAttribute("readonly");
-  }
-
-  set readOnly(value: boolean) {
-    this.toggleAttribute("readonly", !!value);
-  }
-
   protected get _internals(): ElementInternals {
     return this.#internals;
   }
   //TODO nameの設定
   //TODO internals.setFormValue
 
+  protected get _eventTarget(): HTMLElement | null {
+    return this.#eventTarget;
+  }
+
   protected get _capturingPointer(): _CapturingPointer | null {
     return this.#capturingPointer;
-  }
-
-  protected get _connected(): boolean {
-    return this.#connected;
-  }
-
-  protected set _connected(value: boolean) {
-    this.#connected = value;
   }
 
   get size(): BasePresentation.BaseSize {
@@ -244,7 +244,7 @@ abstract class Widget extends HTMLElement {
 
   protected _buildEventTarget(eventTarget: HTMLElement): void {
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if (this._ignoreUiEvent() === true) {
         return;
       }
 
@@ -259,7 +259,7 @@ abstract class Widget extends HTMLElement {
 
     // pointerupやpointercancelでは自動的にreleaseされる
     eventTarget.addEventListener("lostpointercapture", (event: PointerEvent) => {
-      // if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      // if (this._ignoreUiEvent() === true) {
       //   return;
       // }
 
@@ -271,7 +271,7 @@ abstract class Widget extends HTMLElement {
     }, { passive: true });
 
     eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if (this._ignoreUiEvent() === true) {
         return;
       }
 
@@ -285,7 +285,7 @@ abstract class Widget extends HTMLElement {
     // pointercancelの場合は#capturingPointerは使わない
 
     eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if (this._ignoreUiEvent() === true) {
         return;
       }
 
@@ -318,6 +318,10 @@ abstract class Widget extends HTMLElement {
     this.#setEventListener<PointerEvent>("pointerdown", eventTarget, true);
     this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
     this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
+  }
+
+  protected _ignoreUiEvent(): boolean {
+    return ((this.busy === true) || (this.disabled === true));
   }
 
   #getEventTargetBoundingBox(): Readonly<_BoundingBox> {
@@ -366,7 +370,7 @@ abstract class Widget extends HTMLElement {
   //     全部stopして発火しなおす？
   #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
     target.addEventListener(eventType, ((event: T) => {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
+      if (this._ignoreUiEvent() === true) {
         return;
       }
       if (event instanceof PointerEvent) {
@@ -446,10 +450,20 @@ abstract class Widget extends HTMLElement {
 
     this.#dataListSlot.addEventListener("slotchange", () => {
       this.#loadDataListSlot();
-      this._resetCandidates();
+      this._reflectDataListSlotChanged();
     }, { passive: true });
 
     this.#root.append(rootElement);
+
+    this._renderExtended();
+  }
+
+  protected abstract _renderExtended(): void;
+
+  protected _reflectAllAttributesChanged(): void {
+    this.#resetFocusable();
+    this._reflectLabelChanged();
+    this._reflectSizeChanged();
   }
 
   connectedCallback(): void {
@@ -459,13 +473,16 @@ abstract class Widget extends HTMLElement {
 
     this.#render();
 
-    this.#loadDataListSlot();
-    this._resetCandidates();
+    this.#loadDataListSlot();//TODO readAllSlotsとか
+    this.#reflectAllSlotsChanged();
 
-    this.#resetFocusable();
-    this.#resetEditable();
-    this._resetLabel();
-    this._resetSize();
+    this._reflectAllAttributesChanged();
+
+
+
+
+
+
 
     const style = this.ownerDocument.defaultView?.getComputedStyle(this);
     if (style) {
@@ -493,11 +510,10 @@ abstract class Widget extends HTMLElement {
       this.#blockProgression = "tb";
     }
 
-    //this.#connected = true;
   }
 
   disconnectedCallback(): void {
-    this.#connected = false;
+
   }
 
   adoptedCallback(): void {
@@ -506,32 +522,25 @@ abstract class Widget extends HTMLElement {
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
     switch (name) {
-      case "disabled":
-        this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
-        this.#resetFocusable();
-        this.#resetEditable();
+      case _Attr.ARIA_BUSY:
+        this._reflectBusyChanged();
         break;
 
-      case "hidden":
+      case _Attr.DISABLED:
+        this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
+        this._reflectDisabledChanged();
+        break;
+
+      case _Attr.HIDDEN:
         this.#internals.ariaHidden = (super.hidden === true) ? "true" : "false";
         break;
 
-      case "readonly":
-        this.#internals.ariaReadOnly = (this.readOnly === true) ? "true" : "false";
-        this.#resetEditable();
-        break;
-
-      case "aria-busy":
-        this.#resetFocusable();
-        this.#resetEditable();
-        break;
-
       case "aria-label":
-        this._resetLabel();
+        this._reflectLabelChanged();
         break;
 
       case "data-size":
-        this._resetSize();
+        this._reflectSizeChanged();
         break;
 
       default:
@@ -539,10 +548,18 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  protected _resetLabel(): void {
+  protected _reflectDisabledChanged(): void {
+    this.#resetFocusable();
   }
 
-  protected _resetSize(): void {
+  protected _reflectBusyChanged(): void {
+    this.#resetFocusable();
+  }
+
+  protected _reflectLabelChanged(): void {
+  }
+
+  protected _reflectSizeChanged(): void {
   }
 
   #resetFocusable(): void {
@@ -556,20 +573,9 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  #resetEditable(): void {
-    if (!!this.#eventTarget && (this._init.textEditable === true)) {
-      if ((this.busy === true) || (this.disabled === true) || (this.readOnly === true)) {
-        this.#eventTarget.removeAttribute("contenteditable");
-      }
-      else {
-        this.#eventTarget.setAttribute("contenteditable", "true");
-      }
-    }
-  }
-
   protected _addRipple(): void {
     if (!!this.#main) {
-      if ((this._connected !== true) || (this.hidden === true)) {//XXX this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
+      if ((this.isConnected !== true) || (this.hidden === true)) {//XXX this.hiddenかどうかでなくcheckVisibilityで safariが対応したら
         return;
       }
   
@@ -612,7 +618,10 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  protected _resetCandidates(): void {
+  #reflectAllSlotsChanged(): void {
+    this._reflectDataListSlotChanged();
+  }
+  protected _reflectDataListSlotChanged(): void {
   }
 }
 namespace Widget {

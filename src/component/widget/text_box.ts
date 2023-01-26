@@ -159,7 +159,6 @@
 //     this.#setMultiLineFromString(this.getAttribute(Aria.MULTILINE) ?? "", Widget._ReflectionsOnConnected);
 //     //TODO
 
-//     this._connected = true;//TODO 更に継承する場合どうする
 //   }
 
 //   override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {

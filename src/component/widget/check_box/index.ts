@@ -1,9 +1,10 @@
 
 import { Ns } from "../../../ns";
 import { Widget } from "../widget_base/index";
+import { FormControl } from "../form_control/index";
 import Presentation from "./presentation";
 
-class CheckBox extends Widget {
+class CheckBox extends FormControl {
   static readonly formAssociated = true;
 
   static readonly #KEY = Symbol();
@@ -14,7 +15,7 @@ class CheckBox extends Widget {
     { value: "", label: "" },
   ];
 
-  #valueLabelElement: Element | null;
+  #valueLabelElement: Element | null = null;
 
   static {
     Widget._addTemplate(CheckBox.#KEY, Presentation.TEMPLATE);
@@ -29,11 +30,9 @@ class CheckBox extends Widget {
       inputable: true,
       textEditable: false,
     });
-
-    this.#valueLabelElement = null;
   }
 
-  #render2(): void {
+  protected override _renderExtended(): void {
     if (!this._main) {
       throw new Error("TODO");
     }
@@ -75,7 +74,7 @@ class CheckBox extends Widget {
 
   static override get observedAttributes(): Array<string> {
     return [
-      Widget.observedAttributes,
+      super.observedAttributes,
       [
         "checked",
         "indeterminate",
@@ -118,18 +117,13 @@ class CheckBox extends Widget {
     //XXX busyのときエラーにするか待たせるか
   }
 
-  override connectedCallback(): void {
-    super.connectedCallback();
+  // override connectedCallback(): void {
+  //   super.connectedCallback();
+  // }
 
-    if (this.isConnected !== true) {
-      return;
-    }
-    this.#render2();//TODO abstract protectedにしてWidget側で呼ばせる
-
+  protected override _reflectAllAttributesChanged(): void {
+    super._reflectAllAttributesChanged();
     this.#drawMark();
-    this.#resetValueLabel();
-
-    this._connected = true;
   }
 
   override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
@@ -140,7 +134,6 @@ class CheckBox extends Widget {
       case "indeterminate":
         this.#drawMark();
         this._addRipple();
-        this.#resetValueLabel();
         break;
 
       case "data-value-label":
@@ -151,7 +144,7 @@ class CheckBox extends Widget {
     }
   }
 
-  protected override _resetCandidates(): void {
+  protected override _reflectDataListSlotChanged(): void {
     if (!!this.#valueLabelElement) {
       const dataListItems = this._getDataListItems({
         defaultItems: CheckBox.#defaultDataList,
@@ -162,9 +155,6 @@ class CheckBox extends Widget {
       (this.#valueLabelElement.children[CheckBox.OptionIndex.ON] as Element).textContent = dataListItems[CheckBox.OptionIndex.ON].label;
       (this.#valueLabelElement.children[CheckBox.OptionIndex.INDETERMINATE] as Element).textContent = dataListItems[CheckBox.OptionIndex.INDETERMINATE].label;
     }
-  }
-
-  #resetValueLabel(): void {
   }
 
   // animationを変えているのでsvgごと入れ替えている
