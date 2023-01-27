@@ -1,30 +1,29 @@
 import { Ns } from "../../../ns";
+import { Viewport } from "../../../viewport";
 import BasePresentation from "./presentation";
 
 const _Attr = {
   ARIA_BUSY: "aria-busy",
+  ARIA_LABEL: "aria-label",
+  DATA_SIZE: "data-size",
   DISABLED: "disabled",
   HIDDEN: "hidden",
 } as const;
-
-
-
-
-
-
-
-
-
-
-type _Point = {
-  x: number,
-  y: number,
-};
 
 const _ShadowRootInit: ShadowRootInit = {
   mode: "closed",
   delegatesFocus: true,
 };
+
+
+
+
+
+
+
+
+
+
 
 const WidgetColorScheme = {
   AUTO: "auto",
@@ -33,10 +32,6 @@ const WidgetColorScheme = {
 } as const;
 type WidgetColorScheme = typeof WidgetColorScheme[keyof typeof WidgetColorScheme];
 
-const DataAttr = {
-  COLOR_SCHEME: "data-color-scheme",
-} as const;
-
 type _CapturingPointer = {
   readonly id: number,
   readonly type: string,
@@ -44,7 +39,6 @@ type _CapturingPointer = {
   readonly startViewportY: number,//XXX 不要では
   readonly startTimestamp: number,
 
-  leaved: boolean,//XXX 不要（leavedを読んでる側で判定できる）
   readonly targetBoundingBox: _BoundingBox,
 };
 
@@ -113,10 +107,10 @@ abstract class Widget extends HTMLElement {
   static get observedAttributes(): Array<string> {
     return [
       _Attr.ARIA_BUSY,
+      _Attr.ARIA_LABEL,
+      _Attr.DATA_SIZE,
       _Attr.DISABLED,
       _Attr.HIDDEN,
-      "aria-label",
-      "data-size",
     ];
   }
 
@@ -148,16 +142,16 @@ abstract class Widget extends HTMLElement {
   }
 
   get label(): string {
-    return (this.getAttribute("aria-label") ?? "");
+    return (this.getAttribute(_Attr.ARIA_LABEL) ?? "");
   }
 
   set label(value: string) {
     const labelString = (typeof value === "string") ? value : String(value);
     if (labelString.length > 0) {
-      this.setAttribute("aria-label", labelString);
+      this.setAttribute(_Attr.ARIA_LABEL, labelString);
     }
     else {
-      this.removeAttribute("aria-label");
+      this.removeAttribute(_Attr.ARIA_LABEL);
     }
   }
 
@@ -176,7 +170,7 @@ abstract class Widget extends HTMLElement {
   }
 
   get size(): BasePresentation.BaseSize {
-    const size = this.getAttribute("data-size");
+    const size = this.getAttribute(_Attr.DATA_SIZE);
     if (Object.values(BasePresentation.BaseSize).includes(size as BasePresentation.BaseSize) === true) {
       return size as BasePresentation.BaseSize;
     }
@@ -186,11 +180,11 @@ abstract class Widget extends HTMLElement {
   set size(value: BasePresentation.BaseSize) {
     if (Object.values(BasePresentation.BaseSize).includes(value as BasePresentation.BaseSize) === true) {
       if (value !== BasePresentation.BaseSize.MEDIUM) {
-        this.setAttribute("data-size", value);
+        this.setAttribute(_Attr.DATA_SIZE, value);
         return;
       }
     }
-    this.removeAttribute("data-size");
+    this.removeAttribute(_Attr.DATA_SIZE);
   }
 
   protected get _main(): Element | null {
@@ -278,8 +272,6 @@ abstract class Widget extends HTMLElement {
       if (this._isCapturingPointer(event) === true) {
         console.log(`widget.pointerup ${event.pointerType}-${event.pointerId}`);
         console.log(Object.assign({}, this._capturingPointer));
-        const capturingPointer = this.#capturingPointer as _CapturingPointer;
-        capturingPointer.leaved = (this._elementIntersectsPoint(eventTarget, { x: event.clientX, y: event.clientY }) !== true);
       }
     }, { passive: true });
     // pointercancelの場合は#capturingPointerは使わない
@@ -361,7 +353,6 @@ abstract class Widget extends HTMLElement {
         startViewportY: viewportY,
         startTimestamp: event.timeStamp,
         targetBoundingBox: this.#getEventTargetBoundingBox(),
-        leaved: false,
       };
     }
   }
@@ -404,8 +395,8 @@ abstract class Widget extends HTMLElement {
     }) as EventListener, { passive });
   }
 
-  _elementIntersectsPoint(element: Element, { x, y }: _Point): boolean {
-    return this.#root.elementsFromPoint(x, y).includes(element);
+  _elementIntersectsPoint(element: Element, point: Viewport.Inset): boolean {
+    return this.#root.elementsFromPoint(point.x, point.y).includes(element);
   }
 
   // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
@@ -526,6 +517,14 @@ abstract class Widget extends HTMLElement {
         this._reflectBusyChanged();
         break;
 
+      case _Attr.ARIA_LABEL:
+        this._reflectLabelChanged();
+        break;
+
+      case _Attr.DATA_SIZE:
+        this._reflectSizeChanged();
+        break;
+
       case _Attr.DISABLED:
         this.#internals.ariaDisabled = (this.disabled === true) ? "true" : "false";
         this._reflectDisabledChanged();
@@ -533,14 +532,6 @@ abstract class Widget extends HTMLElement {
 
       case _Attr.HIDDEN:
         this.#internals.ariaHidden = (super.hidden === true) ? "true" : "false";
-        break;
-
-      case "aria-label":
-        this._reflectLabelChanged();
-        break;
-
-      case "data-size":
-        this._reflectSizeChanged();
         break;
 
       default:

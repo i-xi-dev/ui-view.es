@@ -1,5 +1,6 @@
 
 import { Ns } from "../../../ns";
+import { Viewport } from "../../../viewport";
 import { Widget } from "../widget_base/index";
 import { FormControl } from "../form_control/index";
 import Presentation from "./presentation";
@@ -42,8 +43,7 @@ class CheckBox extends FormControl {
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {
         if (this._isCapturingPointer(event) === true) {
-          if (this._capturingPointer?.leaved === true) {
-            console.log("------------------------------------- leaved");
+          if (this._elementIntersectsPoint(event.target as Element, Viewport.insetOf(event)) !== true) {
             return;
           }
 
