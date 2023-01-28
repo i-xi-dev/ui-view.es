@@ -12,11 +12,15 @@ customElements.define("wc-switch", Switch);
   <body>
     <div class="test-dynamic">
       <div>
-        <wc-switch id="test1"
-        onclick="console.log(event)"
-        onchange="console.log(event)"
-        onkeydown="console.log(event)"></wc-switch>
+        <form id="form1"></form>
+        <form id="form2">
+          <wc-switch id="test1"
+          onclick="console.log(event)"
+          onchange="console.log(event)"
+          onkeydown="console.log(event)"></wc-switch>
+        </form>
       </div>
+
       <div class="test-dynamic-editor">
         <fieldset>
           <legend>busy state</legend>
@@ -64,6 +68,19 @@ customElements.define("wc-switch", Switch);
           <fieldset>
             <legend>disabled prop</legend>
             <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
+        </fieldset>
+
+        <fieldset>
+          <legend>form property</legend>
+          <fieldset>
+            <legend>form attr</legend>
+            <button onclick="removeAttr('form')">remove attr</button>
+            <input type="text"/><button onclick="setAttr('form', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>form prop</legend>
+            readonly property
           </fieldset>
         </fieldset>
 

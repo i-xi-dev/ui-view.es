@@ -12,12 +12,16 @@ customElements.define("wc-checkbox", CheckBox);
   <body>
     <div class="test-dynamic">
       <div>
-        <wc-checkbox
-        id="test1"
-        onclick="console.log(event)"
-        onchange="console.log(event)"
-        onkeydown="console.log(event)"></wc-checkbox>
+        <form id="form1"></form>
+        <form id="form2">
+          <wc-checkbox
+          id="test1"
+          onclick="console.log(event)"
+          onchange="console.log(event)"
+          onkeydown="console.log(event)"></wc-checkbox>
+        </form>
       </div>
+
       <div class="test-dynamic-editor">
         <fieldset>
           <legend>busy state</legend>
@@ -65,6 +69,19 @@ customElements.define("wc-checkbox", CheckBox);
           <fieldset>
             <legend>disabled prop</legend>
             <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
+        </fieldset>
+
+        <fieldset>
+          <legend>form property</legend>
+          <fieldset>
+            <legend>form attr</legend>
+            <button onclick="removeAttr('form')">remove attr</button>
+            <input type="text"/><button onclick="setAttr('form', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>form prop</legend>
+            readonly property
           </fieldset>
         </fieldset>
 

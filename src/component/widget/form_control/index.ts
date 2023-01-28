@@ -1,6 +1,7 @@
 import { Widget} from "../widget_base";
 
 const _Attr = {
+  FORM: "form",
   NAME: "name",
   READONLY: "readonly",
 } as const;
@@ -18,10 +19,15 @@ abstract class FormControl extends Widget {
     return [
       super.observedAttributes,
       [
+        _Attr.FORM,
         _Attr.NAME,
         _Attr.READONLY,
       ],
     ].flat();
+  }
+
+  get form(): HTMLFormElement | null {
+    return this._internals.form;
   }
 
   get name(): string {
@@ -59,6 +65,9 @@ abstract class FormControl extends Widget {
     super.attributeChangedCallback(name, oldValue, newValue);
 
     switch (name) {
+      case _Attr.FORM:
+        break;
+
       case _Attr.NAME:
         break;
 

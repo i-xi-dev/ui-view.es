@@ -10,14 +10,11 @@ import Presentation from "./presentation";
 //TODO paste
 //XXX ラベルは廃止する （外付けにする）
 //XXX slot名は無くしたいが、他では名前使うかも。そうなると名前は統一したいのでとりあえず名前ありにしておく
-//XXX shadowなしで、白枠常時表示てもいいかも
 //XXX itemのdisabledは無視する
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
 //TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO slotにassignできるのもcustom elementにする？
-//TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
-//TODO 以下の属性が必要 グローバル、form、、 https://momdo.github.io/html/custom-elements.html
 //TODO formAssociatedCallback
 //TODO formDisabledCallback
 //TODO formResetCallback
