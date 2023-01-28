@@ -1,6 +1,7 @@
 import { Widget} from "../widget_base";
 
 const _Attr = {
+  NAME: "name",
   READONLY: "readonly",
 } as const;
 
@@ -17,9 +18,24 @@ abstract class FormControl extends Widget {
     return [
       super.observedAttributes,
       [
+        _Attr.NAME,
         _Attr.READONLY,
       ],
     ].flat();
+  }
+
+  get name(): string {
+    return (this.getAttribute(_Attr.NAME) ?? "");
+  }
+
+  set name(value: string) {
+    const nameString = (typeof value === "string") ? value : String(value);
+    if (nameString.length > 0) {
+      this.setAttribute(_Attr.NAME, nameString);
+    }
+    else {
+      this.removeAttribute(_Attr.NAME);
+    }
   }
 
   get readOnly(): boolean {
@@ -43,6 +59,9 @@ abstract class FormControl extends Widget {
     super.attributeChangedCallback(name, oldValue, newValue);
 
     switch (name) {
+      case _Attr.NAME:
+        break;
+
       case _Attr.READONLY:
         this._internals.ariaReadOnly = (this.readOnly === true) ? "true" : "false";
         this._reflectReadOnlyChanged();

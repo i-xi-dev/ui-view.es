@@ -17,7 +17,7 @@ import Presentation from "./presentation";
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO slotにassignできるのもcustom elementにする？
 //TODO aria-xxx はthis.#internals.ariaXxx = ～ にする？
-//TODO 以下の属性が必要 グローバル、form、、、name https://momdo.github.io/html/custom-elements.html
+//TODO 以下の属性が必要 グローバル、form、、 https://momdo.github.io/html/custom-elements.html
 //TODO formAssociatedCallback
 //TODO formDisabledCallback
 //TODO formResetCallback

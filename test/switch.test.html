@@ -19,120 +19,164 @@ customElements.define("wc-switch", Switch);
       </div>
       <div class="test-dynamic-editor">
         <fieldset>
-          <legend>aria-busy attr</legend>
-          <button onclick="removeAttr('aria-busy')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="true">true</option>
-            <option value="false">false</option>
-          </select><button onclick="setAttr('aria-busy', this.previousElementSibling.value)">set attr</button>
+          <legend>busy state</legend>
+          <fieldset>
+            <legend>aria-busy attr</legend>
+            <button onclick="removeAttr('aria-busy')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select><button onclick="setAttr('aria-busy', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>busy prop</legend>
+            <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>busy prop</legend>
-          <input type="checkbox"/><button onclick="setProp('busy', this.previousElementSibling.checked)">set prop</button>
+          <legend>checked state</legend>
+          <fieldset>
+            <legend>checked attr</legend>
+            <button onclick="removeAttr('checked')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="true">TRUE</option>
+            </select><button onclick="toggleAttr('checked', Boolean(this.previousElementSibling.value))">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>checked prop</legend>
+            <input type="checkbox"/><button onclick="setProp('checked', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>checked attr</legend>
-          <button onclick="removeAttr('checked')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="true">TRUE</option>
-          </select><button onclick="toggleAttr('checked', Boolean(this.previousElementSibling.value))">set attr</button>
+          <legend>disabled state</legend>
+          <fieldset>
+            <legend>disabled attr</legend>
+            <button onclick="removeAttr('disabled')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="true">TRUE</option>
+            </select><button onclick="toggleAttr('disabled', Boolean(this.previousElementSibling.value))">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>disabled prop</legend>
+            <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>checked prop</legend>
-          <input type="checkbox"/><button onclick="setProp('checked', this.previousElementSibling.checked)">set prop</button>
+          <legend>hidden state</legend>
+          <fieldset>
+            <legend>hidden attr</legend>
+            <button onclick="removeAttr('hidden')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="true">TRUE</option>
+            </select><button onclick="toggleAttr('hidden', Boolean(this.previousElementSibling.value))">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>hidden prop</legend>
+            <input type="checkbox"/><button onclick="setProp('hidden', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>disabled attr</legend>
-          <button onclick="removeAttr('disabled')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="true">TRUE</option>
-          </select><button onclick="toggleAttr('disabled', Boolean(this.previousElementSibling.value))">set attr</button>
+          <legend>label property</legend>
+          <fieldset>
+            <legend>aria-label attr</legend>
+            <button onclick="removeAttr('aria-label')">remove attr</button>
+            <input type="text"/><button onclick="setAttr('aria-label', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>label prop</legend>
+            <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>disabled prop</legend>
-          <input type="checkbox"/><button onclick="setProp('disabled', this.previousElementSibling.checked)">set prop</button>
+          <legend>name property</legend>
+          <fieldset>
+            <legend>name attr</legend>
+            <button onclick="removeAttr('name')">remove attr</button>
+            <input type="text"/><button onclick="setAttr('name', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>name prop</legend>
+            <input type="text"/><button onclick="setProp('name', this.previousElementSibling.value)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>hidden attr</legend>
-          <button onclick="removeAttr('hidden')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="true">TRUE</option>
-          </select><button onclick="toggleAttr('hidden', Boolean(this.previousElementSibling.value))">set attr</button>
+          <legend>readonly property</legend>
+          <fieldset>
+            <legend>readonly attr</legend>
+            <button onclick="removeAttr('readonly')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="true">TRUE</option>
+            </select><button onclick="toggleAttr('readonly', Boolean(this.previousElementSibling.value))">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>readOnly prop</legend>
+            <input type="checkbox"/><button onclick="setProp('readOnly', this.previousElementSibling.checked)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>hidden prop</legend>
-          <input type="checkbox"/><button onclick="setProp('hidden', this.previousElementSibling.checked)">set prop</button>
+          <legend>size property</legend>
+          <fieldset>
+            <legend>data-size attr</legend>
+            <button onclick="removeAttr('data-size')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="x-small">x-small</option>
+              <option value="small">small</option>
+              <option value="medium">medium</option>
+              <option value="large">large</option>
+              <option value="x-large">x-large</option>
+            </select><button onclick="setAttr('data-size', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>dataset.size</legend>
+            <button onclick="removeDataset('size')">remove entry</button>
+            <select>
+              <option value=""></option>
+              <option value="x-small">x-small</option>
+              <option value="small">small</option>
+              <option value="medium">medium</option>
+              <option value="large">large</option>
+              <option value="x-large">x-large</option>
+            </select><button onclick="setDataset('size', this.previousElementSibling.value)">set entry</button>
+          </fieldset>
+          <fieldset>
+            <legend>size prop</legend>
+            <input type="text"/><button onclick="setProp('size', this.previousElementSibling.value)">set prop</button>
+          </fieldset>
         </fieldset>
+
         <fieldset>
-          <legend>aria-label attr</legend>
-          <button onclick="removeAttr('aria-label')">remove attr</button>
-          <input type="text"/><button onclick="setAttr('aria-label', this.previousElementSibling.value)">set attr</button>
-        </fieldset>
-        <fieldset>
-          <legend>label prop</legend>
-          <input type="text"/><button onclick="setProp('label', this.previousElementSibling.value)">set prop</button>
-        </fieldset>
-        <fieldset>
-          <legend>readonly attr</legend>
-          <button onclick="removeAttr('readonly')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="true">TRUE</option>
-          </select><button onclick="toggleAttr('readonly', Boolean(this.previousElementSibling.value))">set attr</button>
-        </fieldset>
-        <fieldset>
-          <legend>readOnly prop</legend>
-          <input type="checkbox"/><button onclick="setProp('readOnly', this.previousElementSibling.checked)">set prop</button>
-        </fieldset>
-        <fieldset>
-          <legend>data-size attr</legend>
-          <button onclick="removeAttr('data-size')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="x-small">x-small</option>
-            <option value="small">small</option>
-            <option value="medium">medium</option>
-            <option value="large">large</option>
-            <option value="x-large">x-large</option>
-          </select><button onclick="setAttr('data-size', this.previousElementSibling.value)">set attr</button>
-        </fieldset>
-        <fieldset>
-          <legend>dataset.size</legend>
-          <button onclick="removeDataset('size')">remove entry</button>
-          <select>
-            <option value=""></option>
-            <option value="x-small">x-small</option>
-            <option value="small">small</option>
-            <option value="medium">medium</option>
-            <option value="large">large</option>
-            <option value="x-large">x-large</option>
-          </select><button onclick="setDataset('size', this.previousElementSibling.value)">set entry</button>
-        </fieldset>
-        <fieldset>
-          <legend>size prop</legend>
-          <input type="text"/><button onclick="setProp('size', this.previousElementSibling.value)">set prop</button>
-        </fieldset>
-        <fieldset>
-          <legend>data-value-label attr</legend>
-          <button onclick="removeAttr('data-value-label')">remove attr</button>
-          <select>
-            <option value=""></option>
-            <option value="start">start</option>
-            <option value="end">end</option>
-            <option value="hidden">hidden</option>
-          </select><button onclick="setAttr('data-value-label', this.previousElementSibling.value)">set attr</button>
-        </fieldset>
-        <fieldset>
-          <legend>datalist slot</legend>
-          <button onclick="clearSlot('datalist')">clear slot</button>
-          <form>
-            value:<input type="text" name="val"/>
-            label:<input type="text" name="lbl"/>
-          </form><button onclick="addToDataListSlot(new FormData(this.previousElementSibling))">assign slot</button>
+          <legend>value-label property</legend>
+          <fieldset>
+            <legend>data-value-label attr</legend>
+            <button onclick="removeAttr('data-value-label')">remove attr</button>
+            <select>
+              <option value=""></option>
+              <option value="start">start</option>
+              <option value="end">end</option>
+              <option value="hidden">hidden</option>
+            </select><button onclick="setAttr('data-value-label', this.previousElementSibling.value)">set attr</button>
+          </fieldset>
+          <fieldset>
+            <legend>datalist slot</legend>
+            <button onclick="clearSlot('datalist')">clear slot</button>
+            <form>
+              value:<input type="text" name="val"/>
+              label:<input type="text" name="lbl"/>
+            </form><button onclick="addToDataListSlot(new FormData(this.previousElementSibling))">assign slot</button>
+          </fieldset>
         </fieldset>
       </div>
     </div>

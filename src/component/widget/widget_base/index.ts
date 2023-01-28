@@ -80,10 +80,12 @@ abstract class Widget extends HTMLElement {
 
   constructor(init: Widget.Init) {
     super();
+
     this._init = Object.assign({}, init);
     this.#root = this.attachShadow(_ShadowRootInit);
     this.#internals = this.attachInternals();
     this.#internals.role = this._init.role;
+
     this.#dataListSlot = null;
     this.#eventTarget = null;
     this.#main = null;
@@ -158,7 +160,7 @@ abstract class Widget extends HTMLElement {
   protected get _internals(): ElementInternals {
     return this.#internals;
   }
-  //TODO nameの設定
+
   //TODO internals.setFormValue
 
   protected get _eventTarget(): HTMLElement | null {

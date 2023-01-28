@@ -47,7 +47,6 @@ class CheckBox extends FormControl {
             return;
           }
 
-          console.log(`------------------------------------- ${this.checked} -> ${!(this.checked)}`);
           if (this.indeterminate === true) {
             this.indeterminate = false;
           }
