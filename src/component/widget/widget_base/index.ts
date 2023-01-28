@@ -1,5 +1,6 @@
 import { Ns } from "../../../ns";
 import { Viewport } from "../../../viewport";
+import { CapturedPointer } from "../../../captured_pointer";
 import BasePresentation from "./presentation";
 
 const _Attr = {
@@ -42,16 +43,6 @@ const WidgetColorScheme = {
 } as const;
 type WidgetColorScheme = typeof WidgetColorScheme[keyof typeof WidgetColorScheme];
 
-type _CapturingPointer = {
-  readonly id: number,
-  readonly type: string,
-  readonly startViewportX: number,//XXX 不要では
-  readonly startViewportY: number,//XXX 不要では
-  readonly startTimestamp: number,
-
-  readonly targetBoundingBox: _BoundingBox,
-};
-
 type _BoundingBox = {
   readonly left: number,
   readonly right: number,
@@ -82,7 +73,7 @@ abstract class Widget extends HTMLElement {
   readonly #pointerActions: Map<string, Set<Widget.PointerAction>>;
   readonly #keyboardActions: Map<string, Set<Widget.KeyboardAction>>;
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
-  #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
+  #capturedPointer: CapturedPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   #direction: _WidgetDirection;
   #blockProgression: string;
@@ -106,7 +97,7 @@ abstract class Widget extends HTMLElement {
     this.#dataListSlot = null;
     this.#eventTarget = null;
     this.#main = null;
-    this.#capturingPointer = null;
+    this.#capturedPointer = null;
     this.#textCompositing = false;
     this.#pointerActions = new Map([
       ["pointercancel", new Set()],
@@ -213,8 +204,8 @@ abstract class Widget extends HTMLElement {
     return this.#eventTarget;
   }
 
-  protected get _capturingPointer(): _CapturingPointer | null {
-    return this.#capturingPointer;
+  protected get _capturedPointer(): CapturedPointer | null {
+    return this.#capturedPointer;
   }
 
   get size(): BasePresentation.BaseSize {
@@ -289,12 +280,7 @@ abstract class Widget extends HTMLElement {
       if (this._ignoreUiEvent() === true) {
         return;
       }
-
-      console.log(`widget.pointerdown ${event.pointerType}-${event.pointerId}`);
-      const captured = this.#setPointerCapture(event);
-      if (captured === true) {
-        console.log(Object.assign({}, this._capturingPointer));
-      }
+      this.#setPointerCapture(event);
     }, { passive: true });
 
     // touchだと無条件でpointercaptureされるので、gotpointercaptureで#capturingPointerにセットするのはNG
@@ -304,26 +290,25 @@ abstract class Widget extends HTMLElement {
       // if (this._ignoreUiEvent() === true) {
       //   return;
       // }
-
       if (this._isCapturingPointer(event) === true) {
-        // console.log(`widget.lostpointercapture ${event.pointerType}-${event.pointerId}`);
-        // console.log(Object.assign({}, this._capturingPointer));
-        this.#capturingPointer = null;
+        this.#capturedPointer = null;
       }
     }, { passive: true });
 
-    // eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
-    //   if (this._ignoreUiEvent() === true) {
-    //     return;
-    //   }
-    // }, { passive: true });
-    // // pointercancelの場合は#capturingPointerは使わない
+    eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
+      if (this._ignoreUiEvent() === true) {
+        return;
+      }
+      this.#updateCapturedPointer(event);
+    }, { passive: true });
+    // pointercancelの場合は#capturingPointerは使わない
 
-    // eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
-    //   if (this._ignoreUiEvent() === true) {
-    //     return;
-    //   }
-    // }, { passive: true });
+    eventTarget.addEventListener("pointermove", (event: PointerEvent) => {
+      if (this._ignoreUiEvent() === true) {
+        return;
+      }
+      this.#updateCapturedPointer(event);
+    }, { passive: true });
 
     // if (this._init.textEditable === true) {
     //   eventTarget.setAttribute("contenteditable", "true");
@@ -372,30 +357,25 @@ abstract class Widget extends HTMLElement {
   }
 
   protected _isCapturingPointer(event: PointerEvent): boolean {
-    if (this.#capturingPointer) {
-      return (this.#capturingPointer.type === event.pointerType) && (this.#capturingPointer.id === event.pointerId);
+    if (this.#capturedPointer) {
+      return (this.#capturedPointer.type === event.pointerType) && (this.#capturedPointer.id === event.pointerId);
     }
     return false;
   }
 
-  #setPointerCapture(event: PointerEvent): boolean {
+  #setPointerCapture(event: PointerEvent): void {
     if (!!this.#eventTarget) {
-      if ((this.#capturingPointer === null) && (event.isPrimary === true)) {
+      if ((this.#capturedPointer === null) && (event.isPrimary === true)) {
         this.#eventTarget.setPointerCapture(event.pointerId);
-        const viewportX = event.clientX;
-        const viewportY = event.clientY;
-        this.#capturingPointer = {
-          type: event.pointerType,
-          id: event.pointerId,
-          startViewportX: viewportX,
-          startViewportY: viewportY,
-          startTimestamp: event.timeStamp,
-          targetBoundingBox: this.#getEventTargetBoundingBox(),
-        };
-        return true;
+        this.#capturedPointer = new CapturedPointer(event);
       }
     }
-    return false;
+  }
+
+  #updateCapturedPointer(event: PointerEvent): void {
+    if (!!this.#capturedPointer && (this.#capturedPointer.id === event.pointerId)) {
+      this.#capturedPointer.addTimelineItem(event);
+    }
   }
 
   #setPointerEventListener(eventType: string, target: EventTarget, passive: boolean) {
@@ -465,11 +445,14 @@ abstract class Widget extends HTMLElement {
       if (filteredActions.some((action) => action.doStopPropagation === true) === true) {
         event.stopPropagation();
       }
-      if (filteredActions.some((action) => action.allowRepeat !== true) && (event.repeat === true)) {
-        return;//TODO forの中に移動
-      }
 
       for (const action of filteredActions) {
+        if (action.allowRepeat !== true) {
+          if (event.repeat === true) {
+            return;
+          }
+        }
+
         if (["ignore", "ignore-and-notify"].includes(action.readOnlyBehavior) && (this._isReadOnly === true)) {
           if (action.readOnlyBehavior === "ignore-and-notify") {
             this.#notifyReadOnly();
@@ -813,7 +796,6 @@ namespace Widget {
 
   };
 
-  export type CapturingPointer = _CapturingPointer;
   export type BoundingBox = _BoundingBox;
 }
 Object.freeze(Widget);

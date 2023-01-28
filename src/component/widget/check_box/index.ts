@@ -46,7 +46,7 @@ class CheckBox extends FormControl {
       func: (event: PointerEvent) => {
         if (this._elementIntersectsPoint(event.target as Element, Viewport.insetOf(event)) !== true) {
           return;
-        }//TODO これもactionのパラメータにする
+        }//TODO 外に出す
 
         if (this.indeterminate === true) {
           this.indeterminate = false;

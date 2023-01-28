@@ -1,3 +1,4 @@
+import { CapturedPointer } from "../../../captured_pointer";
 import { Widget } from "../widget_base/index";
 import { FormControl } from "../form_control/index";
 import BasePresentation from "../widget_base/presentation";
@@ -64,9 +65,8 @@ class Switch extends FormControl {
       doPreventDefault: false,
       doStopPropagation: false,
       func: (event: PointerEvent) => {
-        console.log(event.pointerId)
-        const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
-        this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
+        const capturedPointer = this._capturedPointer as CapturedPointer;
+        this.#setThumbPosition(capturedPointer);
       },
       nonCapturedPointerBehavior: "ignore",
       readOnlyBehavior: "ignore",
@@ -76,8 +76,8 @@ class Switch extends FormControl {
       doPreventDefault: false,
       doStopPropagation: false,
       func: (event: PointerEvent) => {
-        const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
-        this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
+        const capturedPointer = this._capturedPointer as CapturedPointer;
+        this.#setThumbPosition(capturedPointer);
       },
       nonCapturedPointerBehavior: "ignore",
       readOnlyBehavior: "ignore",
@@ -103,8 +103,8 @@ class Switch extends FormControl {
         if (!!this.#thumb) {
           this.#thumb.style.removeProperty("inset-inline-start");
 
-          const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
-          if ((capturingPointer.startViewportX === event.clientX) && (capturingPointer.startViewportY === event.clientY)) {
+          const capturedPointer = this._capturedPointer as CapturedPointer;
+          if (capturedPointer.isNotMoved === true) {
             // pointerupとpointerdownの座標が同じ場合はcheckedを変更する
             //XXX pointerdownしてpointermoveして元の位置に戻ってpointerupした場合も？
           }
@@ -205,17 +205,19 @@ class Switch extends FormControl {
   }
 
   //XXX sliderでも使う
-  #setThumbPosition(viewportX: number, viewportY: number, rect: Widget.BoundingBox) {
+  #setThumbPosition(capturedPointer: CapturedPointer) {
+    const { lastTimelineItem, targetBoundingBox } = capturedPointer;
+    const lastPoint = lastTimelineItem.point;
     if (!!this.#thumb) {
       let trackStart: number;
       let pointerCoord: number;
       if (this._blockProgression === "tb") {
-        trackStart = (this._direction === "rtl") ? rect.right : rect.left;
-        pointerCoord = viewportX;
+        trackStart = (this._direction === "rtl") ? targetBoundingBox.right : targetBoundingBox.left;
+        pointerCoord = lastPoint.x;
       }
       else {
-        trackStart = (this._direction === "rtl") ? rect.bottom : rect.top;
-        pointerCoord = viewportY;
+        trackStart = (this._direction === "rtl") ? targetBoundingBox.bottom : targetBoundingBox.top;
+        pointerCoord = lastPoint.y;
       }
   
       let thumbStart = 0;
