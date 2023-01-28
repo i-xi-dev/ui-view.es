@@ -79,7 +79,8 @@ abstract class Widget extends HTMLElement {
   #dataListSlot: HTMLSlotElement | null;
   #eventTarget: HTMLElement | null;
   #main: Element | null;
-  readonly #actions: Map<string, Set<Widget.Action>>;
+  readonly #pointerActions: Map<string, Set<Widget.PointerAction>>;
+  readonly #keyboardActions: Map<string, Set<Widget.KeyboardAction>>;
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
   #capturingPointer: _CapturingPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
@@ -107,15 +108,14 @@ abstract class Widget extends HTMLElement {
     this.#main = null;
     this.#capturingPointer = null;
     this.#textCompositing = false;
-    this.#actions = new Map([
-      ["click", new Set()],
-      //["focus", new Set()],
-      ["input", new Set()],
-      ["keydown", new Set()],
+    this.#pointerActions = new Map([
       ["pointercancel", new Set()],
       ["pointerdown", new Set()],
       ["pointermove", new Set()],
       ["pointerup", new Set()],
+    ]);
+    this.#keyboardActions = new Map([
+      ["keydown", new Set()],
     ]);
     this.#assignedOptionElements = [];
     this.#direction = _WidgetDirection.LTR;
@@ -341,13 +341,12 @@ abstract class Widget extends HTMLElement {
     //   }, { passive: true });
     // }
 
-    this.#setEventListener<PointerEvent>("click", eventTarget, false);
-    this.#setEventListener<InputEvent>("input", eventTarget, true);
-    this.#setEventListener<KeyboardEvent>("keydown", eventTarget, false);
-    this.#setEventListener<PointerEvent>("pointercancel", eventTarget, true);
-    this.#setEventListener<PointerEvent>("pointerdown", eventTarget, true);
-    this.#setEventListener<PointerEvent>("pointermove", eventTarget, true);
-    this.#setEventListener<PointerEvent>("pointerup", eventTarget, true);
+    this.#setPointerEventListener("pointercancel", eventTarget, true);
+    this.#setPointerEventListener("pointerdown", eventTarget, true);
+    this.#setPointerEventListener("pointermove", eventTarget, true);
+    this.#setPointerEventListener("pointerup", eventTarget, true);
+    this.#setKeyboardEventListener("keydown", eventTarget, false);
+    //this.#setEventListener<InputEvent>("input", eventTarget, true);
   }
 
   protected _ignoreUiEvent(): boolean {
@@ -399,58 +398,86 @@ abstract class Widget extends HTMLElement {
     return false;
   }
 
-  //TODO stopPropagation ・・・すくなくともclickは。他？
-  //     全部stopして発火しなおす？
-  #setEventListener<T extends Event>(eventType: string, target: EventTarget, passive: boolean) {
-    target.addEventListener(eventType, ((event: T) => {
+  #setPointerEventListener(eventType: string, target: EventTarget, passive: boolean) {
+    target.addEventListener(eventType, ((event: PointerEvent) => {
       if (this._ignoreUiEvent() === true) {
         return;
       }
-      if (event instanceof PointerEvent) {
-        if (["click", "auxclick", "contextmenu"].includes(event.type) === true) {
-          //
-        }
-        else if (event.isPrimary !== true) {
-          return;
-        }
-      }
-      if (event instanceof MouseEvent) {
-        if (event.detail > 1) {
-          return;
-        }
-        if (event.button > 0) {
-          return;
-        }
-      }
-      const isKeyboardEvent = (event instanceof KeyboardEvent);
-      const actions = this.#actions.get(eventType);
-      if (actions && (actions.size ?? 0) > 0) {
-        const filteredActions = (isKeyboardEvent === true) ? [...actions].filter((action) => action.keys?.includes((event as unknown as KeyboardEvent).key)) : [...actions];
-        if (filteredActions.some((action) => action.doPreventDefault === true) === true) {
-          event.preventDefault();
-        }
-        if (filteredActions.some((action) => action.doStopPropagation === true) === true) {
-          event.stopPropagation();
-        }
-        if ((isKeyboardEvent === true) && filteredActions.some((action) => action.allowRepeat !== true) && ((event as unknown as KeyboardEvent).repeat === true)) {
-          return;
-        }
-        for (const action of filteredActions) {
-          if ((action.nonCapturedPointerBehavior === "ignore") && (event instanceof PointerEvent)) {
-            if (this._isCapturingPointer(event) !== true) {
-              return;
-            }
-          }
 
-          if (["ignore", "ignore-and-notify"].includes(action.readOnlyBehavior) && (this._isReadOnly === true)) {
-            if (action.readOnlyBehavior === "ignore-and-notify") {
-              this.#notifyReadOnly();
-            }
+      if (["click", "auxclick", "contextmenu"].includes(event.type) === true) {
+        return;
+      }
+      if (event.isPrimary !== true) {
+        return;
+      }
+      if (event.detail > 1) {
+        return;
+      }
+      if (event.button > 0) {
+        return;
+      }
+
+      const actions = this.#pointerActions.get(eventType);
+      if (!actions) {
+        return;
+      }
+      const filteredActions = [...actions];
+      if (filteredActions.some((action) => action.doPreventDefault === true) === true) {
+        event.preventDefault();
+      }
+      if (filteredActions.some((action) => action.doStopPropagation === true) === true) {
+        event.stopPropagation();
+      }
+
+      for (const action of filteredActions) {
+        if (action.nonCapturedPointerBehavior === "ignore") {
+          if (this._isCapturingPointer(event) !== true) {
             return;
           }
-
-          action.func(event);
         }
+
+        if (["ignore", "ignore-and-notify"].includes(action.readOnlyBehavior) && (this._isReadOnly === true)) {
+          if (action.readOnlyBehavior === "ignore-and-notify") {
+            this.#notifyReadOnly();
+          }
+          return;
+        }
+
+        action.func(event);
+      }
+    }) as EventListener, { passive });
+  }
+
+  #setKeyboardEventListener(eventType: string, target: EventTarget, passive: boolean) {
+    target.addEventListener(eventType, ((event: KeyboardEvent) => {
+      if (this._ignoreUiEvent() === true) {
+        return;
+      }
+
+      const actions = this.#keyboardActions.get(eventType);
+      if (!actions) {
+        return;
+      }
+      const filteredActions = [...actions].filter((action) => action.keys?.includes(event.key));
+      if (filteredActions.some((action) => action.doPreventDefault === true) === true) {
+        event.preventDefault();
+      }
+      if (filteredActions.some((action) => action.doStopPropagation === true) === true) {
+        event.stopPropagation();
+      }
+      if (filteredActions.some((action) => action.allowRepeat !== true) && (event.repeat === true)) {
+        return;//TODO forの中に移動
+      }
+
+      for (const action of filteredActions) {
+        if (["ignore", "ignore-and-notify"].includes(action.readOnlyBehavior) && (this._isReadOnly === true)) {
+          if (action.readOnlyBehavior === "ignore-and-notify") {
+            this.#notifyReadOnly();
+          }
+          return;
+        }
+
+        action.func(event);
       }
     }) as EventListener, { passive });
   }
@@ -495,14 +522,18 @@ abstract class Widget extends HTMLElement {
     return items;
   }
 
-  protected _addAction<T extends Event>(name: string, action: Widget.Action<T>): void {
-    const actionSet = this.#actions.get(name) as Set<Widget.Action<T>>;
-    if (["keydown"].includes(name) === true) {
-      if (Array.isArray(action.keys) !== true) {
-        throw new Error("TODO");
-      }
-    }
+  protected _addPointerAction(name: string, action: Widget.PointerAction): void {
+    const actionSet = this.#pointerActions.get(name) as Set<Widget.PointerAction>;
     actionSet.add(action);
+  }
+
+  protected _addKeyboardAction(name: string, action: Widget.KeyboardAction): void {
+    const actionSet = this.#keyboardActions.get(name) as Set<Widget.KeyboardAction>;
+    if (Array.isArray(action.keys) && (action.keys.length > 0)) {
+      actionSet.add(action);
+      return;
+    }
+    throw new TypeError("action.keys must have one or more elements");
   }
 
   _onMutate(): void {
@@ -761,16 +792,25 @@ namespace Widget {
     textEditable: boolean,
   };
 
-  export type Action<T extends Event = Event> = {
-    func: (event: T) => void,
-    keys?: Array<string>,
-    doPreventDefault?: boolean,
-    doStopPropagation?: boolean,
-    allowRepeat?: boolean,
+  export interface Action<T extends Event = Event> {
     //XXX AbortSignal
+    doPreventDefault: boolean,
+    doStopPropagation: boolean,
+    func: (event: T) => void,
     readOnlyBehavior: "normal" | "ignore" | "ignore-and-notify",
+  }
+
+  export interface PointerAction extends Action<PointerEvent> {
     nonCapturedPointerBehavior: "normal" | "ignore",
-  
+  }
+
+  export interface KeyboardAction extends Action<KeyboardEvent> {
+    allowRepeat: boolean,
+    keys?: Array<string>,
+  }
+
+  export type PointerActionOptions = {
+
   };
 
   export type CapturingPointer = _CapturingPointer;

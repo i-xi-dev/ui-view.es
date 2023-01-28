@@ -120,6 +120,7 @@ namespace BasePresentation {
       inset: 0;
       position: absolute;
       padding-inline: ${ Parameters.Target.PADDING_INLINE }px;
+      touch-action: pinch-zoom;
     }
 
     *.${ ClassName.TARGET }[contenteditable] {

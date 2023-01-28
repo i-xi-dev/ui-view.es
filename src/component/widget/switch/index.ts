@@ -60,38 +60,45 @@ class Switch extends FormControl {
     this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
     this.#thumb = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 
-    this._addAction<PointerEvent>("pointerdown", {
+    this._addPointerAction("pointerdown", {
+      doPreventDefault: false,
+      doStopPropagation: false,
       func: (event: PointerEvent) => {
         console.log(event.pointerId)
         const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
         this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
       },
-      readOnlyBehavior: "ignore",
       nonCapturedPointerBehavior: "ignore",
+      readOnlyBehavior: "ignore",
     });
 
-    this._addAction<PointerEvent>("pointermove", {
+    this._addPointerAction("pointermove", {
+      doPreventDefault: false,
+      doStopPropagation: false,
       func: (event: PointerEvent) => {
-        console.log("move")
         const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
         this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
       },
+      nonCapturedPointerBehavior: "ignore",
       readOnlyBehavior: "ignore",
-      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
-    this._addAction<PointerEvent>("pointercancel", {
+    this._addPointerAction("pointercancel", {
+      doPreventDefault: false,
+      doStopPropagation: false,
       func: (event: PointerEvent) => {
         if (!!this.#thumb) {
           this.#thumb.style.removeProperty("inset-inline-start");
           this.#thumbMovement = undefined;
         }
       },
+      nonCapturedPointerBehavior: "ignore",
       readOnlyBehavior: "normal",
-      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
-    this._addAction<PointerEvent>("pointerup", {
+    this._addPointerAction("pointerup", {
+      doPreventDefault: false,
+      doStopPropagation: false,
       func: (event: PointerEvent) => {
         if (!!this.#thumb) {
           this.#thumb.style.removeProperty("inset-inline-start");
@@ -121,20 +128,21 @@ class Switch extends FormControl {
           this._dispatchChangeEvent();
         }
       },
+      nonCapturedPointerBehavior: "ignore",
       readOnlyBehavior: "ignore-and-notify",
-      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
-    this._addAction<KeyboardEvent>("keydown", {
-      keys: [" "],
+    this._addKeyboardAction("keydown", {
+      allowRepeat: false,
+      doPreventDefault: true,
+      doStopPropagation: false,
       func: () => {
         this.checked = !(this.checked);
         this._dispatchCompatMouseEvent("click");
         this._dispatchChangeEvent();
       },
-      doPreventDefault: true,
+      keys: [" "],
       readOnlyBehavior: "ignore-and-notify",
-      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
   }
 
