@@ -7,7 +7,14 @@ const _Attr = {
   ARIA_LABEL: "aria-label",
   DATA_SIZE: "data-size",
   DISABLED: "disabled",
+  FORM: "form",
   HIDDEN: "hidden",
+  NAME: "name",
+} as const;
+
+const _State = {
+  DISABLED: "--disabled",
+  ENABLED: "--enabled",
 } as const;
 
 const _ShadowRootInit: ShadowRootInit = {
@@ -15,7 +22,9 @@ const _ShadowRootInit: ShadowRootInit = {
   delegatesFocus: true,
 };
 
-
+type _XElementInternals = ElementInternals & {
+  states: Set<string>,
+};
 
 
 
@@ -64,6 +73,7 @@ abstract class Widget extends HTMLElement {
   protected readonly _init: Readonly<Widget.Init>;
   readonly #root: ShadowRoot;
   readonly #internals: ElementInternals;
+  protected _inDisabledContext: boolean;
   #dataListSlot: HTMLSlotElement | null;
   #eventTarget: HTMLElement | null;
   #main: Element | null;
@@ -85,6 +95,7 @@ abstract class Widget extends HTMLElement {
     this.#root = this.attachShadow(_ShadowRootInit);
     this.#internals = this.attachInternals();
     this.#internals.role = this._init.role;
+    this._inDisabledContext = false;
 
     this.#dataListSlot = null;
     this.#eventTarget = null;
@@ -112,7 +123,9 @@ abstract class Widget extends HTMLElement {
       _Attr.ARIA_LABEL,
       _Attr.DATA_SIZE,
       _Attr.DISABLED,
+      _Attr.FORM,
       _Attr.HIDDEN,
+      _Attr.NAME,
     ];
   }
 
@@ -143,6 +156,10 @@ abstract class Widget extends HTMLElement {
     this.toggleAttribute(_Attr.DISABLED, !!value);
   }
 
+  get form(): HTMLFormElement | null {
+    return this._internals.form;
+  }
+
   get label(): string {
     return (this.getAttribute(_Attr.ARIA_LABEL) ?? "");
   }
@@ -155,6 +172,24 @@ abstract class Widget extends HTMLElement {
     else {
       this.removeAttribute(_Attr.ARIA_LABEL);
     }
+  }
+
+  get name(): string {
+    return (this.getAttribute(_Attr.NAME) ?? "");
+  }
+
+  set name(value: string) {
+    const nameString = (typeof value === "string") ? value : String(value);
+    if (nameString.length > 0) {
+      this.setAttribute(_Attr.NAME, nameString);
+    }
+    else {
+      this.removeAttribute(_Attr.NAME);
+    }
+  }
+
+  protected get _isDisabled(): boolean {
+    return (this.disabled === true) || (this._inDisabledContext === true);
   }
 
   protected get _internals(): ElementInternals {
@@ -315,7 +350,7 @@ abstract class Widget extends HTMLElement {
   }
 
   protected _ignoreUiEvent(): boolean {
-    return ((this.busy === true) || (this.disabled === true));
+    return ((this.busy === true) || (this._isDisabled === true));
   }
 
   #getEventTargetBoundingBox(): Readonly<_BoundingBox> {
@@ -455,6 +490,7 @@ abstract class Widget extends HTMLElement {
 
   protected _reflectAllAttributesChanged(): void {
     this.#resetFocusable();
+    this._toggleDisabledState();
     this._reflectLabelChanged();
     this._reflectSizeChanged();
   }
@@ -532,8 +568,14 @@ abstract class Widget extends HTMLElement {
         this._reflectDisabledChanged();
         break;
 
+      case _Attr.FORM:
+        break;
+
       case _Attr.HIDDEN:
         this.#internals.ariaHidden = (super.hidden === true) ? "true" : "false";
+        break;
+
+      case _Attr.NAME:
         break;
 
       default:
@@ -541,8 +583,42 @@ abstract class Widget extends HTMLElement {
     }
   }
 
+  formAssociatedCallback(newForm: HTMLFormElement | null): void {
+    console.log(`formAssociated`);
+    console.log(newForm);
+  }
+
+  formDisabledCallback(newDisabled: boolean): void {
+    this._inDisabledContext = (newDisabled === true);
+    this._reflectDisabledChanged();
+  }
+
+  formResetCallback(): void {
+    console.log(`formReset`);
+    //TODO リセット リセット値はinputだとvalue属性値？ formAssociated時点の？
+  }
+
+  formStateRestoreCallback(...f:any[]): void {
+    console.log(f);//TODO
+  }
+
+  protected _toggleDisabledState(): void {
+    const internals = (this.#internals as _XElementInternals);
+    if (!!internals.states) {// firefox,safariはElementInternals.states非対応
+      if (this._isDisabled === true) {
+        internals.states.delete(_State.ENABLED);
+        internals.states.add(_State.DISABLED);
+      }
+      else {
+        internals.states.delete(_State.DISABLED);
+        internals.states.add(_State.ENABLED);
+      }
+    }
+  }
+
   protected _reflectDisabledChanged(): void {
     this.#resetFocusable();
+    this._toggleDisabledState();
   }
 
   protected _reflectBusyChanged(): void {
@@ -557,7 +633,7 @@ abstract class Widget extends HTMLElement {
 
   #resetFocusable(): void {
     if (!!this.#eventTarget) {
-      if ((this.busy === true) || (this.disabled === true)) {
+      if (this._ignoreUiEvent() === true) {
         this.#eventTarget.removeAttribute("tabindex");
       }
       else {

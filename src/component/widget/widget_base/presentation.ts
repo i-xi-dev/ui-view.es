@@ -105,7 +105,8 @@ namespace BasePresentation {
     }
 
     :host(*[aria-busy="true"]) *.${ ClassName.ROOT },
-    :host(*[disabled]) *.${ ClassName.ROOT } {
+    :host(*[disabled]) *.${ ClassName.ROOT },
+    :host(*:--disabled) *.${ ClassName.ROOT } {
       filter: contrast(0.5) grayscale(1);
       opacity: 0.6;
     }
@@ -131,20 +132,24 @@ namespace BasePresentation {
       outline: none;
     }
 
-    :host(*[aria-busy="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[aria-busy="true"][disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[aria-busy="true"][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[aria-busy="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
-      cursor: wait;
+    :host(*[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+      cursor: default;
     }
 
     :host(*[disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+    :host(*:--disabled) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*:--disabled[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: not-allowed;
     }
 
-    :host(*[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
-      cursor: default;
+    :host(*[aria-busy="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"]:--disabled) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"]:--disabled[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+      cursor: wait;
     }
 
     *.${ ClassName.MAIN },
@@ -170,6 +175,7 @@ namespace BasePresentation {
 
     :host(*[aria-busy="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
+    :host(*:--disabled) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
@@ -194,6 +200,7 @@ namespace BasePresentation {
 
     :host(*[aria-busy="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
+    :host(*:--disabled) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;

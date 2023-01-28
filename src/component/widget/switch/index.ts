@@ -15,11 +15,8 @@ import Presentation from "./presentation";
 //TODO readonlyが見た目でわからない
 //TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
 //TODO slotにassignできるのもcustom elementにする？
-//TODO formAssociatedCallback
-//TODO formDisabledCallback
-//TODO formResetCallback
-//TODO formStateRestoreCallback
 //TODO 再connect,再adoptに非対応（disconnectの後とか、ownerDocumentが変わったとか、・・・）
+//TODO 祖先がdisabledの場合 firefox,safariは:host-contextもElementInternals.statesも非対応
 
 class Switch extends FormControl {
   static readonly formAssociated = true;

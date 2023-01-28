@@ -122,7 +122,7 @@ namespace Presentation {
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
+    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
       border-color: var(--internal0-accent-color);
       box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
     }
@@ -141,7 +141,7 @@ namespace Presentation {
       transition: transform 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_MARK_CANVAS } {
+    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_MARK_CANVAS } {
       transform: scale(1.25);
     }
 

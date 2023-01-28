@@ -1,8 +1,6 @@
 import { Widget} from "../widget_base";
 
 const _Attr = {
-  FORM: "form",
-  NAME: "name",
   READONLY: "readonly",
 } as const;
 
@@ -19,29 +17,9 @@ abstract class FormControl extends Widget {
     return [
       super.observedAttributes,
       [
-        _Attr.FORM,
-        _Attr.NAME,
         _Attr.READONLY,
       ],
     ].flat();
-  }
-
-  get form(): HTMLFormElement | null {
-    return this._internals.form;
-  }
-
-  get name(): string {
-    return (this.getAttribute(_Attr.NAME) ?? "");
-  }
-
-  set name(value: string) {
-    const nameString = (typeof value === "string") ? value : String(value);
-    if (nameString.length > 0) {
-      this.setAttribute(_Attr.NAME, nameString);
-    }
-    else {
-      this.removeAttribute(_Attr.NAME);
-    }
   }
 
   get readOnly(): boolean {
@@ -56,21 +34,10 @@ abstract class FormControl extends Widget {
   //   super.connectedCallback();
   // }
 
-  protected override _reflectAllAttributesChanged(): void {
-    super._reflectAllAttributesChanged();
-    this._reflectReadOnlyChanged();
-  }
-
   override attributeChangedCallback(name: string, oldValue: string, newValue: string): void {
     super.attributeChangedCallback(name, oldValue, newValue);
 
     switch (name) {
-      case _Attr.FORM:
-        break;
-
-      case _Attr.NAME:
-        break;
-
       case _Attr.READONLY:
         this._internals.ariaReadOnly = (this.readOnly === true) ? "true" : "false";
         this._reflectReadOnlyChanged();
@@ -79,6 +46,11 @@ abstract class FormControl extends Widget {
       default:
         break;
     }
+  }
+
+  protected override _reflectAllAttributesChanged(): void {
+    super._reflectAllAttributesChanged();
+    this._reflectReadOnlyChanged();
   }
 
   protected override _reflectDisabledChanged(): void {
@@ -96,7 +68,7 @@ abstract class FormControl extends Widget {
   }
 
   protected override _ignoreUiEvent(): boolean {
-    return ((this.busy === true) || (this.disabled === true) || (this.readOnly === true));
+    return ((this.busy === true) || (this._isDisabled === true) || (this.readOnly === true));
   }
 
   #resetEditable(): void {
