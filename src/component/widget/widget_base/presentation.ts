@@ -38,9 +38,7 @@ namespace BasePresentation {
   export function createTemplateHtml(mainViewHtml: string) {
     return `
       <div class="${ ClassName.ROOT }">
-        <datalist>
-          <slot name="datalist"></slot>
-        </datalist>
+        <slot name="datalist"></slot>
         <div class="${ ClassName.TARGET }"></div>
         <div class="${ ClassName.MAIN }">${ mainViewHtml }</div>
       </div>

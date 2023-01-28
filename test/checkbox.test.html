@@ -222,9 +222,11 @@ customElements.define("wc-checkbox", CheckBox);
         <div>horizontal-tb, ltr</div>
         <div style="writing-mode: horizontal-tb; direction: ltr;">
           <wc-checkbox data-value-label="end">
-            <option slot="datalist" value="0">OFF</option>
-            <option slot="datalist" value="1">ON</option>
-            <option slot="datalist" value="">-</option>
+            <datalist>
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+              <option value="">-</option>
+            </datalist>
           </wc-checkbox>
         </div>
       </div>
@@ -232,9 +234,11 @@ customElements.define("wc-checkbox", CheckBox);
         <div>horizontal-tb, rtl</div>
         <div style="writing-mode: horizontal-tb; direction: rtl;">
           <wc-checkbox data-value-label="end">
-            <option slot="datalist" value="0">OFF</option>
-            <option slot="datalist" value="1">ON</option>
-            <option slot="datalist" value="">-</option>
+            <datalist>
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+              <option value="">-</option>
+            </datalist>
           </wc-checkbox>
         </div>
       </div>
@@ -242,9 +246,11 @@ customElements.define("wc-checkbox", CheckBox);
         <div>vertical-rl, ltr</div>
         <div style="writing-mode: vertical-rl; direction: ltr;">
           <wc-checkbox data-value-label="end">
-            <option slot="datalist" value="0">OFF</option>
-            <option slot="datalist" value="1">ON</option>
-            <option slot="datalist" value="">-</option>
+            <datalist>
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+              <option value="">-</option>
+            </datalist>
           </wc-checkbox>
         </div>
       </div>
@@ -252,9 +258,11 @@ customElements.define("wc-checkbox", CheckBox);
         <div>vertical-rl, rtl</div>
         <div style="writing-mode: vertical-rl; direction: rtl;">
           <wc-checkbox data-value-label="end">
-            <option slot="datalist" value="0">OFF</option>
-            <option slot="datalist" value="1">ON</option>
-            <option slot="datalist" value="">-</option>
+            <datalist>
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+              <option value="">-</option>
+            </datalist>
           </wc-checkbox>
         </div>
       </div>
@@ -262,9 +270,11 @@ customElements.define("wc-checkbox", CheckBox);
         <div>vertical-lr, ltr</div>
         <div style="writing-mode: vertical-lr; direction: ltr;">
           <wc-checkbox data-value-label="end">
-            <option slot="datalist" value="0">OFF</option>
-            <option slot="datalist" value="1">ON</option>
-            <option slot="datalist" value="">-</option>
+            <datalist>
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+              <option value="">-</option>
+            </datalist>
           </wc-checkbox>
         </div>
       </div>
@@ -272,9 +282,11 @@ customElements.define("wc-checkbox", CheckBox);
         <div>vertical-lr, rtl</div>
         <div style="writing-mode: vertical-lr; direction: rtl;">
           <wc-checkbox data-value-label="end">
-            <option slot="datalist" value="0">OFF</option>
-            <option slot="datalist" value="1">ON</option>
-            <option slot="datalist" value="">-</option>
+            <datalist>
+              <option value="0">OFF</option>
+              <option value="1">ON</option>
+              <option value="">-</option>
+            </datalist>
           </wc-checkbox>
         </div>
       </div>
@@ -333,45 +345,59 @@ customElements.define("wc-checkbox", CheckBox);
       <div>
         <div>data-value-label-visible</div>
         <wc-checkbox>
-          <option slot="datalist" value="0">OFF</option>
-          <option slot="datalist" value="1">ON</option>
-          <option slot="datalist" value="">-</option>
+          <datalist>
+            <option value="0">OFF</option>
+            <option value="1">ON</option>
+            <option value="">-</option>
+          </datalist>
         </wc-checkbox>
         <wc-checkbox data-value-label="start">
-          <option slot="datalist" value="0">OFF</option>
-          <option slot="datalist" value="1">ON</option>
-          <option slot="datalist" value="">-</option>
+          <datalist>
+            <option value="0">OFF</option>
+            <option value="1">ON</option>
+            <option value="">-</option>
+          </datalist>
         </wc-checkbox>
         <wc-checkbox data-value-label="start">
         </wc-checkbox>
         <wc-checkbox data-value-label="start">
-          <option slot="datalist" value="0" label="">OFF</option>
-          <option slot="datalist" value="1" label="">ON</option>
-          <option slot="datalist" value="" label="">-</option>
+          <datalist>
+            <option value="0" label="">OFF</option>
+            <option value="1" label="">ON</option>
+            <option value="" label="">-</option>
+          </datalist>
         </wc-checkbox>
         <wc-checkbox data-value-label="end">
-          <option slot="datalist" value="0">OFF</option>
-          <option slot="datalist" value="1">ON</option>
-          <option slot="datalist" value="">-</option>
+          <datalist>
+            <option value="0">OFF</option>
+            <option value="1">ON</option>
+            <option value="">-</option>
+          </datalist>
         </wc-checkbox>
         <wc-checkbox data-value-label="end">
         </wc-checkbox>
         <wc-checkbox data-value-label="end">
-          <option slot="datalist" value="0" label="">OFF</option>
-          <option slot="datalist" value="1" label="">ON</option>
-          <option slot="datalist" value="" label="">-</option>
+          <datalist>
+            <option value="0" label="">OFF</option>
+            <option value="1" label="">ON</option>
+            <option value="" label="">-</option>
+          </datalist>
         </wc-checkbox>
         <wc-checkbox data-value-label="hidden">
-          <option slot="datalist" value="0">OFF</option>
-          <option slot="datalist" value="1">ON</option>
-          <option slot="datalist" value="">-</option>
+          <datalist>
+            <option value="0">OFF</option>
+            <option value="1">ON</option>
+            <option value="">-</option>
+          </datalist>
         </wc-checkbox>
         <wc-checkbox data-value-label="hidden">
         </wc-checkbox>
         <wc-checkbox data-value-label="hidden">
-          <option slot="datalist" value="0" label="">OFF</option>
-          <option slot="datalist" value="1" label="">ON</option>
-          <option slot="datalist" value="" label="">-</option>
+          <datalist>
+            <option value="0" label="">OFF</option>
+            <option value="1" label="">ON</option>
+            <option value="" label="">-</option>
+          </datalist>
         </wc-checkbox>
       </div>
     </div>

@@ -20,6 +20,7 @@ const _State = {
 const _ShadowRootInit: ShadowRootInit = {
   mode: "closed",
   delegatesFocus: true,
+  slotAssignment: "manual",
 };
 
 type _XElementInternals = ElementInternals & {
@@ -74,6 +75,7 @@ abstract class Widget extends HTMLElement {
   readonly #root: ShadowRoot;
   readonly #internals: ElementInternals;
   protected _inDisabledContext: boolean;
+  #mutationObserver: MutationObserver;
   #dataListSlot: HTMLSlotElement | null;
   #eventTarget: HTMLElement | null;
   #main: Element | null;
@@ -96,6 +98,9 @@ abstract class Widget extends HTMLElement {
     this.#internals = this.attachInternals();
     this.#internals.role = this._init.role;
     this._inDisabledContext = false;
+    this.#mutationObserver = new MutationObserver((records) => {
+      this._onMutate();
+    });
 
     this.#dataListSlot = null;
     this.#eventTarget = null;
@@ -467,6 +472,16 @@ abstract class Widget extends HTMLElement {
     actionSet.add(action);
   }
 
+  _onMutate(): void {
+    const datalist = this.querySelector("datalist");
+    if (!!datalist && !!this.#dataListSlot) {
+      this.#dataListSlot.assign(datalist);
+      this.#loadDataListSlot();//TODO 使うときに直接DOM参照すればいいのでは、というか表示しないならassignする必要もないのでは
+    }
+
+    this.#reflectAllSlotsChanged();
+  }
+
   #render(): void {
     this.#adoptStyleSheets();
 
@@ -475,11 +490,6 @@ abstract class Widget extends HTMLElement {
     this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
     this._buildEventTarget(this.#eventTarget);
     this.#main = rootElement.querySelector(`*.${ BasePresentation.ClassName.MAIN }`) as Element;
-
-    this.#dataListSlot.addEventListener("slotchange", () => {
-      this.#loadDataListSlot();
-      this._reflectDataListSlotChanged();
-    }, { passive: true });
 
     this.#root.append(rootElement);
 
@@ -502,8 +512,13 @@ abstract class Widget extends HTMLElement {
 
     this.#render();
 
-    this.#loadDataListSlot();//TODO readAllSlotsとか
-    this.#reflectAllSlotsChanged();
+    this.#mutationObserver.observe(this, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    this._onMutate();
 
     this._reflectAllAttributesChanged();
 
@@ -678,7 +693,8 @@ abstract class Widget extends HTMLElement {
   #loadDataListSlot(): void {
     if (!!this.#dataListSlot) {
       this.#assignedOptionElements.splice(0);
-      for (const element of this.#dataListSlot.assignedElements()) {
+      const datalist = this.#dataListSlot.assignedElements()[0] as HTMLDataListElement;
+      for (const element of datalist.options) {
         if (element instanceof HTMLOptionElement) {
           this.#assignedOptionElements.push(element);
         }
