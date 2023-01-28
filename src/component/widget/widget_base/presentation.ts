@@ -22,6 +22,7 @@ namespace BasePresentation {
     CONTROL_EFFECTS: "c0-effects",
     CONTROL_EFFECT_RIPPLE: "c0-effect--ripple",
     CONTROL_GLOW: "c0-glow",
+    CONTROL_READONLY_INDICATOR: "c0-readonly-indicator",
   } as const;
 
   export const BaseSize = _BaseSize;
@@ -103,8 +104,11 @@ namespace BasePresentation {
     }
 
     :host(*[aria-busy="true"]) *.${ ClassName.ROOT },
-    :host(*[disabled]) *.${ ClassName.ROOT },
-    :host(*:--disabled) *.${ ClassName.ROOT } {
+    :host(*[disabled]) *.${ ClassName.ROOT } {
+      filter: contrast(0.5) grayscale(1);
+      opacity: 0.6;
+    }
+    :host(*:--disabled) *.${ ClassName.ROOT } {/*XXX firefoxでセレクタ全体が無効になる。多分safariも */
       filter: contrast(0.5) grayscale(1);
       opacity: 0.6;
     }
@@ -135,17 +139,21 @@ namespace BasePresentation {
     }
 
     :host(*[disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+      cursor: not-allowed;
+    }
     :host(*:--disabled) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
     :host(*:--disabled[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: not-allowed;
     }
 
     :host(*[aria-busy="true"]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
     :host(*[aria-busy="true"][disabled]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[aria-busy="true"]:--disabled) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
     :host(*[aria-busy="true"][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
-    :host(*[aria-busy="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
+    :host(*[aria-busy="true"][disabled][readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
+      cursor: wait;
+    }
+    :host(*[aria-busy="true"]:--disabled) *.${ ClassName.ROOT } *.${ ClassName.TARGET },
     :host(*[aria-busy="true"]:--disabled[readonly]) *.${ ClassName.ROOT } *.${ ClassName.TARGET } {
       cursor: wait;
     }
@@ -173,8 +181,11 @@ namespace BasePresentation {
 
     :host(*[aria-busy="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
-    :host(*:--disabled) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW },
     :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
+      box-shadow: 0 0 0 0 currentcolor !important;
+      opacity: 0 !important;
+    }
+    :host(*:--disabled) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW } {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }
@@ -198,8 +209,11 @@ namespace BasePresentation {
 
     :host(*[aria-busy="true"]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[disabled]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
-    :host(*:--disabled) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before,
     :host(*[readonly]) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
+      box-shadow: 0 0 0 0 currentcolor !important;
+      opacity: 0 !important;
+    }
+    :host(*:--disabled) *.${ ClassName.TARGET }:hover + *.${ ClassName.MAIN } *.${ ClassName.CONTROL_GLOW }::before {
       box-shadow: 0 0 0 0 currentcolor !important;
       opacity: 0 !important;
     }

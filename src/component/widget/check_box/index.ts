@@ -42,19 +42,19 @@ class CheckBox extends FormControl {
 
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {
-        if (this._isCapturingPointer(event) === true) {
-          if (this._elementIntersectsPoint(event.target as Element, Viewport.insetOf(event)) !== true) {
-            return;
-          }
+        if (this._elementIntersectsPoint(event.target as Element, Viewport.insetOf(event)) !== true) {
+          return;
+        }//TODO これもactionのパラメータにする
 
-          if (this.indeterminate === true) {
-            this.indeterminate = false;
-          }
-          this.checked = !(this.checked);
-          //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
-          this._dispatchChangeEvent();
+        if (this.indeterminate === true) {
+          this.indeterminate = false;
         }
+        this.checked = !(this.checked);
+        //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+        this._dispatchChangeEvent();
       },
+      readOnlyBehavior: "ignore-and-notify",
+      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
     this._addAction<KeyboardEvent>("keydown", {
@@ -68,6 +68,8 @@ class CheckBox extends FormControl {
         this._dispatchChangeEvent();
       },
       doPreventDefault: true,
+      readOnlyBehavior: "ignore-and-notify",
+      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
   }
 

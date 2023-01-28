@@ -13,8 +13,6 @@ import Presentation from "./presentation";
 //XXX itemのdisabledは無視する
 //TODO itemのselectedは無視する？ 無視しない場合checkedとどちらが優先？
 //TODO readonlyが見た目でわからない
-//TODO readonlyのときのkeydownなどが無反応で何もしないのが気になる
-//TODO slotにassignできるのもcustom elementにする？
 //TODO 再connect,再adoptに非対応（disconnectの後とか、ownerDocumentが変わったとか、・・・）
 //TODO 祖先がdisabledの場合 firefox,safariは:host-contextもElementInternals.statesも非対応
 
@@ -62,27 +60,40 @@ class Switch extends FormControl {
     this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
     this.#thumb = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 
+    this._addAction<PointerEvent>("pointerdown", {
+      func: (event: PointerEvent) => {
+        console.log(event.pointerId)
+        const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
+        this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
+      },
+      readOnlyBehavior: "ignore",
+      nonCapturedPointerBehavior: "ignore",
+    });
+
     this._addAction<PointerEvent>("pointermove", {
       func: (event: PointerEvent) => {
-        if (this._isCapturingPointer(event) === true) {
-          const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
-          this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
-        }
+        console.log("move")
+        const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
+        this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
       },
+      readOnlyBehavior: "ignore",
+      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
     this._addAction<PointerEvent>("pointercancel", {
       func: (event: PointerEvent) => {
-        if (!!this.#thumb && (this._isCapturingPointer(event) === true)) {
+        if (!!this.#thumb) {
           this.#thumb.style.removeProperty("inset-inline-start");
           this.#thumbMovement = undefined;
         }
       },
+      readOnlyBehavior: "normal",
+      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
     this._addAction<PointerEvent>("pointerup", {
       func: (event: PointerEvent) => {
-        if (!!this.#thumb && (this._isCapturingPointer(event) === true)) {
+        if (!!this.#thumb) {
           this.#thumb.style.removeProperty("inset-inline-start");
 
           const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
@@ -110,6 +121,8 @@ class Switch extends FormControl {
           this._dispatchChangeEvent();
         }
       },
+      readOnlyBehavior: "ignore-and-notify",
+      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
 
     this._addAction<KeyboardEvent>("keydown", {
@@ -120,6 +133,8 @@ class Switch extends FormControl {
         this._dispatchChangeEvent();
       },
       doPreventDefault: true,
+      readOnlyBehavior: "ignore-and-notify",
+      nonCapturedPointerBehavior: "ignore",//TODO 消す
     });
   }
 
@@ -174,12 +189,6 @@ class Switch extends FormControl {
       default:
         break;
     }
-  }
-
-  protected override _setPointerCapture(event: PointerEvent) {
-    super._setPointerCapture(event);
-    const capturingPointer = this._capturingPointer as Widget.CapturingPointer;
-    this.#setThumbPosition(event.clientX, event.clientY, capturingPointer.targetBoundingBox);
   }
 
   protected override _reflectSizeChanged(): void {

@@ -21,7 +21,7 @@ namespace Presentation {
   } as const;
 
   export const TEMPLATE = `
-    <div class="${ ClassName.CONTROL }">
+    <div class="${ ClassName.CONTROL } ${ BasePresentation.ClassName.CONTROL_READONLY_INDICATOR }">
       <div class="${ ClassName.CONTROL_BOX }">
         <div class="${ BasePresentation.ClassName.CONTROL_GLOW }"></div>
         <div class="${ ClassName.CONTROL_BOX_SURFACE }"></div>
@@ -122,9 +122,17 @@ namespace Presentation {
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
-      border-color: var(--internal0-accent-color);
-      box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+    @supports selector(*:--disabled) { /*XXX :not()つなげずになんとかできない？ 属性吐くしかない？ */
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
+        border-color: var(--internal0-accent-color);
+        box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+      }
+    }
+    @supports not selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_BOX_HIGHLIGHT } {
+        border-color: var(--internal0-accent-color);
+        box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+      }
     }
 
     *.${ BasePresentation.ClassName.CONTROL_EFFECTS } {
@@ -141,8 +149,15 @@ namespace Presentation {
       transition: transform 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_MARK_CANVAS } {
-      transform: scale(1.25);
+    @supports selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_MARK_CANVAS } {
+        transform: scale(1.25);
+      }
+    }
+    @supports not selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_MARK_CANVAS } {
+        transform: scale(1.25);
+      }
     }
 
     @keyframes mark--checked {

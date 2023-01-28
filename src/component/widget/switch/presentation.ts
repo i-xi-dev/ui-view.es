@@ -22,7 +22,7 @@ namespace Presentation {
   } as const;
 
   export const TEMPLATE = `
-    <div class="${ ClassName.CONTROL }">
+    <div class="${ ClassName.CONTROL } ${ BasePresentation.ClassName.CONTROL_READONLY_INDICATOR }">
       <div class="${ ClassName.CONTROL_TRACK }">
         <div class="${ ClassName.CONTROL_TRACK_SURFACE }"></div>
         <div class="${ ClassName.CONTROL_TRACK_HIGHLIGHT }"></div>
@@ -114,9 +114,17 @@ namespace Presentation {
       transition: border-color 300ms, box-shadow 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
-      border-color: var(--internal0-accent-color);
-      box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+    @supports selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
+        border-color: var(--internal0-accent-color);
+        box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+      }
+    }
+    @supports not selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_TRACK_HIGHLIGHT } {
+        border-color: var(--internal0-accent-color);
+        box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+      }
     }
 
     *.${ ClassName.CONTROL_THUMB } {
@@ -141,13 +149,25 @@ namespace Presentation {
       transition: margin 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *:is(
-      *.${ BasePresentation.ClassName.CONTROL_GLOW },
-      *.${ BasePresentation.ClassName.CONTROL_EFFECTS },
-      *.${ ClassName.CONTROL_THUMB_SURFACE },
-      *.${ ClassName.CONTROL_THUMB_HIGHLIGHT }
-    ) {
-      margin: 0;
+    @supports selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *:is(
+        *.${ BasePresentation.ClassName.CONTROL_GLOW },
+        *.${ BasePresentation.ClassName.CONTROL_EFFECTS },
+        *.${ ClassName.CONTROL_THUMB_SURFACE },
+        *.${ ClassName.CONTROL_THUMB_HIGHLIGHT }
+      ) {
+        margin: 0;
+      }
+    }
+    @supports not selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *:is(
+        *.${ BasePresentation.ClassName.CONTROL_GLOW },
+        *.${ BasePresentation.ClassName.CONTROL_EFFECTS },
+        *.${ ClassName.CONTROL_THUMB_SURFACE },
+        *.${ ClassName.CONTROL_THUMB_HIGHLIGHT }
+      ) {
+        margin: 0;
+      }
     }
 
     *.${ BasePresentation.ClassName.CONTROL_GLOW }::before {
@@ -176,9 +196,17 @@ namespace Presentation {
       transition: border-width 300ms, box-shadow 300ms, margin 300ms;
     }
 
-    :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
-      border-width: var(--internal0-border-width);
-      box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+    @supports selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*:--disabled):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
+        border-width: var(--internal0-border-width);
+        box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+      }
+    }
+    @supports not selector(*:--disabled) {
+      :host(*:not(*[aria-busy="true"]):not(*[disabled]):not(*[readonly])) *.${ BasePresentation.ClassName.TARGET }:hover + *.${ BasePresentation.ClassName.MAIN } *.${ ClassName.CONTROL_THUMB_HIGHLIGHT } {
+        border-width: var(--internal0-border-width);
+        box-shadow: 0 0 0 var(--internal0-border-width) var(--internal0-accent-color);
+      }
     }
 
     @keyframes ripple--value-change {

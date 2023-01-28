@@ -30,6 +30,10 @@ abstract class FormControl extends Widget {
     this.toggleAttribute(_Attr.READONLY, !!value);
   }
 
+  protected override get _isReadOnly(): boolean {
+    return (this.readOnly === true);
+  }
+
   // override connectedCallback(): void {
   //   super.connectedCallback();
   // }
@@ -67,9 +71,9 @@ abstract class FormControl extends Widget {
     this.#resetEditable();
   }
 
-  protected override _ignoreUiEvent(): boolean {
-    return ((this.busy === true) || (this._isDisabled === true) || (this.readOnly === true));
-  }
+  // protected override _ignoreUiEvent(): boolean {
+  //   return ((this.busy === true) || (this._isDisabled === true) || (this.readOnly === true));
+  // }
 
   #resetEditable(): void {
     if (!!this._eventTarget && (this._init.textEditable === true)) {
