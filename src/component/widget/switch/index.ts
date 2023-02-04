@@ -1,4 +1,5 @@
-import { CapturedPointer } from "../../../captured_pointer";
+import { BoundingBox } from "../../../bounding_box";
+import { Pointer } from "../../../pointer";
 import { Widget } from "../widget_base/index";
 import { FormControl } from "../form_control/index";
 import BasePresentation from "../widget_base/presentation";
@@ -51,8 +52,73 @@ class Switch extends FormControl {
     this.#thumbSize = 0;
     this.#valueLabelElement = null;
     this.#thumb = null;
+    this.#capturedPointerMovementCount = 0;
   }
 
+  //TODO capture最大数1
+
+  #capturedPointerMovementCount: number;
+  #boundingBoxLastPointeDown: BoundingBox.Geometry | null = null;
+
+  protected override _onPointerCaptured(): void {
+    this.#capturedPointerMovementCount = 0;
+    super._onPointerCaptured();
+  }
+  protected override _onCapturePointerMoved(track: Pointer.CaptureTrack): void {
+    if (track.pointerState === Pointer.State.LOST) {
+      if (!!this.#thumb) {
+        this.#thumb.style.removeProperty("inset-inline-start");
+        this.#thumbMovement = undefined;
+      }
+      return;
+    }
+
+    if (track.capturePhase === Pointer.CapturePhase.BEFORE_CAPTURE) {
+      // pointerdown
+      this.#boundingBoxLastPointeDown = track.geometry?.target as BoundingBox.Geometry;
+      this.#setThumbPosition2(track);
+    }
+    else if (track.capturePhase === Pointer.CapturePhase.CAPTURED) {
+      // pointermove
+      this.#capturedPointerMovementCount = this.#capturedPointerMovementCount + 1;
+      this.#setThumbPosition2(track);
+    }
+    else if (track.capturePhase === Pointer.CapturePhase.BEFORE_RELEASE) {//XXX 後半は_onPointerReleasedで良い
+      // pointerup (pointercancelは最初に除外している)
+      if (!!this.#thumb) {
+        this.#setThumbPosition2(track);
+        this.#thumb.style.removeProperty("inset-inline-start");
+
+        if (this.#capturedPointerMovementCount <= 0) { //XXX X移動量絶対値の合計が一定以下かつY移動量絶対値の合計が一定以下なら動いてないとみなす の方が良い？
+          // 動いていない場合はcheckedを変更する
+        }
+        else {
+          console.log(this.#thumbMovement);
+          // pointerdownからpointerupの間に少しでも動いている場合は、つまみがあまり動いていない場合はcheckedを変更しない
+          if ((this.checked === true) && ((this.#thumbMovement as number) > 0.6)) {
+            console.log("------------------------------------- no-change:true");
+            return;
+          }
+          else if ((this.checked !== true) && ((this.#thumbMovement as number) < 0.4)) {
+            console.log("------------------------------------- no-change:false");
+            return;
+          }
+        }
+        this.#thumbMovement = undefined;
+
+        console.log(`------------------------------------- ${this.checked} -> ${!(this.checked)}`);
+        this.checked = !(this.checked);
+        //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+        this._dispatchChangeEvent();
+      }
+    }
+  }
+  //TODO readonlyのときの挙動
+  protected override _onPointerReleased(result: Pointer.CaptureResult): void {
+    super._onPointerReleased(result);
+
+
+  }
   protected override _renderExtended(): void {
     if (!this._main) {
       throw new Error("TODO");
@@ -61,76 +127,44 @@ class Switch extends FormControl {
     this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
     this.#thumb = this._main.querySelector(`*.${ Presentation.ClassName.CONTROL_THUMB }`) as HTMLElement;
 
-    this._addPointerAction("pointerdown", {
-      doPreventDefault: false,
-      doStopPropagation: false,
-      func: (event: PointerEvent) => {
-        const capturedPointer = this._capturedPointer as CapturedPointer;
-        this.#setThumbPosition(capturedPointer);
-      },
-      nonCapturedPointerBehavior: "ignore",
-      readOnlyBehavior: "ignore",
-    });
+    //[$02[
 
-    this._addPointerAction("pointermove", {
-      doPreventDefault: false,
-      doStopPropagation: false,
-      func: (event: PointerEvent) => {
-        const capturedPointer = this._capturedPointer as CapturedPointer;
-        this.#setThumbPosition(capturedPointer);
-      },
-      nonCapturedPointerBehavior: "ignore",
-      readOnlyBehavior: "ignore",
-    });
+    // this._addPointerAction("pointerup", {
+    //   doPreventDefault: false,
+    //   doStopPropagation: false,
+    //   func: (event: PointerEvent) => {
+    //     if (!!this.#thumb) {
+    //       this.#thumb.style.removeProperty("inset-inline-start");
 
-    this._addPointerAction("pointercancel", {
-      doPreventDefault: false,
-      doStopPropagation: false,
-      func: (event: PointerEvent) => {
-        if (!!this.#thumb) {
-          this.#thumb.style.removeProperty("inset-inline-start");
-          this.#thumbMovement = undefined;
-        }
-      },
-      nonCapturedPointerBehavior: "ignore",
-      readOnlyBehavior: "normal",
-    });
+    //       const capturedPointer = this._capturedPointer as CapturedPointer;
+    //       if (capturedPointer.isNotMoved === true) {
+    //         // pointerupとpointerdownの座標が同じ場合はcheckedを変更する
+    //         //XXX pointerdownしてpointermoveして元の位置に戻ってpointerupした場合も？
+    //       }
+    //       else {
+    //         console.log(this.#thumbMovement);
+    //         // pointerdownからpointerupの間に少しでも動いている場合は、つまみがあまり動いていない場合はcheckedを変更しない
+    //         if ((this.checked === true) && ((this.#thumbMovement as number) > 0.6)) {
+    //           console.log("------------------------------------- no-change:true");
+    //           return;
+    //         }
+    //         else if ((this.checked !== true) && ((this.#thumbMovement as number) < 0.4)) {
+    //           console.log("------------------------------------- no-change:false");
+    //           return;
+    //         }
+    //       }
+    //       this.#thumbMovement = undefined;
 
-    this._addPointerAction("pointerup", {
-      doPreventDefault: false,
-      doStopPropagation: false,
-      func: (event: PointerEvent) => {
-        if (!!this.#thumb) {
-          this.#thumb.style.removeProperty("inset-inline-start");
-
-          const capturedPointer = this._capturedPointer as CapturedPointer;
-          if (capturedPointer.isNotMoved === true) {
-            // pointerupとpointerdownの座標が同じ場合はcheckedを変更する
-            //XXX pointerdownしてpointermoveして元の位置に戻ってpointerupした場合も？
-          }
-          else {
-            console.log(this.#thumbMovement);
-            // pointerdownからpointerupの間に少しでも動いている場合は、つまみがあまり動いていない場合はcheckedを変更しない
-            if ((this.checked === true) && ((this.#thumbMovement as number) > 0.6)) {
-              console.log("------------------------------------- no-change:true");
-              return;
-            }
-            else if ((this.checked !== true) && ((this.#thumbMovement as number) < 0.4)) {
-              console.log("------------------------------------- no-change:false");
-              return;
-            }
-          }
-          this.#thumbMovement = undefined;
-
-          console.log(`------------------------------------- ${this.checked} -> ${!(this.checked)}`);
-          this.checked = !(this.checked);
-          //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
-          this._dispatchChangeEvent();
-        }
-      },
-      nonCapturedPointerBehavior: "ignore",
-      readOnlyBehavior: "ignore-and-notify",
-    });
+    //       console.log(`------------------------------------- ${this.checked} -> ${!(this.checked)}`);
+    //       this.checked = !(this.checked);
+    //       //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
+    //       this._dispatchChangeEvent();
+    //     }
+    //   },
+    //   nonCapturedPointerBehavior: "ignore",
+    //   readOnlyBehavior: "ignore-and-notify",
+    // });
+    //]$02]
 
     this._addKeyboardAction("keydown", {
       allowRepeat: false,
@@ -203,21 +237,18 @@ class Switch extends FormControl {
     this.#trackLength = BasePresentation.BaseDimension[this.size] * 1.5;
     this.#thumbSize = BasePresentation.BaseDimension[this.size] * 0.75;
   }
-
-  //XXX sliderでも使う
-  #setThumbPosition(capturedPointer: CapturedPointer) {
-    const { lastTimelineItem, targetBoundingBox } = capturedPointer;
-    const lastPoint = lastTimelineItem.point;
-    if (!!this.#thumb) {
+  #setThumbPosition2(track: Pointer.CaptureTrack) {
+    if (!!this.#thumb && !!this.#boundingBoxLastPointeDown) {
       let trackStart: number;
       let pointerCoord: number;
+      const { offset } = this.#boundingBoxLastPointeDown;
       if (this._blockProgression === "tb") {
-        trackStart = (this._direction === "rtl") ? targetBoundingBox.right : targetBoundingBox.left;
-        pointerCoord = lastPoint.x;
+        trackStart = (this._direction === "rtl") ? (offset.left + this.#boundingBoxLastPointeDown.width) : offset.left;
+        pointerCoord = track.offsetFromViewport.left;
       }
       else {
-        trackStart = (this._direction === "rtl") ? targetBoundingBox.bottom : targetBoundingBox.top;
-        pointerCoord = lastPoint.y;
+        trackStart = (this._direction === "rtl") ? (offset.top + this.#boundingBoxLastPointeDown.height) : offset.top;
+        pointerCoord = track.offsetFromViewport.top;
       }
   
       let thumbStart = 0;
@@ -241,6 +272,7 @@ class Switch extends FormControl {
       this.#thumbMovement = thumbStart / range;
     }
   }
+  //XXX sliderでも使う
 
   protected override _reflectDataListSlotChanged(): void {
     if (!!this.#valueLabelElement) {

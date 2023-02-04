@@ -1,6 +1,7 @@
 
 import { Ns } from "../../../ns";
 import { Viewport } from "../../../viewport";
+import { Pointer } from "../../../pointer";
 import { Widget } from "../widget_base/index";
 import { FormControl } from "../form_control/index";
 import Presentation from "./presentation";
@@ -33,31 +34,27 @@ class CheckBox extends FormControl {
     });
   }
 
+  //TODO readonlyのときの挙動
+  protected override _onPointerReleased(result: Pointer.CaptureResult): void {
+    super._onPointerReleased(result);
+
+    if (result.endPointIntersectsTarget !== true) {
+      return;
+    }
+
+    if (this.indeterminate === true) {
+      this.indeterminate = false;
+    }
+    this.checked = !(this.checked);
+    this._dispatchChangeEvent();
+
+  }
   protected override _renderExtended(): void {
     if (!this._main) {
       throw new Error("TODO");
     }
 
     this.#valueLabelElement = this._main.querySelector(`*.${ Presentation.ClassName.OUTPUT }`) as Element;
-
-    this._addPointerAction("pointerup", {
-      doPreventDefault: false,
-      doStopPropagation: false,
-      func: (event: PointerEvent) => {
-        if (this._elementIntersectsPoint(event.target as Element, Viewport.insetOf(event)) !== true) {
-          return;
-        }//TODO 外に出す
-
-        if (this.indeterminate === true) {
-          this.indeterminate = false;
-        }
-        this.checked = !(this.checked);
-        //this._dispatchCompatMouseEvent("click"); pointerupをどうしようが勝手に発火する
-        this._dispatchChangeEvent();
-      },
-      nonCapturedPointerBehavior: "ignore",
-      readOnlyBehavior: "ignore-and-notify",
-    });
 
     this._addKeyboardAction("keydown", {
       allowRepeat: false,

@@ -1,36 +1,25 @@
+import { Geometry as _ } from "./geometry";
+
 namespace Viewport {
-  export type Inset = {
-    x: number,
-    y: number,
+  // coord from left and top edge of viewport
+  export type Inset = _.PointOffset;
+
+  export type Geometry = _.RectSize & {
+    //scrollLeft: number,//XXX rtlの場合の算出法が違う
+    //scrollTop: number,//XXX 
   };
 
-  export function insetOf(geometric: Element | PointerEvent): Inset {
-    if (!geometric) {
-      throw new TypeError("geometric is required");
+  export function geometryOf(view: Window): Geometry {
+    if ((view instanceof Window) !== true) {
+      throw new TypeError("view");
     }
 
-    {
-      const element = geometric as Element;
-      if (!!element.getBoundingClientRect) {
-        const { x, y } = element.getBoundingClientRect();
-        return {
-          x,
-          y,
-        };
-      }
-    }
-
-    {
-      const event = geometric as PointerEvent;
-      if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
-        return {
-          x: event.clientX,
-          y: event.clientY,
-        };
-      }
-    }
-
-    throw new TypeError("unknown type geometric")
+    return {
+      width: view.innerWidth,
+      height: view.innerHeight,
+      //scrollLeft: view.scrollX,
+      //scrollTop: view.scrollY,
+    };
   }
 }
 

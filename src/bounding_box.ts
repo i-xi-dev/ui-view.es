@@ -1,124 +1,73 @@
-type OffsetFrom = {
-  edge: "bounding-box",//TODO | "scrollport-content",
-  edgeOf: Element | null, // nullはlayout-viewport
-};
+import { Geometry as _ } from "./geometry";
 
-type BoundingBoxOffset = {
-  from: OffsetFrom,
-  left: number,
-  top: number,
-  right: number,
-  bottom: number,
-};
+namespace BoundingBox {
+  // coord from left and top edge of bounding box
+  export type Inset = _.PointOffset;
 
-type BoundingBoxSize = {
-  width: number,
-  height: number,
-};
+  export type Geometry = _.RectSize & {
+    offset: _.RectOffset, // offset from `origin` bounding box. if `origin` is not specified, offset from layout viewport
+  };
 
-type _BoundingBoxMetrics = {
-  size: BoundingBoxSize,
-  offset: BoundingBoxOffset,
-};
-
-function _getMetrics(view: Window, target: Element | null): _BoundingBoxMetrics {
-  if (target instanceof Element) {
-    const rect = target.getBoundingClientRect();
-    return {
-      size: {
-        width: rect.width,
-        height: rect.height,
-      },
-      offset: {
-        from: {
-          edge: "bounding-box",
-          edgeOf: null,
-        },
-        left: rect.left,
-        top: rect.top,
-        right: view.innerWidth - rect.right,
-        bottom: view.innerHeight - rect.bottom,
-      },
-    };
-  }
-  else {
-    // layout-viewportとみなす
-    return {
-      size: {
-        width: view.innerWidth,
-        height: view.innerHeight,
-      },
-      offset: {
-        from: {
-          edge: "bounding-box",
-          edgeOf: null, // layout-viewport
-        },
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-      },
+  export function geometryOf(target: Element, origin?: Element): Readonly<Geometry> {
+    if ((target instanceof Element) !== true) {
+      throw new TypeError("target");
     }
+    if (target.isConnected !== true) {
+      throw new Error("invalid state: target is not contained in document");
+    }
+    //XXX checkVisibility
+    //XXX その他取得不能条件
+
+    const view: Window | null = target.ownerDocument.defaultView;
+    if (!view) {
+      throw new Error("invalid state: target is not contained in document with the view");
+    }
+
+    if (!!origin) {
+      if ((origin instanceof Element) !== true) {
+        throw new TypeError("origin");
+      }
+      if (origin.isConnected !== true) {
+        throw new Error("invalid state: origin is not contained in document");
+      }
+      //XXX checkVisibility
+      //XXX その他取得不能条件
+
+      if (view !== origin.ownerDocument.defaultView) {
+        throw new Error("invalid state: elements are contained in another documents");
+      }
+    }
+
+    const targetRect = target.getBoundingClientRect();
+    if (!!origin) {
+      const originRect = origin.getBoundingClientRect();
+      return Object.freeze({
+        width: targetRect.width,
+        height: targetRect.height,
+        offset: {
+          left: targetRect.left - originRect.left,
+          right: originRect.right - targetRect.right,
+          top: targetRect.top - originRect.top,
+          bottom: originRect.bottom - targetRect.bottom,
+        },
+      });
+    }
+
+    return Object.freeze({
+      width: targetRect.width,
+      height: targetRect.height,
+      offset: {
+        left: targetRect.left,
+        right: view.innerWidth - targetRect.right,
+        top: targetRect.top,
+        bottom: view.innerHeight - targetRect.bottom,
+      },
+    });
   }
 }
 
-class BoundingBox {
-  #element: Element;
-
-  constructor(element: Element) {
-    if ((element instanceof Element) !== true) {
-      throw new TypeError("element");
-    }
-    this.#element = element;
-  }
-
-  #getMetrics(): { metrics: _BoundingBoxMetrics, view: Window } {
-    if (this.#element.isConnected !== true) {
-      throw new Error("InvalidState: element");//TODO
-    }
-    const thisView = this.#element.ownerDocument.defaultView;
-    if (thisView) {
-      const thisMetrics = _getMetrics(thisView, this.#element);
-      return {
-        metrics: thisMetrics,
-        view: thisView,
-      };
-    }
-    throw new Error("InvalidState: element.ownerDocument");//TODO
-  }
-
-  getSize(): BoundingBoxSize {
-    const { metrics } = this.#getMetrics();
-    return metrics.size;
-  }
-
-  getOffset(from: OffsetFrom): BoundingBoxOffset {
-    const { metrics, view } = this.#getMetrics();
-    const thisOffset = metrics.offset;
-
-    if (from.edgeOf) {
-      if (from.edgeOf.isConnected !== true) {
-        throw new Error("InvalidState: from.edgeOf - 1");//TODO
-      }
-      else if (from.edgeOf.ownerDocument !== this.#element.ownerDocument) {
-        throw new Error("InvalidState: from.edgeOf - 2");//TODO
-      }
-
-      const fromMetrics = _getMetrics(view, from.edgeOf);
-      const fromOffset = fromMetrics.offset;
-      return {
-        from,
-        left: thisOffset.left + fromOffset.left,
-        top: thisOffset.top + fromOffset.top,
-        right: thisOffset.right + fromOffset.right,
-        bottom: thisOffset.bottom + fromOffset.bottom,
-      };
-    }
-    else {
-      return thisOffset;
-    }
-  }
-}
 Object.freeze(BoundingBox);
 
-export { BoundingBox };
+export {
+  BoundingBox,
+};

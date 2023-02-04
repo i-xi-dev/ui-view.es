@@ -1,6 +1,6 @@
 import { Ns } from "../../../ns";
 import { Viewport } from "../../../viewport";
-import { CapturedPointer } from "../../../captured_pointer";
+import { Pointer } from "../../../pointer";
 import BasePresentation from "./presentation";
 
 const _Attr = {
@@ -73,7 +73,7 @@ abstract class Widget extends HTMLElement {
   readonly #pointerActions: Map<string, Set<Widget.PointerAction>>;
   readonly #keyboardActions: Map<string, Set<Widget.KeyboardAction>>;
   readonly #assignedOptionElements: Array<HTMLOptionElement>;
-  #capturedPointer: CapturedPointer | null; // trueの状態でdisable等にした場合に非対応
+  //$02 #capturedPointer: CapturedPointer | null; // trueの状態でdisable等にした場合に非対応
   #textCompositing: boolean; // trueの状態でdisable等にした場合に非対応
   #direction: _WidgetDirection;
   #blockProgression: string;
@@ -97,7 +97,7 @@ abstract class Widget extends HTMLElement {
     this.#dataListSlot = null;
     this.#eventTarget = null;
     this.#main = null;
-    this.#capturedPointer = null;
+    //$02 this.#capturedPointer = null;
     this.#textCompositing = false;
     this.#pointerActions = new Map([
       ["pointercancel", new Set()],
@@ -204,9 +204,11 @@ abstract class Widget extends HTMLElement {
     return this.#eventTarget;
   }
 
-  protected get _capturedPointer(): CapturedPointer | null {
-    return this.#capturedPointer;
-  }
+  //[$02[
+  //protected get _capturedPointer(): CapturedPointer | null {
+  //  return this.#capturedPointer;
+  //}
+  //]$02]
 
   get size(): BasePresentation.BaseSize {
     const size = this.getAttribute(_Attr.DATA_SIZE);
@@ -274,13 +276,20 @@ abstract class Widget extends HTMLElement {
     this.#root.adoptedStyleSheets.push(componentStyleSheet);
   }
 
+  protected _buildEventTarget2(eventTarget: HTMLElement): void {
+    this.#setPointerEventListener("pointercancel", eventTarget, true);
+    this.#setPointerEventListener("pointerdown", eventTarget, true);
+    this.#setPointerEventListener("pointermove", eventTarget, true);
+    this.#setPointerEventListener("pointerup", eventTarget, true);
+    this.#setKeyboardEventListener("keydown", eventTarget, false);
+  }
 
   protected _buildEventTarget(eventTarget: HTMLElement): void {
     eventTarget.addEventListener("pointerdown", (event: PointerEvent) => {
       if (this._ignoreUiEvent() === true) {
         return;
       }
-      this.#setPointerCapture(event);
+      //$02 this.#setPointerCapture(event);
     }, { passive: true });
 
     // touchだと無条件でpointercaptureされるので、gotpointercaptureで#capturingPointerにセットするのはNG
@@ -290,16 +299,16 @@ abstract class Widget extends HTMLElement {
       // if (this._ignoreUiEvent() === true) {
       //   return;
       // }
-      if (this._isCapturingPointer(event) === true) {
-        this.#capturedPointer = null;
-      }
+      //$02 if (this._isCapturingPointer(event) === true) {
+        //$02 this.#capturedPointer = null;
+      //$02 }
     }, { passive: true });
 
     eventTarget.addEventListener("pointerup", (event: PointerEvent) => {
       if (this._ignoreUiEvent() === true) {
         return;
       }
-      this.#updateCapturedPointer(event);
+      //$02 this.#updateCapturedPointer(event);
     }, { passive: true });
     // pointercancelの場合は#capturingPointerは使わない
 
@@ -307,7 +316,7 @@ abstract class Widget extends HTMLElement {
       if (this._ignoreUiEvent() === true) {
         return;
       }
-      this.#updateCapturedPointer(event);
+      //$02 this.#updateCapturedPointer(event);
     }, { passive: true });
 
     // if (this._init.textEditable === true) {
@@ -356,27 +365,33 @@ abstract class Widget extends HTMLElement {
     });
   }
 
-  protected _isCapturingPointer(event: PointerEvent): boolean {
-    if (this.#capturedPointer) {
-      return (this.#capturedPointer.type === event.pointerType) && (this.#capturedPointer.id === event.pointerId);
-    }
-    return false;
-  }
+  //[$02[
+  // protected _isCapturingPointer(event: PointerEvent): boolean {
+  //   if (this.#capturedPointer) {
+  //     return (this.#capturedPointer.type === event.pointerType) && (this.#capturedPointer.id === event.pointerId);
+  //   }
+  //   return false;
+  // }
+  //]$02]
 
-  #setPointerCapture(event: PointerEvent): void {
-    if (!!this.#eventTarget) {
-      if ((this.#capturedPointer === null) && (event.isPrimary === true)) {
-        this.#eventTarget.setPointerCapture(event.pointerId);
-        this.#capturedPointer = new CapturedPointer(event);
-      }
-    }
-  }
+  //[$02[
+  // #setPointerCapture(event: PointerEvent): void {
+  //   if (!!this.#eventTarget) {
+  //     if ((this.#capturedPointer === null) && (event.isPrimary === true)) {
+  //       this.#eventTarget.setPointerCapture(event.pointerId);
+  //       this.#capturedPointer = new CapturedPointer(event);
+  //     }
+  //   }
+  // }
+  //]$02]
 
-  #updateCapturedPointer(event: PointerEvent): void {
-    if (!!this.#capturedPointer && (this.#capturedPointer.id === event.pointerId)) {
-      this.#capturedPointer.addTimelineItem(event);
-    }
-  }
+  //[$02[
+  // #updateCapturedPointer(event: PointerEvent): void {
+  //   if (!!this.#capturedPointer && (this.#capturedPointer.id === event.pointerId)) {
+  //     this.#capturedPointer.addTimelineItem(event);
+  //   }
+  // }
+  //]$02]
 
   #setPointerEventListener(eventType: string, target: EventTarget, passive: boolean) {
     target.addEventListener(eventType, ((event: PointerEvent) => {
@@ -410,11 +425,13 @@ abstract class Widget extends HTMLElement {
       }
 
       for (const action of filteredActions) {
-        if (action.nonCapturedPointerBehavior === "ignore") {
-          if (this._isCapturingPointer(event) !== true) {
-            return;
-          }
-        }
+        //[$02[
+        // if (action.nonCapturedPointerBehavior === "ignore") {
+        //   if (this._isCapturingPointer(event) !== true) {
+        //     return;
+        //   }
+        // }
+        //]$02]
 
         if (["ignore", "ignore-and-notify"].includes(action.readOnlyBehavior) && (this._isReadOnly === true)) {
           if (action.readOnlyBehavior === "ignore-and-notify") {
@@ -480,10 +497,6 @@ abstract class Widget extends HTMLElement {
     }
   }
 
-  _elementIntersectsPoint(element: Element, point: Viewport.Inset): boolean {
-    return this.#root.elementsFromPoint(point.x, point.y).includes(element);
-  }
-
   // キャッシュしない（slotAssignされた要素が参照はそのままで更新されることもあるので。キャッシュするならMutation監視が要る）
   protected _getDataListItems(options?: Widget.DataListItemMergeOptions): Array<Widget.DataListItem> {
     const items: Array<Widget.DataListItem> = this.#assignedOptionElements.map((element) => {
@@ -535,13 +548,42 @@ abstract class Widget extends HTMLElement {
     const rootElement = this.#useTemplate();
     this.#dataListSlot = rootElement.querySelector('slot[name="datalist"]') as HTMLSlotElement;
     this.#eventTarget = rootElement.querySelector(`*.${ BasePresentation.ClassName.TARGET }`) as HTMLElement;
-    this._buildEventTarget(this.#eventTarget);
     this.#main = rootElement.querySelector(`*.${ BasePresentation.ClassName.MAIN }`) as Element;
 
     this.#root.append(rootElement);
 
     this._renderExtended();
+
+    //[$02[
+    Pointer.CaptureTarget.register(this.#eventTarget, async (capture: Pointer.Capture): Promise<void> => {
+      this._onPointerCaptured();
+      for await (const track of capture) {
+        this._onCapturePointerMoved(track);
+      }
+      const result = await capture.result;// for-awaitが終わった後なら待ちなしのはず
+      this._onPointerReleased(result);
+    }, {
+      filter: (event: PointerEvent) => {
+        return (Pointer.DefaultCaptureFilter(event) === true) && (this._ignoreUiEvent() !== true);
+      },
+    });
+
+    this._buildEventTarget2(this.#eventTarget);//$02
+    //]$02]
+
   }
+
+  //[$02[
+  protected _onPointerCaptured(): void {
+    console.log("pointercapture captured");
+  }
+  protected _onCapturePointerMoved(track: Pointer.CaptureTrack): void {
+    console.log(track);
+  }
+  protected _onPointerReleased(result: Pointer.CaptureResult): void {
+    console.log(result);
+  }
+  //]$02]
 
   protected abstract _renderExtended(): void;
 
@@ -784,7 +826,7 @@ namespace Widget {
   }
 
   export interface PointerAction extends Action<PointerEvent> {
-    nonCapturedPointerBehavior: "normal" | "ignore",
+    //nonCapturedPointerBehavior: "normal" | "ignore",
   }
 
   export interface KeyboardAction extends Action<KeyboardEvent> {
