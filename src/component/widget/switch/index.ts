@@ -75,7 +75,7 @@ class Switch extends FormControl {
 
     if (track.capturePhase === Pointer.CapturePhase.BEFORE_CAPTURE) {
       // pointerdown
-      this.#boundingBoxLastPointeDown = track.geometry?.target as BoundingBox.Geometry;
+      this.#boundingBoxLastPointeDown = track.exteriaGeometry?.target as BoundingBox.Geometry;
       this.#setThumbPosition2(track);
     }
     else if (track.capturePhase === Pointer.CapturePhase.CAPTURED) {
@@ -244,11 +244,11 @@ class Switch extends FormControl {
       const { offset } = this.#boundingBoxLastPointeDown;
       if (this._blockProgression === "tb") {
         trackStart = (this._direction === "rtl") ? (offset.left + this.#boundingBoxLastPointeDown.width) : offset.left;
-        pointerCoord = track.offsetFromViewport.left;
+        pointerCoord = track.geometry.point.left;
       }
       else {
         trackStart = (this._direction === "rtl") ? (offset.top + this.#boundingBoxLastPointeDown.height) : offset.top;
-        pointerCoord = track.offsetFromViewport.top;
+        pointerCoord = track.geometry.point.top;
       }
   
       let thumbStart = 0;

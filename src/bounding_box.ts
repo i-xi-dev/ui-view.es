@@ -1,11 +1,11 @@
-import { Geometry as _ } from "./geometry";
+import { GenericGeometry } from "./geometry";
 
 namespace BoundingBox {
   // coord from left and top edge of bounding box
-  export type Inset = _.PointOffset;
+  export type Inset = GenericGeometry.PointOffset;
 
-  export type Geometry = _.RectSize & {
-    offset: _.RectOffset, // offset from `origin` bounding box. if `origin` is not specified, offset from layout viewport
+  export type Geometry = GenericGeometry.RectSize & {
+    readonly offset: GenericGeometry.RectOffset, // offset from `origin` bounding box. if `origin` is not specified, offset from layout viewport
   };
 
   export function geometryOf(target: Element, origin?: Element): Readonly<Geometry> {
@@ -44,24 +44,24 @@ namespace BoundingBox {
       return Object.freeze({
         width: targetRect.width,
         height: targetRect.height,
-        offset: {
+        offset: Object.freeze({
           left: targetRect.left - originRect.left,
           right: originRect.right - targetRect.right,
           top: targetRect.top - originRect.top,
           bottom: originRect.bottom - targetRect.bottom,
-        },
+        }),
       });
     }
 
     return Object.freeze({
       width: targetRect.width,
       height: targetRect.height,
-      offset: {
+      offset: Object.freeze({
         left: targetRect.left,
         right: view.innerWidth - targetRect.right,
         top: targetRect.top,
         bottom: view.innerHeight - targetRect.bottom,
-      },
+      }),
     });
   }
 }

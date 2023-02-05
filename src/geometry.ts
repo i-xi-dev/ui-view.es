@@ -1,24 +1,24 @@
-namespace Geometry {
+namespace GenericGeometry {
 
   export type PointOffset = {
-    left: number,
-    top: number,
+    readonly left: number,
+    readonly top: number,
     // inlineStart
     // blockStart
   };
 
   export type RectSize = {
-    width: number,
-    height: number,
+    readonly width: number,
+    readonly height: number,
     // inlineSize
     // blockSize
   };
 
   export type RectOffset = {
-    left: number,
-    top: number,
-    right: number,
-    bottom: number,
+    readonly left: number,
+    readonly top: number,
+    readonly right: number,
+    readonly bottom: number,
     // inlineStart
     // inlineEnd
     // blockStart
@@ -27,4 +27,4 @@ namespace Geometry {
 
 }
 
-export { Geometry };
+export { GenericGeometry };

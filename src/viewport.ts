@@ -1,10 +1,10 @@
-import { Geometry as _ } from "./geometry";
+import { GenericGeometry } from "./geometry";
 
 namespace Viewport {
   // coord from left and top edge of viewport
-  export type Inset = _.PointOffset;
+  export type Inset = GenericGeometry.PointOffset;
 
-  export type Geometry = _.RectSize & {
+  export type Geometry = GenericGeometry.RectSize & {
     //scrollLeft: number,//XXX rtlの場合の算出法が違う
     //scrollTop: number,//XXX 
   };
