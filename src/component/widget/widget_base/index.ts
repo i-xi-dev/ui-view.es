@@ -563,8 +563,10 @@ abstract class Widget extends HTMLElement {
       const result = await capture.result;// for-awaitが終わった後なら待ちなしのはず
       this._onPointerReleased(result);
     }, {
-      filter: (event: PointerEvent) => {
-        return (Pointer.DefaultCaptureFilter(event) === true) && (this._ignoreUiEvent() !== true);
+      filter: {
+        custom: () => {
+          return (this._ignoreUiEvent() !== true);
+        },
       },
     });
 

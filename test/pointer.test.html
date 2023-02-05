@@ -194,10 +194,13 @@ body {
 }
 *.grid-cell-main {
   backdrop-filter: blur(2px);
-  background-color: #fcc25f88;
+  background-color: #5ffcda88;
   box-shadow: 0 0 0 2px #fff;
   color: #5f6781;
   font-size: 12px;
+}
+*.grid.x-mode-itemdrag-nodrop *.grid-cell-main {
+  background-color: #fcc25f88;
 }
 *.grid-cell-main *,
 *.item-main * {
@@ -220,7 +223,8 @@ body {
   transition: background-color 200ms;
 }
 *.item:hover *.item-main {
-  background-color: #b7e0f0;
+  background-color: #d2ebf5;
+  outline: 2px solid #fff;
 }
 *.grid.x-mode-itemdrag *.grid-main *.item-main {
   background-blend-mode: darken;
@@ -554,12 +558,11 @@ createApp({
       this.dragYScrollContent = Number.NaN;
 
     }, {
-      filter: (event) => {
-        if (Pointer.DefaultCaptureFilter(event) === true) {
+      filter: {
+        custom: (event) => {
           const composedPath = event.composedPath();
           return (composedPath.some((el) => (el instanceof Element) && el.classList.contains("item-main")) === true);
-        }
-        return false;
+        },
       },
     });
 

@@ -112,14 +112,22 @@ class _PointerCaptureTarget {
   readonly #element: Element;
   readonly #eventListenerAborter: AbortController;
   readonly #internalsMap: Map<pointerid, _PointerCaptureInternals>;
-  readonly #filter: (event: PointerEvent) => boolean;
+  readonly #filterPointerTypes: Array<string>;
+  readonly #filterPrimaryPointer: boolean;
+  readonly #filterMouseButtons: Array<Pointer.MouseButton>;
+  readonly #filterPenButton: Array<Pointer.PenButton>;
+  readonly #customFilter: (event: PointerEvent) => boolean;
   readonly #maxConcurrentCaptures: number;
   readonly #highPrecision: boolean;
 
   constructor(element: Element, callback: Pointer.CaptureCallback, options: Pointer.CaptureOptions) {
     this.#element = element;
     this.#eventListenerAborter = new AbortController();
-    this.#filter = (typeof options.filter === "function") ? options.filter : Pointer.DefaultCaptureFilter;
+    this.#filterPointerTypes = (!!options.filter && Array.isArray(options.filter.pointerType)) ? [...options.filter.pointerType] : ["mouse", "pen", "touch"];
+    this.#filterPrimaryPointer = (typeof options.filter?.primaryPointer === "boolean") ? options.filter.primaryPointer : true;
+    this.#filterMouseButtons = (!!options.filter && Array.isArray(options.filter.mouseButtons)) ? [...options.filter.mouseButtons] : [];
+    this.#filterPenButton = (!!options.filter && Array.isArray(options.filter.penButtons)) ? [...options.filter.penButtons] : [];
+    this.#customFilter = (typeof options.filter?.custom === "function") ? options.filter.custom : () => true;
     this.#maxConcurrentCaptures = Number.isSafeInteger(options.maxConcurrentCaptures) ? (options.maxConcurrentCaptures as number) : 1;
     this.#highPrecision = (options.highPrecision === true) && !!(new PointerEvent("test")).getCoalescedEvents;//XXX safariが未実装:getCoalescedEvents
 
@@ -189,6 +197,72 @@ class _PointerCaptureTarget {
 
   containsPoint(point: Viewport.Inset): boolean {
     return this.#rootNode.elementsFromPoint(point.left, point.top).includes(this.#element);
+  }
+
+  // event.buttonsの判定はpointerdown特化なので注意
+  #filter(event: PointerEvent): boolean {
+    if (this.#filterPointerTypes.includes(event.pointerType) !== true) {
+      return false;
+    }
+    if ((this.#filterPrimaryPointer === true) && (event.isPrimary !== true)) {
+      return false;
+    }
+    for (const button of this.#filterMouseButtons) {
+      const pointerIsMouse = (event.pointerType === "mouse");
+      switch (button) {
+        case Pointer.MouseButton.LEFT:
+          if (!(pointerIsMouse && ((event.buttons & 0b1) === 0b1))) {
+            return false;
+          }
+          break;
+        case Pointer.MouseButton.RIGHT:
+          if (!(pointerIsMouse && ((event.buttons & 0b10) === 0b10))) {
+            return false;
+          }
+          break;
+        case Pointer.MouseButton.MIDDLE:
+          if (!(pointerIsMouse && ((event.buttons & 0b100) === 0b100))) {
+            return false;
+          }
+          break;
+        case Pointer.MouseButton.X1:
+          if (!(pointerIsMouse && ((event.buttons & 0b1000) === 0b1000))) {
+            return false;
+          }
+          break;
+        case Pointer.MouseButton.X2:
+          if (!(pointerIsMouse && ((event.buttons & 0b10000) === 0b10000))) {
+            return false;
+          }
+          break;
+      }
+    }
+    for (const button of this.#filterPenButton) {
+      const pointerIsPen = (event.pointerType === "pen");
+      switch (button) {
+        case Pointer.PenButton.NO_BUTTONS:
+          if (!(pointerIsPen && ((event.buttons & 0b1) === 0b1))) {
+            return false;
+          }
+          break;
+        case Pointer.PenButton.BARREL:
+          if (!(pointerIsPen && ((event.buttons & 0b10) === 0b10))) {
+            return false;
+          }
+          break;
+        case Pointer.PenButton.ERASER:
+          if (!(pointerIsPen && ((event.buttons & 0b100000) === 0b100000))) {
+            return false;
+          }
+          break;
+      }
+    }
+    
+
+    if (this.#customFilter(event) !== true) {
+      return false;
+    }
+    return true;
   }
 
   #requestCapture(event: PointerEvent, callback: Pointer.CaptureCallback): void {
@@ -409,15 +483,32 @@ namespace Pointer {
 
   export type CaptureCallback = (capture: Capture) => (void | Promise<void>);
 
-  //TODO 非公開にする 内容は個別の設定項目にする
-  export const DefaultCaptureFilter = (event: PointerEvent): boolean => {
-    return (["mouse", "pen", "touch"].includes(event.pointerType) && (event.buttons <= 1));
+  export const MouseButton = {
+    LEFT: "left",
+    MIDDLE: "middle",
+    RIGHT: "right",
+    X1: "x1",
+    X2: "x2",
   };
+  export type MouseButton = typeof MouseButton[keyof typeof MouseButton];
+
+  export const PenButton = {
+    NO_BUTTONS: "",// ボタン押していない
+    BARREL: "barrel",
+    ERASER: "eraser",
+  } as const;
+  export type PenButton = typeof PenButton[keyof typeof PenButton];
 
   export type CaptureOptions = {
-    // pointerTypeでフィルタとか、isPrimaryでフィルタとか、isTrustedでフィルタとか、位置でフィルタとか、composedPath()でフィルタとか、いろいろできるようにevent自体を渡す
-    //TODO pointerType,isPrimary,isTrusted,butonn/buttons,は個別の設定項目にする。filterはそこからさらに絞りたい場合用とする
-    filter?: (event: PointerEvent) => boolean,
+    filter?: {
+      // trustedPointer?: boolean,
+      pointerType?: Array<string>,
+      primaryPointer?: boolean,
+      mouseButtons?: Array<MouseButton>,// 左ボタン（主ボタン）は除いたボタン（マウスではどれかボタン押さないとpointerdownにはならないので）
+      penButtons?: Array<PenButton>,
+      //XXX key
+      custom?: (event: PointerEvent) => boolean,// 位置でフィルタとか、composedPath()でフィルタとか、いろいろできるようにevent自体を渡す
+    },
 
     //TODO そもそも同時captureできるのか？
     maxConcurrentCaptures?: number,
